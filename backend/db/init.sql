@@ -1,0 +1,2 @@
+CREATE DATABASE sisg;
+CREATE DATABASE sisg_test;

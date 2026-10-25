@@ -1,0 +1,63 @@
+# Producción (Coolify / cualquier servidor con Docker): base de datos + API + interfaz.
+# Los secretos NO están aquí: se definen como variables de entorno (ver .env.example y DESPLIEGUE.md).
+# Las bases del almacén de datos (MySQL, carpeta dw/) son una herramienta de análisis local y no forman parte de este despliegue.
+# El desarrollo local usa backend/docker-compose.yml.
+
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${DB_USER:?defina DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASS:?defina DB_PASS}
+      POSTGRES_DB: ${DB_NAME:-sisg}
+    volumes:
+      - sisg_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    # Sin "ports": la base solo es accesible desde la red interna del compose.
+
+  backend:
+    build: ./backend
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      PORT: "3000"
+      DB_HOST: db
+      DB_PORT: "5432"
+      DB_USER: ${DB_USER:?defina DB_USER}
+      DB_PASS: ${DB_PASS:?defina DB_PASS}
+      DB_NAME: ${DB_NAME:-sisg}
+      JWT_SECRET: ${JWT_SECRET:?defina JWT_SECRET (openssl rand -hex 32)}
+      MFA_KEY: ${MFA_KEY:?defina MFA_KEY (openssl rand -base64 32)}
+      FRONTEND_URL: ${FRONTEND_URL:?defina FRONTEND_URL (https://app.sudominio.com)}
+      CORS_ORIGINS: ${CORS_ORIGINS:-}
+      # Crea el esquema al arrancar. Déjelo en true en el primer despliegue y tras cambiar el esquema; ver DESPLIEGUE.md.
+      DB_SYNC: ${DB_SYNC:-true}
+      # Detrás del proxy de Coolify: toma la IP real del cliente (bloqueo por intentos y límite de peticiones).
+      TRUST_PROXY: ${TRUST_PROXY:-1}
+    expose:
+      - "3000"
+
+  frontend:
+    build:
+      context: ./nuevo-diseño
+      args:
+        VITE_API_URL: ${API_URL:?defina API_URL (https://api.sudominio.com)}
+    restart: unless-stopped
+    environment:
+      # Opcional: solo para la función «Mensajes con IA» de campañas.
+      LOVABLE_API_KEY: ${LOVABLE_API_KEY:-}
+    depends_on:
+      - backend
+    expose:
+      - "3000"
+
+volumes:
+  sisg_pgdata:

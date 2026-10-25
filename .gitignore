@@ -1,0 +1,32 @@
+# Sistema y herramientas
+.DS_Store
+*.log
+.vscode/
+.idea/
+
+# Dependencias y compilados
+node_modules/
+dist/
+.output/
+.vinxi/
+.tanstack/
+coverage/
+
+# Secretos y configuración local (nunca al repositorio)
+.env
+.env.*
+!.env.example
+
+# Datos que genera el puente aplicación -> almacén (contienen datos de la base) y archivos de MySQL
+dw/data/*
+!dw/data/.gitkeep
+
+# Material de clase y exportaciones personales (capturas con datos de equipos y personas)
+imagenes/
+*.zip
+
+# Maquetas anteriores (reemplazadas por nuevo-diseno/)
+diseno-stitch/
+
+# Archivos temporales de los generadores de documentos
+docs/gestion/generador/fig/

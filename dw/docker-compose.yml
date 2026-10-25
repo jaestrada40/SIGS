@@ -1,0 +1,15 @@
+# MySQL local solo para el proyecto de Bases de Datos II (el app de Postgres no se toca).
+services:
+  mysql:
+    image: mysql:8.0
+    environment:
+      MYSQL_ROOT_PASSWORD: sisg_dev
+    ports:
+      - "127.0.0.1:3307:3306"
+    volumes:
+      - ./data:/var/lib/mysql-files   # aquí caen los CSV exportados de la app
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-psisg_dev"]
+      interval: 3s
+      timeout: 3s
+      retries: 40

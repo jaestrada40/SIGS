@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+
+<html lang="es"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><meta content="web_dashboard" name="shell-type"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Plus+Jakarta+Sans:wght@600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = { darkMode: "class", theme: { extend: { "colors": { "primary": "#00288e", "surface": "#f8f9ff", "on-tertiary-fixed-variant": "#004b73", "on-tertiary-fixed": "#001d31", "tertiary-fixed": "#cce5ff", "tertiary": "#003757", "on-error": "#ffffff", "on-tertiary-container": "#77c2ff", "on-primary-fixed": "#001453", "on-surface": "#0b1c30", "secondary-fixed-dim": "#6bd8cb", "on-primary": "#ffffff", "surface-container-highest": "#d3e4fe", "error": "#ba1a1a", "primary-fixed-dim": "#b8c4ff", "outline": "#757684", "surface-variant": "#d3e4fe", "background": "#f8f9ff", "surface-container-low": "#eff4ff", "surface-bright": "#f8f9ff", "surface-dim": "#cbdbf5", "on-primary-container": "#a8b8ff", "surface-container": "#e5eeff", "on-error-container": "#93000a", "inverse-on-surface": "#eaf1ff", "on-secondary-fixed": "#00201d", "secondary": "#006a61", "on-secondary-fixed-variant": "#005049", "on-surface-variant": "#444653", "outline-variant": "#c4c5d5", "surface-container-high": "#dce9ff", "inverse-primary": "#b8c4ff", "on-secondary": "#ffffff", "primary-container": "#1e40af", "tertiary-container": "#004f7a", "error-container": "#ffdad6", "on-tertiary": "#ffffff", "secondary-fixed": "#89f5e7", "secondary-container": "#86f2e4", "surface-container-lowest": "#ffffff", "on-secondary-container": "#006f66", "surface-tint": "#3755c3", "on-primary-fixed-variant": "#173bab", "inverse-surface": "#213145", "primary-fixed": "#dde1ff", "on-background": "#0b1c30", "tertiary-fixed-dim": "#93ccff" }, "borderRadius": { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" }, "spacing": { "gutter-mobile": "1rem", "space-xs": "0.25rem", "space-lg": "1.5rem", "margin": "2rem", "margin-mobile": "1rem", "space-xl": "2.5rem", "space-sm": "0.5rem", "gutter": "1.5rem", "space-md": "1rem" }, "fontFamily": { "body-sm": ["Inter"], "headline-lg-mobile": ["Plus Jakarta Sans"], "label-md": ["Inter"], "label-sm": ["Inter"], "title-md": ["Inter"], "headline-md": ["Plus Jakarta Sans"], "body-lg": ["Inter"], "headline-lg": ["Plus Jakarta Sans"], "display-lg": ["Plus Jakarta Sans"], "label-lg": ["Inter"], "title-lg": ["Plus Jakarta Sans"], "display-lg-mobile": ["Plus Jakarta Sans"], "body-md": ["Inter"] }, "fontSize": { "body-sm": ["12px", { "lineHeight": "16px", "fontWeight": "400" }], "headline-lg-mobile": ["22px", { "lineHeight": "28px", "fontWeight": "600" }], "label-md": ["12px", { "lineHeight": "16px", "fontWeight": "500" }], "label-sm": ["11px", { "lineHeight": "14px", "fontWeight": "600" }], "title-md": ["16px", { "lineHeight": "24px", "fontWeight": "600" }], "headline-md": ["20px", { "lineHeight": "28px", "fontWeight": "600" }], "body-lg": ["16px", { "lineHeight": "24px", "fontWeight": "400" }], "headline-lg": ["28px", { "lineHeight": "36px", "fontWeight": "600" }], "display-lg": ["36px", { "lineHeight": "44px", "fontWeight": "700" }], "label-lg": ["14px", { "lineHeight": "20px", "fontWeight": "600" }], "title-lg": ["18px", { "lineHeight": "24px", "fontWeight": "600" }], "display-lg-mobile": ["28px", { "lineHeight": "36px", "fontWeight": "700" }], "body-md": ["14px", { "lineHeight": "20px", "fontWeight": "400" }] } } } };</script></head><body class="bg-background font-body-md text-on-surface antialiased"><aside class="fixed left-0 top-0 h-full w-72 bg-surface-container-lowest shadow-[0_1px_8px_rgba(0,0,0,0.04)] z-50 flex flex-col justify-between overflow-y-auto"><div class="flex flex-col"><div class="p-space-lg flex items-center gap-space-sm"><img alt="Logo SISG Guatemala" class="h-8 w-auto object-contain" src="https://lh3.googleusercontent.com/aida/AEtjO1UD0M0oYpeG8OcRtRzvwzRiZ7qWCBr479mPNOIKy6K6-3IYU989pAw0XFt8oFlgivSOMTXt7DSCYk3gZ335rUW4MVMoZjPI9IxVQ3MDv1MzTSShNTMJC6KJfBcHOxwRn02BytGbgAuTjWm_Fgx9AWHEBT990i6DV_7rS2Dej2p4vz68q9lq5iZK3pZwzarpFRxjRJAESfUBPrm7XLrPFDBQKHOmDC_C6rB46jrsKD2cVwQFXvOi95uAuCY"/><div class="flex flex-col min-w-0"><div class="flex items-center gap-1.5"><span class="font-title-lg text-title-lg tracking-tight text-primary">SISG</span><span class="font-label-sm text-label-sm px-1.5 py-0.5 rounded-full bg-primary-fixed text-on-primary-fixed">GT</span></div><span class="font-label-sm text-label-sm text-on-surface-variant truncate">Grupo 4: Centros y ONGs</span></div></div><div class="px-space-md mb-space-md"><div class="p-1.5 bg-surface-container rounded-xl flex flex-col gap-1.5"><span class="font-label-sm text-label-sm text-on-surface-variant px-1 font-semibold uppercase tracking-wider">Tipo de Entidad</span><div class="grid grid-cols-2 gap-1 bg-surface-container-low p-1 rounded-lg"><button class="py-1 px-2 rounded-md font-label-sm text-label-sm font-semibold bg-surface-container-lowest text-primary shadow-[0_1px_2px_rgba(0,0,0,0.06)] flex items-center justify-center gap-1 text-center" type="button"><span class="material-symbols-outlined text-[14px]">biotech</span>Diagnóstico</button><button class="py-1 px-2 rounded-md font-label-sm text-label-sm font-medium text-on-surface-variant hover:text-on-surface flex items-center justify-center gap-1 text-center transition-colors" type="button"><span class="material-symbols-outlined text-[14px]">volunteer_activism</span>ONGs</button></div></div></div><div class="px-space-md flex flex-col gap-space-xs"><div class="px-space-sm pt-space-xs pb-1 flex items-center justify-between"><span class="font-label-sm text-label-sm uppercase font-semibold tracking-wider text-outline">Centro de Diagnóstico</span><span class="font-label-sm text-label-sm px-2 py-0.5 rounded-full bg-secondary-fixed text-on-secondary-fixed font-semibold">Activo</span></div><nav class="flex flex-col gap-1" data-active-classes="bg-primary-container text-on-primary font-title-md rounded-xl shadow-[0_1px_4px_rgba(0,0,0,0.08)]"><a aria-current="page" class="flex items-center gap-3 px-space-md py-2.5 transition-all bg-primary-container text-on-primary font-title-md rounded-xl shadow-[0_1px_4px_rgba(0,0,0,0.08)]" data-path="dashboard" href="#"><span class="material-symbols-outlined text-[20px]">dashboard</span><span>Inicio (Dashboard)</span></a><a class="flex items-center gap-3 px-space-md py-2.5 rounded-xl font-label-lg text-label-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-all" data-path="pacientes" href="#"><span class="material-symbols-outlined text-[20px]">personal_injury</span><span>Pacientes</span></a><a class="flex items-center gap-3 px-space-md py-2.5 rounded-xl font-label-lg text-label-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-all" data-path="estudios-diagnosticos" href="#"><span class="material-symbols-outlined text-[20px]">radiology</span><span>Estudios Diagnósticos</span></a><a class="flex items-center gap-3 px-space-md py-2.5 rounded-xl font-label-lg text-label-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-all" data-path="reportes" href="#"><span class="material-symbols-outlined text-[20px]">clinical_notes</span><span>Reportes</span></a></nav><div class="px-space-sm pt-space-md pb-1 flex items-center justify-between"><span class="font-label-sm text-label-sm uppercase font-semibold tracking-wider text-outline">Organismo No Lucrativo</span><span class="font-label-sm text-label-sm px-2 py-0.5 rounded-full bg-surface-container-high text-on-surface-variant font-medium">ONG</span></div><nav class="flex flex-col gap-1" data-active-classes="bg-secondary text-on-secondary font-title-md rounded-xl shadow-[0_1px_4px_rgba(0,0,0,0.08)]"><a class="flex items-center gap-3 px-space-md py-2.5 rounded-xl font-label-lg text-label-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-all" data-path="campanas-de-salud" href="#"><span class="material-symbols-outlined text-[20px]">campaign</span><span>Campañas de Salud</span></a><a class="flex items-center gap-3 px-space-md py-2.5 rounded-xl font-label-lg text-label-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-all" data-path="jornadas" href="#"><span class="material-symbols-outlined text-[20px]">event_available</span><span>Jornadas</span></a><a class="flex items-center gap-3 px-space-md py-2.5 rounded-xl font-label-lg text-label-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-all" data-path="estadisticas" href="#"><span class="material-symbols-outlined text-[20px]">query_stats</span><span>Estadísticas</span></a></nav><div class="px-space-sm pt-space-sm pb-1"><span class="font-label-sm text-label-sm uppercase font-semibold tracking-wider text-outline">Sistema</span></div><nav class="flex flex-col gap-1" data-active-classes="bg-primary-container text-on-primary font-title-md rounded-xl"><a class="flex items-center gap-3 px-space-md py-2.5 rounded-xl font-label-lg text-label-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-all" data-path="configuracion" href="#"><span class="material-symbols-outlined text-[20px]">settings</span><span>Configuración</span></a></nav></div></div><div class="p-space-md m-space-md rounded-xl bg-surface-container-low flex flex-col gap-2"><div class="flex items-center justify-between"><div class="flex items-center gap-2"><span class="relative flex h-2.5 w-2.5"><span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-secondary opacity-75"></span><span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-secondary"></span></span><span class="font-label-sm text-label-sm font-semibold text-on-surface">En línea</span></div><span class="font-label-sm text-label-sm text-outline">v2.4</span></div><div class="flex items-center gap-1.5 text-on-surface-variant"><span class="material-symbols-outlined text-[14px]">verified</span><span class="font-label-sm text-label-sm font-medium">MINSAL Guatemala</span></div></div></aside><div class="pl-72"><header class="fixed top-0 left-72 right-0 h-16 bg-surface/85 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.04)] z-40 px-space-lg flex items-center justify-between gap-space-md"><div class="flex items-center gap-space-md min-w-0"><div class="flex flex-col min-w-0"><div class="flex items-center gap-2"><span class="font-title-md text-title-md text-on-surface truncate">San Rafael / Liga del Corazón</span><span class="font-label-sm text-label-sm px-2 py-0.5 rounded-full bg-tertiary-fixed text-on-tertiary-fixed font-semibold shrink-0">Guatemala, Zona 10</span></div></div></div><div class="flex-1 max-w-md hidden md:block"><div class="relative flex items-center"><span class="material-symbols-outlined absolute left-3 text-[18px] text-outline pointer-events-none">search</span><input class="w-full h-9 pl-9 pr-4 rounded-xl bg-surface-container-lowest text-on-surface font-body-sm text-body-sm placeholder:text-outline shadow-[0_1px_2px_rgba(0,0,0,0.04)] focus:outline-none focus:ring-2 focus:ring-primary" placeholder="Buscar paciente, DPI, carnet o estudio..." type="text"/></div></div><div class="flex items-center gap-space-md shrink-0"><button aria-label="Notificaciones" class="relative p-2 rounded-xl text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors" type="button"><span class="material-symbols-outlined text-[22px]">notifications</span><span class="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-error ring-2 ring-surface"></span></button><div class="flex items-center gap-space-sm pl-space-sm"><img alt="Profile" class="w-8 h-8 rounded-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAozL9YrISVNnIYRXMcxzr3N1umF2tRgLsArXz8iGPRygAokGwawY4mrmOU085J-52FxOqdlWjb-xKnNJ9XfJNDSdfPqvY9dZ7_ZTEo9FmUJxvmR6pYyPamm4I77Wfe9llIXT-u0qV1OmWeZGwqXbXP5NqyoxdtM_Iw23CjVbASZL3gj0bklb6fd8N6hOR8hHJBhNlxEcmxkf7GQKhT1eyZJ6h6Em4gR-b2vgRZ4PcXTWk57RWnpbJV"/><div class="hidden lg:flex flex-col text-left"><span class="font-label-md text-label-md font-semibold text-on-surface leading-tight">Dra. Sofía Morales</span><span class="font-label-sm text-label-sm text-on-surface-variant leading-tight">Directora Clínica</span></div><a class="ml-1 flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-surface-container text-on-surface-variant hover:bg-error-container hover:text-on-error-container font-label-sm text-label-sm font-semibold transition-colors" data-path="login" href="#"><span class="material-symbols-outlined text-[16px]">logout</span><span>Cerrar sesión</span></a></div></div></header><main class="relative pt-16 bg-surface min-h-screen"><div class="flex flex-col w-full p-space-md lg:p-space-lg space-y-space-lg">
+<!-- Interactivo Switcher & Welcome Banner -->
+<section class="flex flex-col md:flex-row md:items-center justify-between gap-space-md p-space-lg rounded-xl bg-surface-container shadow-sm">
+<div class="flex items-center gap-space-md">
+<div class="w-12 h-12 rounded-xl bg-primary text-on-primary flex items-center justify-center shrink-0 shadow-md">
+<span class="material-symbols-outlined text-[28px]">local_hospital</span>
+</div>
+<div>
+<div class="flex items-center gap-2">
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-secondary font-semibold">Red Integrada de Salud</span>
+<span class="inline-block w-1.5 h-1.5 rounded-full bg-secondary"></span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Guatemala Central</span>
+</div>
+<h1 class="font-title-lg text-title-lg text-on-surface font-bold tracking-tight">Centro de Diagnóstico y Salud San Rafael</h1>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Zona 10, Ciudad de Guatemala • Licencia MINSAL #DRS-2024-0419</p>
+</div>
+</div>
+<!-- Segmented View Mode Toggle -->
+<div class="flex items-center self-start md:self-auto bg-surface-container-low p-1.5 rounded-xl">
+<span class="font-label-sm text-label-sm text-on-surface-variant mr-3 ml-2 font-medium">Vista activa:</span>
+<div class="flex items-center gap-1">
+<button class="flex items-center gap-2 px-3 py-1.5 rounded-lg font-label-md text-label-md font-semibold bg-surface-container-lowest text-primary shadow-sm transition-all" id="viewCentroBtn" type="button">
+<span class="w-2 h-2 rounded-full bg-primary"></span>
+<span>Centro de Diagnóstico</span>
+</button>
+<button class="flex items-center gap-2 px-3 py-1.5 rounded-lg font-label-md text-label-md font-medium text-on-surface-variant hover:text-on-surface transition-all" id="viewOngBtn" type="button">
+<span class="w-2 h-2 rounded-full bg-secondary opacity-40"></span>
+<span>Organismo No Lucrativo (Liga / Aprofam)</span>
+</button>
+</div>
+</div>
+</section>
+<!-- 3 Tarjetas KPI Principales -->
+<section class="grid grid-cols-1 md:grid-cols-3 gap-space-md">
+<!-- KPI 1: Pacientes -->
+<div class="relative overflow-hidden p-space-lg rounded-xl bg-surface-container-lowest shadow-sm flex flex-col justify-between">
+<div class="absolute -right-4 -top-4 w-28 h-28 bg-primary-fixed/20 rounded-full blur-2xl pointer-events-none"></div>
+<div class="flex items-center justify-between">
+<div class="flex flex-col">
+<span class="font-label-md text-label-md font-semibold text-on-surface-variant uppercase tracking-wider">Total Pacientes Registrados</span>
+<span class="font-body-sm text-body-sm text-outline">Base activa SISG Nacional</span>
+</div>
+<div class="w-11 h-11 rounded-xl bg-primary-fixed text-on-primary-fixed flex items-center justify-center">
+<span class="material-symbols-outlined text-[24px]">group</span>
+</div>
+</div>
+<div class="mt-6 flex items-baseline justify-between">
+<div>
+<span class="font-display-lg text-display-lg text-primary font-bold">12,480</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant ml-1 font-medium">expedientes</span>
+</div>
+<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-secondary-fixed text-on-secondary-fixed font-label-sm text-label-sm font-semibold">
+<span class="material-symbols-outlined text-[14px]">trending_up</span>
+          +8.4% este mes
+        </span>
+</div>
+<div class="mt-3 w-full bg-surface-container rounded-full h-1.5 overflow-hidden">
+<div class="bg-primary h-full rounded-full" style="width: 76%"></div>
+</div>
+</div>
+<!-- KPI 2: Estudios & Campañas -->
+<div class="relative overflow-hidden p-space-lg rounded-xl bg-surface-container-lowest shadow-sm flex flex-col justify-between">
+<div class="absolute -right-4 -top-4 w-28 h-28 bg-secondary-fixed/30 rounded-full blur-2xl pointer-events-none"></div>
+<div class="flex items-center justify-between">
+<div class="flex flex-col">
+<span class="font-label-md text-label-md font-semibold text-on-surface-variant uppercase tracking-wider">Estudios &amp; Campañas Activas</span>
+<span class="font-body-sm text-body-sm text-outline">Consolidado interinstitucional</span>
+</div>
+<div class="w-11 h-11 rounded-xl bg-secondary-fixed text-on-secondary-fixed flex items-center justify-center">
+<span class="material-symbols-outlined text-[24px]">vital_signs</span>
+</div>
+</div>
+<div class="mt-6 flex items-baseline justify-between">
+<div>
+<span class="font-display-lg text-display-lg text-secondary font-bold">1,842</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant ml-1 font-medium">estudios</span>
+</div>
+<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-tertiary-fixed text-on-tertiary-fixed font-label-sm text-label-sm font-semibold">
+<span class="material-symbols-outlined text-[14px]">campaign</span>
+          14 comunitarias
+        </span>
+</div>
+<div class="mt-3 w-full bg-surface-container rounded-full h-1.5 overflow-hidden">
+<div class="bg-secondary h-full rounded-full" style="width: 88%"></div>
+</div>
+</div>
+<!-- KPI 3: Registros del Mes -->
+<div class="relative overflow-hidden p-space-lg rounded-xl bg-surface-container-lowest shadow-sm flex flex-col justify-between">
+<div class="absolute -right-4 -top-4 w-28 h-28 bg-tertiary-fixed/30 rounded-full blur-2xl pointer-events-none"></div>
+<div class="flex items-center justify-between">
+<div class="flex flex-col">
+<span class="font-label-md text-label-md font-semibold text-on-surface-variant uppercase tracking-wider">Mes en Curso (Mayo 2024)</span>
+<span class="font-body-sm text-body-sm text-outline">Eficiencia de atención</span>
+</div>
+<div class="w-11 h-11 rounded-xl bg-tertiary-fixed text-on-tertiary-fixed flex items-center justify-center">
+<span class="material-symbols-outlined text-[24px]">calendar_month</span>
+</div>
+</div>
+<div class="mt-6 flex items-baseline justify-between">
+<div>
+<span class="font-display-lg text-display-lg text-tertiary font-bold">645</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant ml-1 font-medium">ingresos</span>
+</div>
+<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-surface-container-high text-primary font-label-sm text-label-sm font-bold">
+<span class="material-symbols-outlined text-[14px]">task_alt</span>
+          98.2% efectividad
+        </span>
+</div>
+<div class="mt-3 w-full bg-surface-container rounded-full h-1.5 overflow-hidden">
+<div class="bg-primary-container h-full rounded-full" style="width: 98.2%"></div>
+</div>
+</div>
+</section>
+<!-- Barra de Acciones Rápidas -->
+<section class="p-space-md rounded-xl bg-surface-container-lowest shadow-sm flex flex-wrap items-center justify-between gap-space-md">
+<div class="flex flex-wrap items-center gap-2">
+<span class="font-label-sm text-label-sm font-semibold uppercase tracking-wider text-outline px-2 hidden sm:inline">Operaciones:</span>
+<button class="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-primary text-on-primary hover:bg-primary-container font-label-lg text-label-lg font-semibold transition-colors shadow-sm" type="button">
+<span class="material-symbols-outlined text-[18px]">person_add</span>
+<span>+ Nuevo Paciente</span>
+</button>
+<button class="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-primary-fixed text-on-primary-fixed hover:bg-primary-container hover:text-on-primary font-label-lg text-label-lg font-semibold transition-colors" type="button">
+<span class="material-symbols-outlined text-[18px]">biotech</span>
+<span>+ Registrar Estudio</span>
+</button>
+<button class="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-secondary text-on-secondary hover:bg-secondary-container hover:text-on-secondary-container font-label-lg text-label-lg font-semibold transition-colors" type="button">
+<span class="material-symbols-outlined text-[18px]">add_circle</span>
+<span>+ Nueva Campaña Médica</span>
+</button>
+</div>
+<!-- Exportar Documentación -->
+<div class="flex items-center gap-2">
+<button class="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-surface-container text-on-surface hover:bg-surface-container-high font-label-md text-label-md font-semibold transition-colors" title="Exportar a PDF" type="button">
+<span class="material-symbols-outlined text-[18px] text-error">picture_as_pdf</span>
+<span>Reporte PDF</span>
+</button>
+<button class="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-surface-container text-on-surface hover:bg-surface-container-high font-label-md text-label-md font-semibold transition-colors" title="Exportar a Excel" type="button">
+<span class="material-symbols-outlined text-[18px] text-secondary">table_view</span>
+<span>Excel (XLSX)</span>
+</button>
+</div>
+</section>
+<!-- Grid Principal: Últimos Registros & Tablero Lateral ONG -->
+<section class="grid grid-cols-1 xl:grid-cols-12 gap-space-lg items-start">
+<!-- Columna Izquierda/Principal (8 cols): Tabla Últimos Registros -->
+<div class="xl:col-span-8 flex flex-col space-y-space-md bg-surface-container-lowest p-space-lg rounded-xl shadow-sm">
+<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-space-sm pb-space-sm">
+<div>
+<h2 class="font-headline-md text-headline-md text-on-surface font-bold">Últimos Registros del Sistema</h2>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Monitoreo y trazabilidad diagnóstica en tiempo real</p>
+</div>
+<div class="flex items-center gap-2 self-start sm:self-auto">
+<span class="px-2.5 py-1 rounded-full bg-surface-container text-on-surface font-label-sm text-label-sm font-semibold">5 actualizaciones hoy</span>
+<button class="p-1.5 rounded-lg text-outline hover:text-on-surface hover:bg-surface-container transition-colors" type="button">
+<span class="material-symbols-outlined text-[20px]">filter_list</span>
+</button>
+</div>
+</div>
+<!-- Tabla Responsive -->
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-surface-container-low text-on-surface-variant font-label-md text-label-md uppercase tracking-wider">
+<th class="py-3 px-4 rounded-l-lg font-semibold">Código / ID</th>
+<th class="py-3 px-3 font-semibold">Fecha &amp; Hora</th>
+<th class="py-3 px-3 font-semibold">Paciente</th>
+<th class="py-3 px-3 font-semibold">Entidad Emisora</th>
+<th class="py-3 px-3 font-semibold">Tipo de Procedimiento</th>
+<th class="py-3 px-3 font-semibold">Estado</th>
+<th class="py-3 px-4 rounded-r-lg font-semibold text-right">Acciones</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-surface-container text-body-md font-body-md">
+<!-- Registro 1: Carlos René Álvarez -->
+<tr class="hover:bg-surface-container-low/60 transition-colors">
+<td class="py-3.5 px-4 font-mono font-semibold text-primary font-label-sm text-label-sm">
+                #EST-2024-892
+              </td>
+<td class="py-3.5 px-3 whitespace-nowrap text-on-surface-variant font-body-sm text-body-sm">
+                18 May • 10:15
+              </td>
+<td class="py-3.5 px-3">
+<div class="flex flex-col">
+<span class="font-title-md text-title-md text-on-surface font-medium leading-snug">Carlos René Álvarez</span>
+<span class="font-body-sm text-body-sm text-outline">DPI 2490 81234 0101</span>
+</div>
+</td>
+<td class="py-3.5 px-3 font-body-sm text-body-sm text-on-surface">
+                San Rafael Lab
+              </td>
+<td class="py-3.5 px-3">
+<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-surface-container font-label-sm text-label-sm font-medium text-on-surface">
+<span class="material-symbols-outlined text-[15px] text-primary">biotech</span>
+                  Estudio de Laboratorio
+                </span>
+</td>
+<td class="py-3.5 px-3">
+<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-secondary-fixed text-on-secondary-fixed font-label-sm text-label-sm font-semibold">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary"></span>
+                  Completado
+                </span>
+</td>
+<td class="py-3.5 px-4 text-right whitespace-nowrap">
+<div class="inline-flex items-center gap-1">
+<button class="px-2 py-1 rounded-md text-primary hover:bg-primary-fixed/30 font-label-sm text-label-sm font-semibold transition-colors" type="button">
+                    Ver Detalle
+                  </button>
+<button class="p-1 rounded-md text-outline hover:text-on-surface hover:bg-surface-container transition-colors" type="button">
+<span class="material-symbols-outlined text-[16px]">edit</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- Registro 2: María Luisa Morales de León -->
+<tr class="hover:bg-surface-container-low/60 transition-colors">
+<td class="py-3.5 px-4 font-mono font-semibold text-primary font-label-sm text-label-sm">
+                #EST-2024-891
+              </td>
+<td class="py-3.5 px-3 whitespace-nowrap text-on-surface-variant font-body-sm text-body-sm">
+                18 May • 09:40
+              </td>
+<td class="py-3.5 px-3">
+<div class="flex flex-col">
+<span class="font-title-md text-title-md text-on-surface font-medium leading-snug">María Luisa Morales de León</span>
+<span class="font-body-sm text-body-sm text-outline">DPI 1832 94821 0101</span>
+</div>
+</td>
+<td class="py-3.5 px-3 font-body-sm text-body-sm text-on-surface">
+                Liga del Corazón
+              </td>
+<td class="py-3.5 px-3">
+<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-secondary-fixed/40 font-label-sm text-label-sm font-medium text-on-surface">
+<span class="material-symbols-outlined text-[15px] text-secondary">favorite</span>
+                  Campaña Cardiológica Aprofam
+                </span>
+</td>
+<td class="py-3.5 px-3">
+<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-primary-fixed text-on-primary-fixed font-label-sm text-label-sm font-semibold">
+<span class="w-1.5 h-1.5 rounded-full bg-primary"></span>
+                  En Proceso
+                </span>
+</td>
+<td class="py-3.5 px-4 text-right whitespace-nowrap">
+<div class="inline-flex items-center gap-1">
+<button class="px-2 py-1 rounded-md text-primary hover:bg-primary-fixed/30 font-label-sm text-label-sm font-semibold transition-colors" type="button">
+                    Ver Detalle
+                  </button>
+<button class="p-1 rounded-md text-outline hover:text-on-surface hover:bg-surface-container transition-colors" type="button">
+<span class="material-symbols-outlined text-[16px]">edit</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- Registro 3: Juan Diego Choc -->
+<tr class="hover:bg-surface-container-low/60 transition-colors">
+<td class="py-3.5 px-4 font-mono font-semibold text-primary font-label-sm text-label-sm">
+                #EST-2024-890
+              </td>
+<td class="py-3.5 px-3 whitespace-nowrap text-on-surface-variant font-body-sm text-body-sm">
+                18 May • 08:55
+              </td>
+<td class="py-3.5 px-3">
+<div class="flex flex-col">
+<span class="font-title-md text-title-md text-on-surface font-medium leading-snug">Juan Diego Choc</span>
+<span class="font-body-sm text-body-sm text-outline">DPI 3012 11940 1601</span>
+</div>
+</td>
+<td class="py-3.5 px-3 font-body-sm text-body-sm text-on-surface">
+                San Rafael Imagenología
+              </td>
+<td class="py-3.5 px-3">
+<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-surface-container font-label-sm text-label-sm font-medium text-on-surface">
+<span class="material-symbols-outlined text-[15px] text-tertiary">radiology</span>
+                  Rayos X Torácico
+                </span>
+</td>
+<td class="py-3.5 px-3">
+<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-error-container text-on-error-container font-label-sm text-label-sm font-semibold">
+<span class="w-1.5 h-1.5 rounded-full bg-error"></span>
+                  Pendiente Revisión
+                </span>
+</td>
+<td class="py-3.5 px-4 text-right whitespace-nowrap">
+<div class="inline-flex items-center gap-1">
+<button class="px-2 py-1 rounded-md text-primary hover:bg-primary-fixed/30 font-label-sm text-label-sm font-semibold transition-colors" type="button">
+                    Ver Detalle
+                  </button>
+<button class="p-1 rounded-md text-outline hover:text-on-surface hover:bg-surface-container transition-colors" type="button">
+<span class="material-symbols-outlined text-[16px]">edit</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- Registro 4: Silvia Eugenia Asturias -->
+<tr class="hover:bg-surface-container-low/60 transition-colors">
+<td class="py-3.5 px-4 font-mono font-semibold text-primary font-label-sm text-label-sm">
+                #EST-2024-889
+              </td>
+<td class="py-3.5 px-3 whitespace-nowrap text-on-surface-variant font-body-sm text-body-sm">
+                17 May • 16:30
+              </td>
+<td class="py-3.5 px-3">
+<div class="flex flex-col">
+<span class="font-title-md text-title-md text-on-surface font-medium leading-snug">Silvia Eugenia Asturias</span>
+<span class="font-body-sm text-body-sm text-outline">DPI 2105 77621 0101</span>
+</div>
+</td>
+<td class="py-3.5 px-3 font-body-sm text-body-sm text-on-surface">
+                Aprofam Centro
+              </td>
+<td class="py-3.5 px-3">
+<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-surface-container font-label-sm text-label-sm font-medium text-on-surface">
+<span class="material-symbols-outlined text-[15px] text-secondary">medical_services</span>
+                  Ultrasonido Obstétrico
+                </span>
+</td>
+<td class="py-3.5 px-3">
+<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-secondary-fixed text-on-secondary-fixed font-label-sm text-label-sm font-semibold">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary"></span>
+                  Completado
+                </span>
+</td>
+<td class="py-3.5 px-4 text-right whitespace-nowrap">
+<div class="inline-flex items-center gap-1">
+<button class="px-2 py-1 rounded-md text-primary hover:bg-primary-fixed/30 font-label-sm text-label-sm font-semibold transition-colors" type="button">
+                    Ver Detalle
+                  </button>
+<button class="p-1 rounded-md text-outline hover:text-on-surface hover:bg-surface-container transition-colors" type="button">
+<span class="material-symbols-outlined text-[16px]">edit</span>
+</button>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- Paginación Simple -->
+<div class="flex items-center justify-between pt-space-sm border-t border-surface-container">
+<span class="font-body-sm text-body-sm text-on-surface-variant">Mostrando 4 de 1,842 estudios</span>
+<div class="flex items-center gap-1">
+<button class="px-2.5 py-1 rounded-lg bg-surface-container text-on-surface-variant font-label-sm text-label-sm font-medium hover:bg-surface-container-high transition-colors" type="button">Anterior</button>
+<span class="px-2.5 py-1 rounded-lg bg-primary-container text-on-primary font-label-sm text-label-sm font-bold">1</span>
+<button class="px-2.5 py-1 rounded-lg bg-surface-container text-on-surface font-label-sm text-label-sm font-medium hover:bg-surface-container-high transition-colors" type="button">2</button>
+<button class="px-2.5 py-1 rounded-lg bg-surface-container text-on-surface font-label-sm text-label-sm font-medium hover:bg-surface-container-high transition-colors" type="button">3</button>
+<button class="px-2.5 py-1 rounded-lg bg-surface-container text-on-surface-variant font-label-sm text-label-sm font-medium hover:bg-surface-container-high transition-colors" type="button">Siguiente</button>
+</div>
+</div>
+</div>
+<!-- Columna Derecha (4 cols): Tablero Lateral Red No Lucrativa & Jornadas -->
+<div class="xl:col-span-4 flex flex-col space-y-space-md">
+<!-- Tarjeta: Organismos No Lucrativos Vinculados -->
+<div class="bg-surface-container-lowest p-space-lg rounded-xl shadow-sm flex flex-col space-y-space-md">
+<div class="flex items-center justify-between pb-2">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-secondary text-[24px]">volunteer_activism</span>
+<h3 class="font-title-lg text-title-lg text-on-surface font-bold">Servicios Comunitarios</h3>
+</div>
+<span class="font-label-sm text-label-sm px-2 py-0.5 rounded-full bg-secondary-fixed text-on-secondary-fixed font-semibold">Convenios ONGs</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant">
+          Coordinación técnica y de referencias con las tres organizaciones aliadas del departamento de Guatemala.
+        </p>
+<!-- Lista de Entidades -->
+<div class="space-y-3">
+<!-- Entidad 1: Liga del Corazón -->
+<div class="p-3 rounded-xl bg-surface-container-low hover:bg-surface-container transition-colors flex items-center justify-between">
+<div class="flex items-center gap-3">
+<div class="w-9 h-9 rounded-lg bg-surface-container-highest text-primary flex items-center justify-center font-bold">
+<span class="material-symbols-outlined text-[20px] text-error">ecg_heart</span>
+</div>
+<div class="flex flex-col">
+<span class="font-title-md text-title-md text-on-surface font-semibold">Liga del Corazón</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Cardiología &amp; Holter</span>
+</div>
+</div>
+<span class="px-2 py-0.5 rounded-full bg-secondary-fixed text-on-secondary-fixed font-label-sm text-label-sm font-bold">94% Cupo</span>
+</div>
+<!-- Entidad 2: Liga del Pulmón -->
+<div class="p-3 rounded-xl bg-surface-container-low hover:bg-surface-container transition-colors flex items-center justify-between">
+<div class="flex items-center gap-3">
+<div class="w-9 h-9 rounded-lg bg-surface-container-highest text-primary flex items-center justify-center font-bold">
+<span class="material-symbols-outlined text-[20px] text-tertiary">pulmonology</span>
+</div>
+<div class="flex flex-col">
+<span class="font-title-md text-title-md text-on-surface font-semibold">Liga del Pulmón</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Espirometrías &amp; Tórax</span>
+</div>
+</div>
+<span class="px-2 py-0.5 rounded-full bg-primary-fixed text-on-primary-fixed font-label-sm text-label-sm font-bold">Operando</span>
+</div>
+<!-- Entidad 3: Aprofam -->
+<div class="p-3 rounded-xl bg-surface-container-low hover:bg-surface-container transition-colors flex items-center justify-between">
+<div class="flex items-center gap-3">
+<div class="w-9 h-9 rounded-lg bg-surface-container-highest text-primary flex items-center justify-center font-bold">
+<span class="material-symbols-outlined text-[20px] text-secondary">family_restroom</span>
+</div>
+<div class="flex flex-col">
+<span class="font-title-md text-title-md text-on-surface font-semibold">Aprofam Guatemala</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Salud Integral &amp; Familiar</span>
+</div>
+</div>
+<span class="px-2 py-0.5 rounded-full bg-secondary-fixed text-on-secondary-fixed font-label-sm text-label-sm font-bold">Activo</span>
+</div>
+</div>
+</div>
+<!-- Tarjeta: Próximas Jornadas de Salud en Guatemala -->
+<div class="bg-surface-container-lowest p-space-lg rounded-xl shadow-sm flex flex-col space-y-space-md">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-[22px]">event_upcoming</span>
+<h3 class="font-title-lg text-title-lg text-on-surface font-bold">Próximas Jornadas</h3>
+</div>
+<a class="font-label-sm text-label-sm font-semibold text-primary hover:underline" href="#">Ver calendario</a>
+</div>
+<div class="space-y-3">
+<!-- Jornada 1 -->
+<div class="p-3 rounded-xl bg-surface-container-low flex flex-col space-y-2">
+<div class="flex items-start justify-between">
+<div>
+<span class="font-label-md text-label-md font-bold text-on-surface">Jornada de Detección Temprana HTA</span>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Parque Central, Mixco • Liga del Corazón</p>
+</div>
+<span class="px-2 py-0.5 rounded bg-primary text-on-primary font-label-sm text-label-sm font-bold shrink-0">22 MAY</span>
+</div>
+<div class="flex items-center justify-between text-outline font-body-sm text-body-sm pt-1">
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-[15px]">schedule</span> 08:00 - 14:00</span>
+<span class="flex items-center gap-1 font-semibold text-secondary"><span class="material-symbols-outlined text-[15px]">how_to_reg</span> 180 inscritos</span>
+</div>
+</div>
+<!-- Jornada 2 -->
+<div class="p-3 rounded-xl bg-surface-container-low flex flex-col space-y-2">
+<div class="flex items-start justify-between">
+<div>
+<span class="font-label-md text-label-md font-bold text-on-surface">Campaña de Espirometría y Asma</span>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Sumpango, Sacatepéquez • Liga de Pulmón</p>
+</div>
+<span class="px-2 py-0.5 rounded bg-secondary text-on-secondary font-label-sm text-label-sm font-bold shrink-0">28 MAY</span>
+</div>
+<div class="flex items-center justify-between text-outline font-body-sm text-body-sm pt-1">
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-[15px]">schedule</span> 07:30 - 13:00</span>
+<span class="flex items-center gap-1 font-semibold text-secondary"><span class="material-symbols-outlined text-[15px]">how_to_reg</span> 120 inscritos</span>
+</div>
+</div>
+</div>
+<!-- Banner Visual de Apoyo a la Red -->
+<div class="p-3 rounded-xl bg-primary-container text-on-primary flex items-center justify-between">
+<div class="flex flex-col">
+<span class="font-label-md text-label-md font-bold">¿Desea coordinar jornada?</span>
+<span class="font-body-sm text-body-sm text-on-primary-container">Enlace directo con viceministerio</span>
+</div>
+<button class="px-3 py-1.5 rounded-lg bg-surface-container-lowest text-primary font-label-sm text-label-sm font-bold shadow-sm hover:bg-surface transition-colors" type="button">
+            Solicitar
+          </button>
+</div>
+</div>
+</div>
+</section>
+<!-- Notificación Flotante de Confirmación (Toast) -->
+<aside class="fixed bottom-6 right-6 z-50 flex items-center gap-3 px-4 py-3 rounded-xl bg-on-surface text-inverse-on-surface shadow-xl max-w-md animate-bounce duration-1000" id="confirmationToast">
+<div class="w-8 h-8 rounded-full bg-secondary flex items-center justify-center text-on-secondary shrink-0">
+<span class="material-symbols-outlined text-[18px]">check</span>
+</div>
+<div class="flex flex-col min-w-0 pr-2">
+<span class="font-label-md text-label-md font-bold text-surface-container-lowest">Registro confirmado</span>
+<span class="font-body-sm text-body-sm text-inverse-on-surface truncate">✓ Estudio #EST-2024-892 guardado con éxito en la red SISG</span>
+</div>
+<button aria-label="Cerrar notificación" class="p-1 rounded-md text-outline-variant hover:text-surface-container-lowest transition-colors ml-auto" onclick="document.getElementById('confirmationToast').style.display='none'" type="button">
+<span class="material-symbols-outlined text-[18px]">close</span>
+</button>
+</aside>
+</div>
+<script>
+  // Simple interactive toggle for Segmented Control
+  const btnCentro = document.getElementById('viewCentroBtn');
+  const btnOng = document.getElementById('viewOngBtn');
+
+  if (btnCentro && btnOng) {
+    btnCentro.addEventListener('click', () => {
+      btnCentro.className = 'flex items-center gap-2 px-3 py-1.5 rounded-lg font-label-md text-label-md font-semibold bg-surface-container-lowest text-primary shadow-sm transition-all';
+      btnCentro.querySelector('span:first-child').className = 'w-2 h-2 rounded-full bg-primary';
+      btnOng.className = 'flex items-center gap-2 px-3 py-1.5 rounded-lg font-label-md text-label-md font-medium text-on-surface-variant hover:text-on-surface transition-all';
+      btnOng.querySelector('span:first-child').className = 'w-2 h-2 rounded-full bg-secondary opacity-40';
+    });
+
+    btnOng.addEventListener('click', () => {
+      btnOng.className = 'flex items-center gap-2 px-3 py-1.5 rounded-lg font-label-md text-label-md font-semibold bg-surface-container-lowest text-secondary shadow-sm transition-all';
+      btnOng.querySelector('span:first-child').className = 'w-2 h-2 rounded-full bg-secondary';
+      btnCentro.className = 'flex items-center gap-2 px-3 py-1.5 rounded-lg font-label-md text-label-md font-medium text-on-surface-variant hover:text-on-surface transition-all';
+      btnCentro.querySelector('span:first-child').className = 'w-2 h-2 rounded-full bg-primary opacity-40';
+    });
+  }
+
+  // Auto-dismiss toast after 7 seconds
+  setTimeout(() => {
+    const toast = document.getElementById('confirmationToast');
+    if (toast) {
+      toast.style.transition = 'opacity 0.5s ease-out, transform 0.5s ease-out';
+      toast.style.opacity = '0';
+      toast.style.transform = 'translateY(10px)';
+      setTimeout(() => toast.remove(), 500);
+    }
+  }, 7000);
+</script></main></div></body></html>

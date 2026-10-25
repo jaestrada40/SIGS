@@ -1,0 +1,6 @@
+{
+  "rootDir": ".",
+  "testRegex": ".e2e-spec.ts$",
+  "transform": { "^.+\\.ts$": ["ts-jest", { "diagnostics": false, "tsconfig": { "module": "commonjs", "esModuleInterop": true, "emitDecoratorMetadata": true, "experimentalDecorators": true, "target": "ES2021" } }] },
+  "testEnvironment": "node"
+}
