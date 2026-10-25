@@ -89,24 +89,20 @@ function Acceso() {
 
   return (
     <div className="grid min-h-screen lg:grid-cols-[1.05fr_1fr]">
-      <section className="relative hidden flex-col justify-between overflow-hidden bg-gradient-hero p-10 text-primary-foreground lg:flex">
-        <Logo inverted />
+      <section className="relative flex flex-col justify-between overflow-hidden bg-gradient-hero px-6 py-10 text-primary-foreground lg:p-10">
+        <div className="hidden lg:block"><Logo inverted /></div>
         <div className="relative z-10 mx-auto flex max-w-md flex-col items-center text-center">
-          <div className="mb-8 rounded-[2rem] bg-card/95 p-6 shadow-2xl">
-            <img src={ilustracion} alt="Manos sosteniendo un corazón con estetoscopio y lupa" width={1024} height={1024} className="h-64 w-64 object-contain" />
+          <div className="mb-6 rounded-[2rem] bg-card/95 p-4 shadow-2xl lg:mb-8 lg:p-6">
+            <img src={ilustracion} alt="Manos sosteniendo un corazón con estetoscopio y lupa" width={1024} height={1024} className="h-32 w-32 object-contain lg:h-64 lg:w-64" />
           </div>
-          <h1 className="font-display text-4xl font-extrabold leading-tight">Un solo registro para la salud de Guatemala</h1>
+          <h1 className="font-display text-2xl font-extrabold leading-tight lg:text-4xl">Un solo registro para la salud de Guatemala</h1>
           <p className="mt-4 text-primary-foreground/85">Pacientes, estudios diagnósticos y campañas de salud, ordenados y seguros en un mismo lugar.</p>
         </div>
-        <p className="text-xs text-primary-foreground/70">SISG · Módulo Grupo 4 · Centros de diagnóstico y organismos no lucrativos</p>
+        <p className="hidden text-xs text-primary-foreground/70 lg:block">SISG · Módulo Grupo 4 · Centros de diagnóstico y organismos no lucrativos</p>
       </section>
 
       <section className="flex items-center justify-center p-6 md:p-10">
         <div className="w-full max-w-md">
-          <div className="mb-6 flex flex-col items-center gap-2 text-center lg:hidden">
-            <img src={ilustracion} alt="" width={160} height={160} className="h-40 w-40 object-contain" aria-hidden />
-            <p className="font-display text-2xl font-extrabold">SISG</p>
-          </div>
           {paso ? <PasoMfa paso={paso} volver={() => setPaso(null)} /> : (<>
           <h2 className="text-3xl font-extrabold">{tab === "login" ? "Bienvenido de vuelta" : "Registre su entidad"}</h2>
           <p className="mt-1 text-muted-foreground">{tab === "login" ? "Ingrese con el correo de su entidad." : "Toma menos de un minuto."}</p>
