@@ -36,8 +36,22 @@ describe('enlace seguro de resultado y alertas', () => {
     expect(r.body).toMatchObject({ paciente: 'Ana López', tipoEstudio: 'Mamografía', resultado: 'Sin hallazgos de importancia' });
     expect(r.headers['cache-control']).toBe('no-store');
     expect(r.headers['x-robots-tag']).toMatch(/noindex/);
-    await ver(token, '0301').expect(200);
+    await ver(token, '0301').expect(401);   // con fecha de nacimiento registrada, los 4 del DPI no sirven
     expect(JSON.stringify(r.body)).not.toMatch(/2048173580301|entidadId|pacienteId/);   // no devuelve identificadores ni el DPI completo
+  });
+
+  it('sin fecha de nacimiento sirven los últimos 4 del DPI', async () => {
+    const p = (await http().post('/pacientes').set(centro.auth).send({ nombreCompleto: 'Sin Fecha', sexo: 'M', dpi: '1234567890909' }).expect(201)).body;
+    const e = (await http().post('/estudios').set(centro.auth).send({ pacienteId: p.id, tipoEstudio: 'X', fecha: ayer, estado: 'REALIZADO', resultado: 'ok' }).expect(201)).body;
+    const { token } = (await http().post('/enlaces').set(centro.auth).send({ estudioId: e.id }).expect(201)).body;
+    await ver(token, '0909').expect(200);
+  });
+
+  it('adivinanzas en paralelo no superan el límite de intentos', async () => {
+    const { token } = await nuevoEnlace();
+    const rs = await Promise.all(Array.from({ length: 12 }, () => ver(token, '1990-01-01')));
+    expect(rs.filter((r) => r.status === 401)).toHaveLength(5);   // solo 5 llegaron a verificarse
+    await ver(token, '1985-03-12').expect(404);
   });
 
   it('en la base solo existe el hash del token', async () => {
