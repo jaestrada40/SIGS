@@ -3,6 +3,24 @@ import { Camera, Loader2, ScanLine, X } from "lucide-react";
 
 type Props = { onFound: (dpi: string) => void };
 
+async function reconocerDpi(blob: Blob) {
+  const image = await createImageBitmap(blob);
+  const canvas = document.createElement("canvas");
+  canvas.width = image.width * 2; canvas.height = image.height * 2;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) throw new Error("canvas");
+  ctx.filter = "grayscale(1) contrast(1.8)";
+  ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
+  const procesada = await new Promise<Blob>((resolve, reject) => canvas.toBlob((b) => b ? resolve(b) : reject(new Error("imagen")), "image/png"));
+  const { createWorker } = await import("tesseract.js");
+  const worker = await createWorker("eng");
+  await worker.setParameters({ tessedit_pageseg_mode: "6", tessedit_char_whitelist: "0123456789" });
+  const { data: { text } } = await worker.recognize(procesada);
+  await worker.terminate();
+  const candidatos = (text.match(/[0-9][0-9\s-]{11,20}[0-9]/g) ?? []).map((x) => x.replace(/\D/g, "")).filter((x) => x.length === 13);
+  return candidatos[0] ?? text.replace(/\D/g, "").match(/\d{13}/)?.[0];
+}
+
 /** OCR local: la imagen no sale del navegador. Solo devuelve un DPI candidato. */
 export function OcrDpi({ onFound }: Props) {
   const [busy, setBusy] = useState(false);
@@ -41,11 +59,7 @@ export function OcrDpi({ onFound }: Props) {
     cerrarCamara();
     setBusy(true); setMsg(null);
     try {
-      const { createWorker } = await import("tesseract.js");
-      const worker = await createWorker("eng");
-      const { data: { text } } = await worker.recognize(frente);
-      await worker.terminate();
-      const dpi = text.replace(/[^0-9]/g, " ").match(/\d{13}/g)?.[0];
+      const dpi = await reconocerDpi(frente);
       if (!dpi) setMsg("No encontramos el DPI en el frente. Intente con mejor luz y enfoque."); else onFound(dpi);
     } catch { setMsg("No se pudo reconocer el DPI. Intente nuevamente."); }
     finally { setBusy(false); setFrente(null); }
@@ -57,12 +71,7 @@ export function OcrDpi({ onFound }: Props) {
     if (file.size > 5 * 1024 * 1024) { setMsg("La imagen no puede superar 5 MB."); return; }
     setBusy(true);
     try {
-      const { createWorker } = await import("tesseract.js");
-      const worker = await createWorker("eng");
-      const { data: { text } } = await worker.recognize(file);
-      await worker.terminate();
-      const candidatos = text.replace(/[^0-9]/g, " ").match(/\d{13}/g) ?? [];
-      const dpi = candidatos[0];
+      const dpi = await reconocerDpi(file);
       if (!dpi) setMsg("No encontramos un DPI de 13 dígitos. Pruebe con una imagen más nítida.");
       else onFound(dpi);
     } catch { setMsg("No se pudo reconocer la imagen. Intente con otra fotografía."); }
