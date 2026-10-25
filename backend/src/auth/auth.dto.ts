@@ -1,4 +1,4 @@
-import { IsEmail, IsIn, IsNotEmpty, IsOptional, IsString, MaxLength, MinLength } from 'class-validator';
+import { IsBoolean, IsEmail, IsIn, IsNotEmpty, IsOptional, IsString, MaxLength, MinLength } from 'class-validator';
 import { Rol, TipoEntidad } from '../common/enums';
 
 // SUPERADMIN solo lo crea SuperadminInicial: ningún administrador de entidad puede asignarlo.
@@ -41,4 +41,19 @@ export class ActualizarUsuarioDto {
 }
 export class NuevaPasswordDto {
   @IsString() @MinLength(10) @MaxLength(72) password: string;
+}
+export class ActualizarEntidadDto {
+  @IsOptional() @IsString() @IsNotEmpty() @MaxLength(120) nombre?: string;
+  @IsOptional() @IsString() @MaxLength(60) departamento?: string;
+  @IsOptional() @IsString() @MaxLength(30) telefono?: string;
+}
+export class EstadoEntidadDto {
+  @IsBoolean() activa: boolean;
+}
+export class ActivoDto {
+  @IsBoolean() activo: boolean;
+}
+export class CrearSuperadminDto {
+  @IsString() @IsNotEmpty() @MaxLength(120) nombre: string;
+  @IsEmail() @MaxLength(120) correo: string;
 }

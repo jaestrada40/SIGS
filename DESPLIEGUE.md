@@ -34,7 +34,12 @@ Cada aplicación tiene su `Dockerfile` (`backend/Dockerfile` y `nuevo-diseño/Do
 ## 3. Comprobar que quedó bien
 - `https://api.sudominio.com/salud` responde `{"estado":"ok"}`.
 - Defina `SUPERADMIN_CORREO` y `SUPERADMIN_PASSWORD` antes del primer arranque. Entre a `https://app.sudominio.com` con esa cuenta y configure el MFA con su app autenticadora; guarde los códigos de recuperación.
-- En **Entidades** cree cada centro u organismo: se genera un enlace de invitación de un solo uso (vence en 72 h) que usted le envía; con él la entidad crea su contraseña y su MFA. No hay registro público.
+- La consola del superadministrador tiene cuatro secciones, y ninguna muestra datos de pacientes:
+  - **Resumen:** entidades activas, sin activar y suspendidas; usuarios sin MFA; bloqueos y exportaciones de los últimos 7 días.
+  - **Entidades:** alta (genera un enlace de invitación de un solo uso, 72 h, que usted envía), edición, nuevo enlace y **suspender/reactivar** (corta el acceso de toda la entidad al instante, sin borrar nada).
+  - **Usuarios:** todas las cuentas de todas las entidades; desactivar/activar, **restablecer acceso** (borra contraseña y MFA y entrega un enlace nuevo) e invitar a otro superadministrador, para no depender de una sola cuenta.
+  - **Seguridad:** altas, accesos, bloqueos y acciones sobre cuentas de todas las entidades. Lo que la plataforma hace sobre las cuentas de una entidad también queda en la auditoría de esa entidad, como «Plataforma SISG».
+- No hay registro público.
 - Esta versión agrega columnas y valores de enumeración: en una base existente active `DB_SYNC=true` una vez (con respaldo) y vuelva a `false`.
 - La primera cuenta de cada entidad es **Administrador**; desde **Usuarios** se crean los demás.
 

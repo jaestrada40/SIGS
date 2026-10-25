@@ -8,5 +8,6 @@ export class Entidad {
   @Column({ type: 'enum', enum: TipoEntidad }) tipo: TipoEntidad;
   @Column({ nullable: true }) departamento: string;
   @Column({ nullable: true }) telefono: string;
+  @Column({ default: true }) activa: boolean;   // false = suspendida por la plataforma: nadie de la entidad puede entrar
   @Column({ unique: true }) correo: string;   // contacto de la entidad (el del primer administrador)
 }

@@ -12,6 +12,8 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ActividadRouteImport } from './routes/actividad'
 import { Route as CampanasRouteImport } from './routes/campanas'
+import { Route as CuentasRouteImport } from './routes/cuentas'
+import { Route as EntidadesRouteImport } from './routes/entidades'
 import { Route as EstudiosRouteImport } from './routes/estudios'
 import { Route as ImpactoRouteImport } from './routes/impacto'
 import { Route as InicioRouteImport } from './routes/inicio'
@@ -19,6 +21,7 @@ import { Route as JornadaRouteImport } from './routes/jornada'
 import { Route as PacientesRouteImport } from './routes/pacientes'
 import { Route as PlataformaRouteImport } from './routes/plataforma'
 import { Route as ReferidosRouteImport } from './routes/referidos'
+import { Route as SeguridadRouteImport } from './routes/seguridad'
 import { Route as UsuariosRouteImport } from './routes/usuarios'
 import { Route as ResultadoTokenRouteImport } from './routes/resultado.$token'
 
@@ -35,6 +38,16 @@ const ActividadRoute = ActividadRouteImport.update({
 const CampanasRoute = CampanasRouteImport.update({
   id: '/campanas',
   path: '/campanas',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CuentasRoute = CuentasRouteImport.update({
+  id: '/cuentas',
+  path: '/cuentas',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EntidadesRoute = EntidadesRouteImport.update({
+  id: '/entidades',
+  path: '/entidades',
   getParentRoute: () => rootRouteImport,
 } as any)
 const EstudiosRoute = EstudiosRouteImport.update({
@@ -72,6 +85,11 @@ const ReferidosRoute = ReferidosRouteImport.update({
   path: '/referidos',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SeguridadRoute = SeguridadRouteImport.update({
+  id: '/seguridad',
+  path: '/seguridad',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const UsuariosRoute = UsuariosRouteImport.update({
   id: '/usuarios',
   path: '/usuarios',
@@ -87,6 +105,8 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/actividad': typeof ActividadRoute
   '/campanas': typeof CampanasRoute
+  '/cuentas': typeof CuentasRoute
+  '/entidades': typeof EntidadesRoute
   '/estudios': typeof EstudiosRoute
   '/impacto': typeof ImpactoRoute
   '/inicio': typeof InicioRoute
@@ -94,6 +114,7 @@ export interface FileRoutesByFullPath {
   '/pacientes': typeof PacientesRoute
   '/plataforma': typeof PlataformaRoute
   '/referidos': typeof ReferidosRoute
+  '/seguridad': typeof SeguridadRoute
   '/usuarios': typeof UsuariosRoute
   '/resultado/$token': typeof ResultadoTokenRoute
 }
@@ -101,6 +122,8 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/actividad': typeof ActividadRoute
   '/campanas': typeof CampanasRoute
+  '/cuentas': typeof CuentasRoute
+  '/entidades': typeof EntidadesRoute
   '/estudios': typeof EstudiosRoute
   '/impacto': typeof ImpactoRoute
   '/inicio': typeof InicioRoute
@@ -108,6 +131,7 @@ export interface FileRoutesByTo {
   '/pacientes': typeof PacientesRoute
   '/plataforma': typeof PlataformaRoute
   '/referidos': typeof ReferidosRoute
+  '/seguridad': typeof SeguridadRoute
   '/usuarios': typeof UsuariosRoute
   '/resultado/$token': typeof ResultadoTokenRoute
 }
@@ -116,6 +140,8 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/actividad': typeof ActividadRoute
   '/campanas': typeof CampanasRoute
+  '/cuentas': typeof CuentasRoute
+  '/entidades': typeof EntidadesRoute
   '/estudios': typeof EstudiosRoute
   '/impacto': typeof ImpactoRoute
   '/inicio': typeof InicioRoute
@@ -123,6 +149,7 @@ export interface FileRoutesById {
   '/pacientes': typeof PacientesRoute
   '/plataforma': typeof PlataformaRoute
   '/referidos': typeof ReferidosRoute
+  '/seguridad': typeof SeguridadRoute
   '/usuarios': typeof UsuariosRoute
   '/resultado/$token': typeof ResultadoTokenRoute
 }
@@ -132,6 +159,8 @@ export interface FileRouteTypes {
     | '/'
     | '/actividad'
     | '/campanas'
+    | '/cuentas'
+    | '/entidades'
     | '/estudios'
     | '/impacto'
     | '/inicio'
@@ -139,6 +168,7 @@ export interface FileRouteTypes {
     | '/pacientes'
     | '/plataforma'
     | '/referidos'
+    | '/seguridad'
     | '/usuarios'
     | '/resultado/$token'
   fileRoutesByTo: FileRoutesByTo
@@ -146,6 +176,8 @@ export interface FileRouteTypes {
     | '/'
     | '/actividad'
     | '/campanas'
+    | '/cuentas'
+    | '/entidades'
     | '/estudios'
     | '/impacto'
     | '/inicio'
@@ -153,6 +185,7 @@ export interface FileRouteTypes {
     | '/pacientes'
     | '/plataforma'
     | '/referidos'
+    | '/seguridad'
     | '/usuarios'
     | '/resultado/$token'
   id:
@@ -160,6 +193,8 @@ export interface FileRouteTypes {
     | '/'
     | '/actividad'
     | '/campanas'
+    | '/cuentas'
+    | '/entidades'
     | '/estudios'
     | '/impacto'
     | '/inicio'
@@ -167,6 +202,7 @@ export interface FileRouteTypes {
     | '/pacientes'
     | '/plataforma'
     | '/referidos'
+    | '/seguridad'
     | '/usuarios'
     | '/resultado/$token'
   fileRoutesById: FileRoutesById
@@ -175,6 +211,8 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   ActividadRoute: typeof ActividadRoute
   CampanasRoute: typeof CampanasRoute
+  CuentasRoute: typeof CuentasRoute
+  EntidadesRoute: typeof EntidadesRoute
   EstudiosRoute: typeof EstudiosRoute
   ImpactoRoute: typeof ImpactoRoute
   InicioRoute: typeof InicioRoute
@@ -182,6 +220,7 @@ export interface RootRouteChildren {
   PacientesRoute: typeof PacientesRoute
   PlataformaRoute: typeof PlataformaRoute
   ReferidosRoute: typeof ReferidosRoute
+  SeguridadRoute: typeof SeguridadRoute
   UsuariosRoute: typeof UsuariosRoute
   ResultadoTokenRoute: typeof ResultadoTokenRoute
 }
@@ -207,6 +246,20 @@ declare module '@tanstack/react-router' {
       path: '/campanas'
       fullPath: '/campanas'
       preLoaderRoute: typeof CampanasRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/cuentas': {
+      id: '/cuentas'
+      path: '/cuentas'
+      fullPath: '/cuentas'
+      preLoaderRoute: typeof CuentasRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/entidades': {
+      id: '/entidades'
+      path: '/entidades'
+      fullPath: '/entidades'
+      preLoaderRoute: typeof EntidadesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/estudios': {
@@ -258,6 +311,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ReferidosRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/seguridad': {
+      id: '/seguridad'
+      path: '/seguridad'
+      fullPath: '/seguridad'
+      preLoaderRoute: typeof SeguridadRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/usuarios': {
       id: '/usuarios'
       path: '/usuarios'
@@ -279,6 +339,8 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   ActividadRoute: ActividadRoute,
   CampanasRoute: CampanasRoute,
+  CuentasRoute: CuentasRoute,
+  EntidadesRoute: EntidadesRoute,
   EstudiosRoute: EstudiosRoute,
   ImpactoRoute: ImpactoRoute,
   InicioRoute: InicioRoute,
@@ -286,6 +348,7 @@ const rootRouteChildren: RootRouteChildren = {
   PacientesRoute: PacientesRoute,
   PlataformaRoute: PlataformaRoute,
   ReferidosRoute: ReferidosRoute,
+  SeguridadRoute: SeguridadRoute,
   UsuariosRoute: UsuariosRoute,
   ResultadoTokenRoute: ResultadoTokenRoute,
 }

@@ -1,6 +1,6 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
-import { Building2, Tent, BarChart3, ClipboardList, FlaskConical, Send, HeartPulse, LayoutDashboard, LogOut, Megaphone, Menu, Search, UserCog, Users, X } from "lucide-react";
+import { Building2, Tent, BarChart3, ClipboardList, FlaskConical, Send, HeartPulse, LayoutDashboard, LogOut, Megaphone, Menu, Search, ShieldCheck, UserCog, Users, X } from "lucide-react";
 import { api, esAdmin, esCentro, esSuperadmin, puedeEscribir, ROLES, setSession, useSession, veAuditoria } from "@/lib/api";
 import { CuentaDialog } from "./CuentaDialog";
 import { useQueryClient } from "@tanstack/react-query";
@@ -52,7 +52,12 @@ export function AppShell({ children }: { children: ReactNode }) {
   }
 
   const centro = esCentro(session.entidad);
-  const items = esSuperadmin(session) ? [{ to: "/plataforma", label: "Entidades", icon: Building2 }] : [
+  const items = esSuperadmin(session) ? [
+    { to: "/plataforma", label: "Resumen", icon: LayoutDashboard },
+    { to: "/entidades", label: "Entidades", icon: Building2 },
+    { to: "/cuentas", label: "Usuarios", icon: UserCog },
+    { to: "/seguridad", label: "Seguridad", icon: ShieldCheck },
+  ] : [
     { to: "/inicio", label: "Inicio", icon: LayoutDashboard },
     { to: "/pacientes", label: "Pacientes", icon: Users },
     centro
@@ -122,6 +127,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             <img src={ilustracion} alt="" width={36} height={36} className="h-9 w-9 object-contain" aria-hidden />
             <span className="font-display text-base font-extrabold">SISG</span>
           </div>
+          {esSuperadmin(session) ? <div className="flex-1" /> : (
           <div className="relative max-w-md flex-1">
             <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" aria-hidden />
             <input
@@ -132,6 +138,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             />
             <kbd className="absolute right-3 top-1/2 hidden -translate-y-1/2 rounded-md border bg-muted px-1.5 text-[11px] font-semibold text-muted-foreground sm:block">⌘K</kbd>
           </div>
+          )}
           <button onClick={() => setCuenta(true)} aria-label="Mi cuenta" title="Mi cuenta"
             className="ml-auto flex h-10 w-10 items-center justify-center rounded-full bg-gradient-primary font-display text-sm font-bold text-primary-foreground transition-transform hover:scale-105">
             {session.usuario.nombre.slice(0, 1).toUpperCase()}

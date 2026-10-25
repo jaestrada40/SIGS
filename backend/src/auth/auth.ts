@@ -1,4 +1,4 @@
-import { Body, ConflictException, Controller, Get, Headers, HttpException, Injectable, Ip, NotFoundException, Param, Post, Req, Res, UnauthorizedException, UseGuards } from '@nestjs/common';
+import { Body, ConflictException, Controller, ForbiddenException, Get, Headers, HttpException, Injectable, Ip, NotFoundException, Param, Post, Req, Res, UnauthorizedException, UseGuards } from '@nestjs/common';
 import type { Response } from 'express';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
@@ -50,14 +50,15 @@ const SEG = { id: true, entidadId: true, nombre: true, correo: true, rol: true, 
 // El rol se lee de la base en cada petición: un cambio de rol o una desactivación surten efecto de inmediato.
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
-  constructor(cfg: ConfigService, @InjectRepository(Usuario) private repo: Repository<Usuario>) {
+  constructor(cfg: ConfigService, @InjectRepository(Usuario) private repo: Repository<Usuario>, @InjectRepository(Entidad) private entidades: Repository<Entidad>) {
     super({ jwtFromRequest: (req) => cookieToken(req) ?? ExtractJwt.fromAuthHeaderAsBearerToken()(req), secretOrKey: cfg.getOrThrow('JWT_SECRET'), algorithms: ['HS256'], issuer: ISSUER });
   }
   async validate(p: { sub: number; tipo: string; scope?: string; ms?: number }) {
     if (p.scope !== 'full') throw new UnauthorizedException();
     const u = await this.repo.findOne({ where: { id: p.sub }, select: { id: true, entidadId: true, rol: true, activo: true, sesionesDesde: true } });
     // Cerrar sesión (o cambiar credenciales, rol o estado) invalida los tokens emitidos antes de ese momento.
-    if (!u || !u.activo || (u.sesionesDesde && (p.ms ?? 0) <= u.sesionesDesde.getTime())) throw new UnauthorizedException();
+    // shortcut: una consulta más por petición para saber si la entidad sigue activa; si pesa, moverlo a la misma consulta con un join.
+    if (!u || !u.activo || (u.sesionesDesde && (p.ms ?? 0) <= u.sesionesDesde.getTime()) || !(await this.entidades.existsBy({ id: u.entidadId, activa: true }))) throw new UnauthorizedException();
     return { entidadId: u.entidadId, tipo: p.tipo, usuarioId: u.id, rol: u.rol };
   }
 }
@@ -98,7 +99,7 @@ export class AuthController {
       const p = await this.jwt.verifyAsync(token ?? '', { algorithms: ['HS256'], issuer: ISSUER });
       if (p.scope !== scope) throw new Error('scope');
       const u = await this.repo.findOne({ where: { id: p.sub }, select: SEG });
-      if (!u || !u.activo) throw new Error('sin usuario');
+      if (!u || !u.activo || !(await this.entidades.existsBy({ id: u.entidadId, activa: true }))) throw new Error('sin usuario');
       // Un restablecimiento de contraseña o de MFA, un cambio de rol o un cierre de sesión invalidan también estos tokens parciales (misma regla que la sesión completa).
       if (u.sesionesDesde && (p.ms ?? 0) <= u.sesionesDesde.getTime()) throw new Error('revocado');
       return u;
@@ -154,6 +155,8 @@ export class AuthController {
     const u = await this.repo.findOne({ where: { correo }, select: SEG });
     const ok = await bcrypt.compare(password, u?.passwordHash ?? RELLENO);
     if (!u || !ok || !u.activo) { if (u) return this.fallo(u, k); contarFallo(k); throw new UnauthorizedException(); }
+    // Ya con la contraseña correcta: aquí sí se puede decir por qué no entra sin revelar si la cuenta existe.
+    if (!(await this.entidades.existsBy({ id: u.entidadId, activa: true }))) throw new ForbiddenException('Su entidad está suspendida. Contacte al administrador de la plataforma.');
     this.verBloqueo(u);
     await this.limpiar(u, k);
     return this.siguientePaso(u);

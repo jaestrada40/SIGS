@@ -16,8 +16,20 @@ export interface AuthResponse { entidad: Entidad; usuario: UsuarioSesion }
 export interface UsuarioGestion { id: number; nombre: string; correo: string; rol: Rol; activo: boolean; mfaActivo: boolean; creadoEn: string; ultimoAcceso: string | null }
 export interface EntidadAlta {
   id: number; nombre: string; tipo: TipoEntidad; correo: string; departamento: string | null; telefono: string | null;
-  estado: "activa" | "invitada" | "invitacion_vencida" | "sin_administrador"; ultimoAcceso: string | null;
+  estado: "activa" | "invitada" | "invitacion_vencida" | "sin_administrador" | "suspendida"; activa: boolean;
+  usuarios: number; usuariosActivos: number; ultimoAcceso: string | null;
 }
+export interface UsuarioPlataforma {
+  id: number; entidadId: number; nombre: string; correo: string; rol: Rol; activo: boolean; mfaActivo: boolean; creadoEn: string; ultimoAcceso: string | null;
+  invitacion: "pendiente" | "vencida" | null; entidad: string | null; entidadTipo: TipoEntidad | null; entidadActiva: boolean;
+}
+export interface ResumenPlataforma {
+  entidades: { total: number; centros: number; organismos: number; activas: number; pendientes: number; suspendidas: number };
+  usuarios: { total: number; activos: number; sinMfa: number; superadmins: number };
+  seguridad: { bloqueos7d: number; exportaciones7d: number };
+}
+export type MovimientoPlataforma = Movimiento & { entidad: string | null; objetivo: string | null };
+export interface EnlaceEntregado { invitacion: string; vence: string }
 export type Geografia = Record<string, string[]>;
 // Tras la contraseña el servidor nunca da sesión: pide el código MFA o exige configurarlo.
 export type PasoAcceso =
@@ -46,11 +58,12 @@ export interface Campana {
 export interface Movimiento {
   id: number | string; tabla: string; registroId: number | string;
   accion: Accion;
-  detalle: { campos?: string[]; filas?: number; rol?: Rol; minutos?: number } | null; creadoEn: string;
+  detalle: { campos?: string[]; filas?: number; rol?: Rol; minutos?: number; plataforma?: boolean } | null; creadoEn: string;
   usuario: { id: number; nombre: string; correo: string; rol: Rol } | null;
 }
 export type Accion = "CREAR" | "MODIFICAR" | "IMPORTAR" | "INICIO_SESION" | "CIERRE_SESION" | "MFA_ACTIVADO" | "BLOQUEO" | "CAMBIO_PASSWORD"
-  | "ACTIVAR" | "DESACTIVAR" | "RESTABLECER_MFA" | "RESTABLECER_PASSWORD" | "EXPORTAR" | "ACCESO" | "ACCESO_FALLIDO";
+  | "ACTIVAR" | "DESACTIVAR" | "RESTABLECER_MFA" | "RESTABLECER_PASSWORD" | "EXPORTAR" | "ACCESO" | "ACCESO_FALLIDO"
+  | "SUSPENDER" | "REACTIVAR" | "REINVITAR" | "INVITACION_ACEPTADA" | "RESTABLECER_ACCESO";
 export type EstadoReferido = "PENDIENTE" | "AGENDADO" | "ATENDIDO" | "NO_LLEGO" | "CANCELADO";
 export interface Referido {
   id: number; campanaId: number | null; nombreCompleto: string; sexo: Sexo; dpi: string | null; fechaNacimiento: string | null; telefono: string | null;
@@ -155,8 +168,16 @@ export const api = {
   aceptarInvitacion: (token: string, password: string) => post<PasoAcceso>(`/auth/invitacion/${encodeURIComponent(token)}`, { password }),
   entidades: () => request<EntidadAlta[]>("/plataforma/entidades"),
   crearEntidad: (b: { nombre: string; tipo: Exclude<TipoEntidad, "PLATAFORMA">; correo: string; departamento?: string | undefined; telefono?: string | undefined }) =>
-    post<{ entidad: EntidadAlta; invitacion: string; vence: string }>("/plataforma/entidades", b),
-  reinvitar: (id: number) => post<{ invitacion: string; vence: string }>(`/plataforma/entidades/${id}/invitacion`, {}),
+    post<EnlaceEntregado & { entidad: EntidadAlta }>("/plataforma/entidades", b),
+  reinvitar: (id: number) => post<EnlaceEntregado>(`/plataforma/entidades/${id}/invitacion`, {}),
+  resumenPlataforma: () => request<ResumenPlataforma>("/plataforma/resumen"),
+  editarEntidad: (id: number, b: { nombre?: string; departamento?: string; telefono?: string }) => patch<EntidadAlta>(`/plataforma/entidades/${id}`, b),
+  estadoEntidad: (id: number, activa: boolean) => patch<EntidadAlta>(`/plataforma/entidades/${id}/estado`, { activa }),
+  usuariosPlataforma: () => request<UsuarioPlataforma[]>("/plataforma/usuarios"),
+  activoUsuario: (id: number, activo: boolean) => patch<{ ok: boolean }>(`/plataforma/usuarios/${id}/activo`, { activo }),
+  restablecerAcceso: (id: number) => post<EnlaceEntregado>(`/plataforma/usuarios/${id}/restablecer-acceso`, {}),
+  crearSuperadmin: (b: { nombre: string; correo: string }) => post<EnlaceEntregado & { id: number }>("/plataforma/superadmins", b),
+  auditoriaPlataforma: () => request<MovimientoPlataforma[]>("/plataforma/auditoria"),
   dashboard: () => request<DashboardCentro | DashboardOrg>("/dashboard"),
   pacientes: () => request<Paciente[]>("/pacientes"),
   paciente: (id: string | number) => request<Paciente>(`/pacientes/${id}`),
