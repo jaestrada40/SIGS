@@ -105,7 +105,7 @@ function Acceso() {
         <div className="w-full max-w-md">
           <div className="mb-6 flex flex-col items-center gap-2 text-center lg:hidden">
             <img src={ilustracion} alt="" width={160} height={160} className="h-40 w-40 object-contain" aria-hidden />
-            <Logo />
+            <p className="font-display text-2xl font-extrabold">SISG</p>
           </div>
           {paso ? <PasoMfa paso={paso} volver={() => setPaso(null)} /> : (<>
           <h2 className="text-3xl font-extrabold">{tab === "login" ? "Bienvenido de vuelta" : "Registre su entidad"}</h2>
