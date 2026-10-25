@@ -168,7 +168,7 @@ function EstudioSheet({ sel, pacientes, onClose }: { sel: Estudio | "nuevo" | nu
         <form onSubmit={submit} className="mt-6 space-y-4" key={e?.id ?? "nuevo"}>
           <Field id="pacienteId" label="Paciente" required>
             <input type="search" value={filtro} onChange={(x) => setFiltro(x.target.value)} placeholder="Buscar paciente por nombre o DPI…" aria-label="Buscar paciente" className={`${inputCls} mb-2`} />
-            <OcrDpi onFound={(datos) => { const dpi = datos.dpi ?? ""; setFiltro(dpi); const p = pacientes.find((x) => x.dpi === dpi); if (p) setPacienteId(String(p.id)); }} />
+            <OcrDpi modo="buscar" onUsar={(l) => { const dpi = l.dpi?.valor ?? ""; setFiltro(dpi); const p = pacientes.find((x) => x.dpi === dpi); if (p) setPacienteId(String(p.id)); else toast.info("No hay un paciente con ese DPI en su entidad. Regístrelo primero en Pacientes."); }} />
             <select id="pacienteId" name="pacienteId" required value={pacienteId} onChange={(x) => setPacienteId(x.target.value)} className={`${inputCls} py-1`} style={{ height: "auto" }} size={Math.min(5, Math.max(2, opciones.length + 1))}>
               <option value="" disabled>Seleccione un paciente</option>
               {opciones.map((p) => <option key={p.id} value={String(p.id)}>{p.nombreCompleto}{p.dpi ? ` · ${p.dpi}` : ""}</option>)}

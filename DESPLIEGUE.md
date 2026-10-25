@@ -47,6 +47,9 @@ Cada aplicación tiene su `Dockerfile` (`backend/Dockerfile` y `nuevo-diseño/Do
 - **`MFA_KEY`** cifra los secretos del MFA. Si se pierde o se cambia, nadie podrá usar su código y habrá que restablecer el MFA de todos los usuarios. Guárdela en un lugar seguro.
 - **IP real del cliente.** `TRUST_PROXY=1` hace que el bloqueo por intentos fallidos y el límite de peticiones usen la IP del cliente y no la del proxy. No lo quite detrás de Coolify.
 
+## 4b. Reconocimiento del DPI (cámara o imagen)
+Corre **en el navegador** (Tesseract.js): la foto del DPI no se envía al servidor ni se guarda. La primera vez, el navegador descarga el motor y el modelo de idioma desde `cdn.jsdelivr.net`; después quedan en caché. Si el equipo no puede salir a Internet, hay que alojar esos archivos en el propio sitio (opción `langPath`/`workerPath` de Tesseract). La cámara solo funciona con **HTTPS** (Coolify lo da) o en `localhost`.
+
 ## 5. Límites conocidos (antes de usar datos reales de pacientes)
 - La sesión autenticada se mantiene en una cookie `HttpOnly`, `Secure` y `SameSite=Strict`; el navegador solo conserva metadatos no sensibles de la interfaz.
 - No hay recuperación de contraseña por correo: un administrador la restablece desde **Usuarios**.

@@ -1,11 +1,11 @@
-import { useMemo, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Download, FileSpreadsheet, Loader2, Pencil, Phone, Search, UserPlus, X } from "lucide-react";
 import { toast } from "sonner";
 import { AppShell } from "@/components/sisg/AppShell";
 import { ImportDialog } from "@/components/sisg/ImportDialog";
-import { OcrDpi, type DpiDatos } from "@/components/sisg/OcrDpiDialog";
+import { OcrDpi, type DpiLectura } from "@/components/sisg/OcrDpiDialog";
 import { Avatar, Card, EmptyState, Field, FilterChip, inputCls, ListSkeleton, PageHeader, Tag } from "@/components/sisg/ui";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
@@ -151,17 +151,15 @@ function PacienteSheet({ sel, onClose }: { sel: Paciente | "nuevo" | null; onClo
   const [error, setError] = useState<string | null>(null);
   const modo = nuevo || editando;
 
-  function completarDpi(datos: DpiDatos) {
-    const campos = ["dpi", "nombreCompleto", "fechaNacimiento", "departamento", "municipio"] as const;
-    for (const campo of campos) {
-      const valor = datos[campo];
-      const input = document.getElementById(campo) as HTMLInputElement | HTMLSelectElement | null;
-      if (input && valor) { input.value = valor; input.dispatchEvent(new Event("input", { bubbles: true })); input.dispatchEvent(new Event("change", { bubbles: true })); }
-    }
-    if (datos.sexo) {
-      const sexo = document.getElementById("sexo") as HTMLSelectElement | null;
-      if (sexo) { sexo.value = datos.sexo; sexo.dispatchEvent(new Event("change", { bubbles: true })); }
-    }
+  const geo = useQuery({ queryKey: ["geografia"], queryFn: api.geografia, staleTime: Infinity });
+  const [ubic, setUbic] = useState<{ depto: string; municipio: string; n: number } | null>(null);
+
+  /** Carga en el formulario lo que la persona confirmó del DPI. Los campos no detectados no se tocan: quedan para llenar a mano. */
+  function completarDpi(l: DpiLectura) {
+    const poner = (id: string, valor?: string) => { const el = document.getElementById(id) as HTMLInputElement | HTMLSelectElement | null; if (el && valor) el.value = valor; };
+    poner("nombreCompleto", l.nombreCompleto?.valor); poner("fechaNacimiento", l.fechaNacimiento?.valor); poner("dpi", l.dpi?.valor); poner("sexo", l.sexo?.valor);
+    if (l.departamento) setUbic({ depto: l.departamento.valor, municipio: l.municipio?.valor ?? "", n: Date.now() });
+    toast.success("Datos cargados desde el DPI. Revíselos antes de guardar.");
   }
 
   const m = useMutation({
@@ -220,15 +218,16 @@ function PacienteSheet({ sel, onClose }: { sel: Paciente | "nuevo" | null; onClo
             <Field id="nombreCompleto" label="Nombre completo" required><input id="nombreCompleto" name="nombreCompleto" required defaultValue={p?.nombreCompleto} className={inputCls} /></Field>
             <div className="grid grid-cols-2 gap-3">
               <Field id="sexo" label="Sexo" required>
-                <select id="sexo" name="sexo" defaultValue={p?.sexo ?? "F"} className={inputCls}>
+                <select id="sexo" name="sexo" required defaultValue={p?.sexo ?? ""} className={inputCls}>
+                  <option value="" disabled>Seleccione…</option>
                   {(Object.keys(SEXOS) as Sexo[]).map((s) => <option key={s} value={s}>{SEXOS[s]}</option>)}
                 </select>
               </Field>
               <Field id="fechaNacimiento" label="Fecha de nacimiento"><input id="fechaNacimiento" name="fechaNacimiento" type="date" defaultValue={p?.fechaNacimiento ?? ""} className={inputCls} /></Field>
             </div>
-            <Field id="dpi" label="DPI"><OcrDpi onFound={completarDpi} /><input id="dpi" name="dpi" inputMode="numeric" maxLength={13} defaultValue={p?.dpi ?? ""} placeholder="13 dígitos"
+            <Field id="dpi" label="DPI"><OcrDpi onUsar={completarDpi} geografia={geo.data} /><input id="dpi" name="dpi" inputMode="numeric" maxLength={13} defaultValue={p?.dpi ?? ""} placeholder="13 dígitos"
               onInput={(e) => { e.currentTarget.value = e.currentTarget.value.replace(/\D/g, ""); }} className={inputCls} /></Field>
-            <Ubicacion depto={p?.departamento ?? ""} municipio={p?.municipio ?? ""} />
+            <Ubicacion depto={p?.departamento ?? ""} municipio={p?.municipio ?? ""} forzar={ubic} />
             <div className="grid grid-cols-2 gap-3">
               <Field id="telefono" label="Teléfono"><input id="telefono" name="telefono" type="tel" inputMode="tel" maxLength={18} defaultValue={p?.telefono ?? ""} placeholder="5512 3456"
                 onInput={(e) => { e.currentTarget.value = e.currentTarget.value.replace(/[^\d\s+-]/g, ""); }} className={inputCls} /></Field>
@@ -253,10 +252,12 @@ const TELEFONO_GT = /^[2-7]\d{7}$/;   // misma regla que el servidor: 8 dígitos
 const limpiarTelefono = (v: string) => v.replace(/^\+?502/, "").replace(/[\s-]/g, "");
 
 /** Departamento y municipio en cascada: el municipio solo ofrece los del departamento elegido, ambos en orden alfabético. */
-function Ubicacion({ depto, municipio }: { depto: string; municipio: string }) {
+function Ubicacion({ depto, municipio, forzar }: { depto: string; municipio: string; forzar?: { depto: string; municipio: string; n: number } | null }) {
   const geo = useQuery({ queryKey: ["geografia"], queryFn: api.geografia, staleTime: Infinity });
   const [dep, setDep] = useState(depto);
   const [mun, setMun] = useState(municipio);
+  // Valores que llegan desde fuera (por ejemplo, leídos de un DPI): cada n nuevo reemplaza la selección.
+  useEffect(() => { if (forzar) { setDep(forzar.depto); setMun(forzar.municipio); } }, [forzar]);
   const g = geo.data ?? {};
   const deptos = Object.keys(g);                 // el servidor ya los entrega ordenados
   const munis = g[dep] ?? [];
