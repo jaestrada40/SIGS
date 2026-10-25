@@ -251,6 +251,13 @@ export function esLugar(texto: string, geo: Geografia): boolean {
   return Object.entries(geo).some(([d, munis]) => aparece(d) || munis.some((m) => norm(m).includes(" ") && aparece(m)));
 }
 
+const ROTULOS = ["CODIGO", "UNICO", "IDENTIFICACION", "REPUBLICA", "GUATEMALA", "CENTROAMERICA", "REGISTRO", "NACIONAL", "PERSONAS", "DOCUMENTO", "PERSONAL", "NOMBRE", "APELLIDO", "NACIONALIDAD", "FIRMA", "SEXO", "FECHA", "NACIMIENTO", "MASCULINO", "FEMENINO"];
+/** Quita del nombre las palabras que son rótulos impresos en el documento, aunque el OCR las haya cortado («CÓDIG») o deformado. */
+export function quitaRotulos(nombre: string): string {
+  const esRotulo = (w: string) => { const n = norm(w); return n.length >= 4 && ROTULOS.some((r) => (r.startsWith(n) && n.length >= 4) || lev(n, r) <= (r.length >= 9 ? 2 : 1)); };
+  return nombre.split(" ").filter((w) => !esRotulo(w)).join(" ");
+}
+
 function nombreDelFrente(textos: string[], piezasMrz?: string[]): string | undefined {
   let candidatos = [nombreConEtiquetas(lineasDe(textos)), ...textos.map(nombreEstructural)].filter((c): c is string => !!c);
   if (piezasMrz && piezasMrz.length >= 2) {   // con la franja: solo valen los candidatos que contienen el primer nombre y el primer apellido que ella da
@@ -277,14 +284,23 @@ function sexoDelFrente(lineas: string[]): "F" | "M" | undefined {
   return palabra ? (palabra[1] === "MASCULINO" ? "M" : "F") : undefined;
 }
 
-function fechaDelFrente(textos: string[], hoy: Date): { fecha?: string | undefined; etiquetada: boolean; corregida: boolean; alterna?: string | undefined } {
+function fechaDelFrente(textos: string[], hoy: Date): { fecha?: string | undefined; etiquetada: boolean; corregida: boolean; alterna?: string | undefined; confirmada?: boolean } {
   const lineas = lineasDe(textos);
+  const etiquetadas: ReturnType<typeof fechasEnTexto> = [];
   for (let i = 0; i < lineas.length; i++) {
     if (!/NACIMIENTO/.test(norm(lineas[i]!))) continue;
     const f = fechasEnTexto(lineas.slice(i, i + 3).join("\n"), hoy)[0];
-    if (f) return { fecha: f[0], etiquetada: true, corregida: f[2], alterna: f[3] };
+    if (f) etiquetadas.push(f);
   }
-  const todas = textos.flatMap((t) => fechasEnTexto(t, hoy)).sort((a, b) => (a[0] < b[0] ? -1 : 1));
+  const sueltas = textos.flatMap((t) => fechasEnTexto(t, hoy));
+  const primera = etiquetadas[0];
+  if (primera) {
+    // Una «S» pudo ser 5 o 6. Si otra lectura de la línea (la pasada dirigida a la fecha) da, sin ambigüedad, justo la alternativa, esa es la buena.
+    const firme = primera[3] ? [...etiquetadas, ...sueltas].find((c) => c[0] === primera[3] && !c[3]) : undefined;
+    if (firme) return { fecha: firme[0], etiquetada: true, corregida: false, confirmada: true };
+    return { fecha: primera[0], etiquetada: true, corregida: primera[2], alterna: primera[3] };
+  }
+  const todas = [...sueltas].sort((a, b) => (a[0] < b[0] ? -1 : 1));
   return { fecha: todas[0]?.[0], etiquetada: false, corregida: todas[0]?.[2] ?? false, alterna: todas[0]?.[3] };   // sin etiqueta: la más antigua (emisión y vencimiento son posteriores)
 }
 
@@ -390,6 +406,7 @@ export function interpretarDpi(textos: string[], geo?: Geografia, hoy = new Date
   // ---- Nombre: frente (con tildes) y franja de lectura; la franja solo trae primer nombre y primer apellido, así que basta con que estén contenidos.
   let delFrente = nombreDelFrente(textos, mrz.piezasNombre);
   const delMrz = mrz.nombre;
+  if (delFrente) delFrente = quitaRotulos(delFrente) || undefined;
   if (delFrente && geo && esLugar(delFrente, geo)) delFrente = undefined;   // era el lugar de nacimiento o de vecindad, no el nombre
   if (delFrente && mrz.piezasNombre?.[0]) {   // el nombre del frente empieza en el primer nombre de pila que da la franja: lo anterior es ruido del OCR
     const pal = delFrente.split(" "), primero = norm(mrz.piezasNombre[0]);
@@ -416,7 +433,7 @@ export function interpretarDpi(textos: string[], geo?: Geografia, hoy = new Date
   } else if (mrz.nacimiento && (!ff.fecha || ff.fecha === mrz.nacimiento)) {
     out.fechaNacimiento = { valor: mrz.nacimiento, estado: ff.fecha === mrz.nacimiento && !ff.corregida ? "verificado" : "revisar" };
   } else if (ff.fecha) {
-    out.fechaNacimiento = { valor: ff.fecha, estado: "revisar", nota: ff.corregida ? `El OCR confundió letras con números en la fecha${ff.alterna ? `; también podría ser ${ff.alterna.split("-").reverse().join("/")}` : ""}. Confírmela contra el documento.` : mrz.nacimiento && mrz.nacimiento !== ff.fecha ? "El frente y la franja de lectura no coinciden." : "Se leyó solo del frente." };
+    out.fechaNacimiento = { valor: ff.fecha, estado: "revisar", nota: ff.confirmada ? "Confirmada con una segunda lectura de la línea; sin el reverso no hay dígito de control." : ff.corregida ? `El OCR confundió letras con números en la fecha${ff.alterna ? `; también podría ser ${ff.alterna.split("-").reverse().join("/")}` : ""}. Confírmela contra el documento.` : mrz.nacimiento && mrz.nacimiento !== ff.fecha ? "El frente y la franja de lectura no coinciden." : "Se leyó solo del frente." };
   }
 
   // ---- Departamento y municipio: siempre contra el catálogo.

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { digitoIcao, interpretarDpi, leerMrz, repararCui, validarCui } from "./dpi";
+import { digitoIcao, interpretarDpi, leerMrz, quitaRotulos, repararCui, validarCui } from "./dpi";
 
 // Todos los datos son inventados. La estructura sí es la de un DPI real: el CUI de 13 dígitos (8 de número + verificador + 2 de
 // departamento + 2 de municipio), una franja de lectura automática de 3 líneas y las etiquetas del documento.
@@ -242,5 +242,14 @@ describe("interpretarDpi", () => {
     const l = interpretarDpi(["FECHA DE NACIMIENTO\nOSENE1978"], GEO, new Date("2026-10-24"));
     expect(l.fechaNacimiento).toMatchObject({ valor: "1978-01-05", estado: "revisar" });
     expect(l.fechaNacimiento?.nota).toContain("06/01/1978");
+  });
+  it("la lectura dirigida de la línea confirma la alternativa y evita adivinar entre 5 y 6", () => {
+    const l = interpretarDpi(["FECHA DE NACIMIENTO\nOSENE1978", "O6ENEI978"], GEO, new Date("2026-10-24"));
+    expect(l.fechaNacimiento).toMatchObject({ valor: "1978-01-06", estado: "revisar" });
+    expect(l.fechaNacimiento?.nota).toMatch(/segunda lectura/);
+  });
+  it("las palabras de rótulos del documento (aunque estén cortadas) no entran al nombre", () => {
+    expect(quitaRotulos("CODIG JAVIER AUGUSTO ESTRADA GORDILLO")).toBe("JAVIER AUGUSTO ESTRADA GORDILLO");
+    expect(quitaRotulos("LUIS FERNANDO GOMEZ PEREZ")).toBe("LUIS FERNANDO GOMEZ PEREZ");
   });
 });

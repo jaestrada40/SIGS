@@ -70,6 +70,30 @@ function recorteInferior(origen: HTMLCanvasElement, fraccion = 0.45) {
   return c;
 }
 
+/**
+ * Segunda lectura de la fecha del frente: el OCR general confunde 6 con «S» en la línea «06ENE1978». Se localiza la línea bajo «FECHA DE NACIMIENTO»,
+ * se recorta con algo de margen y se lee a varios tamaños, con solo letras mayúsculas y dígitos. El resultado se suma a los textos; dpi.ts decide.
+ */
+async function leerFecha(general: { recognize: (i: HTMLCanvasElement, o?: object, out?: object) => Promise<{ data: { blocks?: { paragraphs: { lines: { text: string; bbox: { x0: number; y0: number; x1: number; y1: number } }[] }[] }[] | null } }> },
+  linea: { setParameters: (p: Record<string, unknown>) => Promise<unknown>; recognize: (i: HTMLCanvasElement) => Promise<{ data: { text: string } }> }, lienzo: HTMLCanvasElement, PSM: { SINGLE_LINE: unknown }): Promise<string[]> {
+  const lineas = ((await general.recognize(lienzo, {}, { blocks: true })).data.blocks ?? []).flatMap((b) => b.paragraphs.flatMap((p) => p.lines));
+  const sinTildes = (s: string) => s.normalize("NFD").replace(/[̀-ͯ]/g, "").toUpperCase();
+  const i = lineas.findIndex((l) => /NACIMIENTO/.test(sinTildes(l.text)) && !/LUGAR/.test(sinTildes(l.text)));
+  const destino = i >= 0 ? lineas[i + 1] : undefined;
+  if (!destino) return [];
+  const h = destino.bbox.y1 - destino.bbox.y0, x0 = destino.bbox.x0, x1 = Math.min(destino.bbox.x1, x0 + 9 * h);
+  await linea.setParameters({ tessedit_char_whitelist: "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789", tessedit_pageseg_mode: PSM.SINGLE_LINE });
+  const out: string[] = [];
+  for (const margen of [0.35, 0.5, 0.7]) for (const alto of [100, 140]) {
+    const m = Math.round(h * margen), sx = Math.max(0, x0 - m), sy = Math.max(0, destino.bbox.y0 - m);
+    const sw = Math.min(lienzo.width - sx, x1 - x0 + 2 * m), sh = Math.min(lienzo.height - sy, h + 2 * m), k = alto / sh;
+    const c = document.createElement("canvas"); c.width = Math.round(sw * k); c.height = Math.round(sh * k);
+    c.getContext("2d")?.drawImage(lienzo, sx, sy, sw, sh, 0, 0, c.width, c.height);
+    out.push((await linea.recognize(c)).data.text);
+  }
+  return out;
+}
+
 /** OCR local con Tesseract: la imagen NO sale del navegador. Devuelve los textos de varias pasadas; la interpretación se hace en lib/dpi.ts. */
 async function leerImagenes(blobs: Blob[], avance: (texto: string) => void): Promise<string[]> {
   const { createWorker, PSM } = await import("tesseract.js");
@@ -79,7 +103,7 @@ async function leerImagenes(blobs: Blob[], avance: (texto: string) => void): Pro
   const textos: string[] = [];
   try {
     await mrz.setParameters({ tessedit_char_whitelist: "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789<", tessedit_pageseg_mode: PSM.SINGLE_BLOCK });
-    const total = blobs.length * (ESCALAS.length + 1 + 3); let n = 0;
+    const total = blobs.length * (ESCALAS.length + 1 + 3 + 1); let n = 0;
     const paso = (t: string) => avance(`${t} (${++n} de ${total})`);
     for (const [i, blob] of blobs.entries()) {
       const cara = blobs.length > 1 ? (i === 0 ? "el frente" : "el reverso") : "la imagen";
@@ -94,6 +118,10 @@ async function leerImagenes(blobs: Blob[], avance: (texto: string) => void): Pro
         textos.push((await general.recognize(media.binaria!)).data.text);
         // Franja de lectura automática (MRZ): parte baja del reverso, con solo sus caracteres posibles.
         for (const lienzo of [media.gris, porEscala[2]!.gris, media.binaria!]) { paso("Buscando la franja de lectura automática"); textos.push((await mrz.recognize(recorteInferior(lienzo))).data.text); }
+        paso(`Confirmando la fecha de ${cara}`);
+        await general.setParameters({ tessedit_pageseg_mode: PSM.AUTO });
+        textos.push(...await leerFecha(general as never, mrz as never, media.gris, PSM));
+        await mrz.setParameters({ tessedit_char_whitelist: "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789<", tessedit_pageseg_mode: PSM.SINGLE_BLOCK });   // deja el lector de la franja como estaba para la siguiente cara
       } finally { bitmap.close(); }
     }
   } finally { await general.terminate(); await mrz.terminate(); }
