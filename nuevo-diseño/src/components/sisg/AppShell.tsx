@@ -1,6 +1,6 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
-import { ClipboardList, FlaskConical, LayoutDashboard, LogOut, Megaphone, Menu, Search, UserCog, Users, X } from "lucide-react";
+import { ClipboardList, FlaskConical, HeartPulse, LayoutDashboard, LogOut, Megaphone, Menu, Search, UserCog, Users, X } from "lucide-react";
 import { api, esAdmin, esCentro, ROLES, setSession, useSession, veAuditoria } from "@/lib/api";
 import { CuentaDialog } from "./CuentaDialog";
 import { useQueryClient } from "@tanstack/react-query";
@@ -9,6 +9,20 @@ import { cn } from "@/lib/utils";
 import ilustracion from "@/assets/ilustracion-cuidado.png";
 
 export function Logo({ inverted }: { inverted?: boolean }) {
+  return (
+    <div className="flex items-center gap-2.5">
+      <span className={cn("flex h-10 w-10 items-center justify-center rounded-xl", inverted ? "bg-primary-foreground/15 text-primary-foreground" : "bg-gradient-primary text-primary-foreground shadow-glow")}>
+        <HeartPulse className="h-5 w-5" aria-hidden />
+      </span>
+      <div className="leading-tight">
+        <p className={cn("font-display text-lg font-extrabold", inverted && "text-primary-foreground")}>SISG</p>
+        <p className={cn("text-[11px] font-medium", inverted ? "text-primary-foreground/80" : "text-muted-foreground")}>Salud de Guatemala</p>
+      </div>
+    </div>
+  );
+}
+
+function SidebarLogo() {
   return (
     <div className="flex flex-col items-center gap-1 text-center">
       <img src={ilustracion} alt="" width={72} height={72} className="h-[72px] w-[72px] object-contain" aria-hidden />
@@ -50,7 +64,7 @@ export function AppShell({ children }: { children: ReactNode }) {
 
   const nav = (
     <nav className="flex h-full flex-col gap-6 p-5" aria-label="Principal">
-      <Logo />
+      <SidebarLogo />
       <div className="rounded-2xl bg-secondary p-3">
         <p className="truncate text-sm font-bold">{session.entidad.nombre}</p>
         <span className="mt-1 inline-block rounded-full bg-card px-2 py-0.5 text-[11px] font-semibold text-secondary-foreground">
