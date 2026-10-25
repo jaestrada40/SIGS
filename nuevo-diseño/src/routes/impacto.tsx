@@ -175,7 +175,7 @@ function Indicadores() {
           <p className="mb-3 mt-1 text-sm text-muted-foreground">Archivos JSON en formato FHIR R4 con pacientes{centro ? ", informes de estudios realizados" : ""} y su entidad. Contienen datos personales y cada descarga queda en la auditoría. No es un servidor FHIR ni codifica estudios con LOINC o SNOMED.</p>
           <div className="flex flex-wrap gap-2">
             {(centro ? (["Patient", "DiagnosticReport", "Organization"] as const) : (["Patient", "Organization"] as const)).map((r) => (
-              <Button key={r} variant="outline" size="sm" onClick={() => void descargarFhir(r)}><Download /> {r}</Button>
+              <Button key={r} variant="outline" size="sm" onClick={() => void descargarFhir(r)}><Download /> {ETIQUETA_FHIR[r]}</Button>
             ))}
           </div>
         </Card>
@@ -183,6 +183,8 @@ function Indicadores() {
     </>
   );
 }
+
+const ETIQUETA_FHIR = { Patient: "Pacientes", DiagnosticReport: "Informes de estudios", Organization: "Mi entidad" } as const;
 
 async function descargarFhir(recurso: "Patient" | "DiagnosticReport" | "Organization") {
   try {
