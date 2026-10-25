@@ -70,4 +70,11 @@ describe('plataforma: alta de entidades por invitación', () => {
     await http().get('/usuarios').set(sa.auth).expect(403);
     await http().post('/auth/logout').set(sa.auth).expect(201);
   });
+
+  it('un SUPERADMIN fuera de la entidad de plataforma no puede actuar', async () => {
+    const sa = await superadmin(app);
+    await app.get(DataSource).query(`UPDATE entidad SET tipo = 'CENTRO_DIAGNOSTICO' WHERE correo = $1`, [sa.correo]);
+    await http().get('/plataforma/entidades').set(sa.auth).expect(403);
+    await nueva(sa, 'fuera@test.com').expect(403);
+  });
 });

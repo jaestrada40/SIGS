@@ -1,4 +1,4 @@
-import { Body, ConflictException, Controller, Get, Injectable, NotFoundException, OnModuleInit, Param, ParseIntPipe, Post } from '@nestjs/common';
+import { Body, ConflictException, Controller, ForbiddenException, Get, Injectable, NotFoundException, OnModuleInit, Param, ParseIntPipe, Post } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
 import * as bcrypt from 'bcrypt';
@@ -40,12 +40,18 @@ export class PlataformaController {
     @InjectRepository(Bitacora) private bit: Repository<Bitacora>,
   ) {}
 
+  // Segunda barrera además del rol: el superadmin solo actúa desde la entidad de plataforma.
+  private async soloPlataforma({ entidadId }: Sesion) {
+    if (!(await this.entidades.existsBy({ id: entidadId, tipo: TipoEntidad.PLATAFORMA }))) throw new ForbiddenException();
+  }
+
   private nuevaInvitacion() {
     const token = randomBytes(32).toString('base64url');
     return { token, hash: sha256(token), vence: new Date(Date.now() + VIGENCIA_MS) };
   }
 
-  @Get('entidades') async listar() {
+  @Get('entidades') async listar(@Quien() s: Sesion) {
+    await this.soloPlataforma(s);
     const [entidades, admins] = await Promise.all([
       this.entidades.find({ where: { tipo: Not(TipoEntidad.PLATAFORMA) }, order: { id: 'DESC' } }),
       this.usuarios.find({ where: { rol: Rol.ADMIN }, order: { id: 'ASC' }, select: { id: true, entidadId: true, correo: true, mfaActivo: true, ultimoAcceso: true, invitacionVence: true } }),
@@ -58,6 +64,7 @@ export class PlataformaController {
   }
 
   @Post('entidades') async crear(@Quien() s: Sesion, @Body() { correo, ...dto }: CrearEntidadDto) {
+    await this.soloPlataforma(s);
     if (await this.usuarios.existsBy({ correo }) || await this.entidades.existsBy({ correo })) throw new ConflictException('correo ya registrado');
     const inv = this.nuevaInvitacion();
     const e = await this.entidades.manager.transaction(async (m) => {
@@ -72,6 +79,7 @@ export class PlataformaController {
 
   // Un enlace nuevo reemplaza al anterior. Solo mientras el administrador no haya aceptado: después no hay nada que reenviar.
   @Post('entidades/:id/invitacion') async reenviar(@Quien() s: Sesion, @Param('id', ParseIntPipe) id: number) {
+    await this.soloPlataforma(s);
     const a = await this.usuarios.findOne({ where: { entidadId: id, rol: Rol.ADMIN }, order: { id: 'ASC' }, select: { id: true, invitacionVence: true } });
     if (!a) throw new NotFoundException();
     if (!a.invitacionVence) throw new ConflictException('La entidad ya activó su acceso.');
