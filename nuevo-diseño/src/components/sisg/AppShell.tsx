@@ -118,6 +118,10 @@ export function AppShell({ children }: { children: ReactNode }) {
           <button className="flex h-11 w-11 items-center justify-center rounded-xl hover:bg-accent lg:hidden" onClick={() => setOpen(true)} aria-label="Abrir menú">
             <Menu className="h-5 w-5" />
           </button>
+          <div className="flex items-center gap-1.5 lg:hidden" aria-label="SISG">
+            <img src={ilustracion} alt="" width={36} height={36} className="h-9 w-9 object-contain" aria-hidden />
+            <span className="font-display text-base font-extrabold">SISG</span>
+          </div>
           <div className="relative max-w-md flex-1">
             <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" aria-hidden />
             <input
