@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { digitoIcao, interpretarDpi, leerMrz, quitaRotulos, repararCui, validarCui } from "./dpi";
+import { digitoIcao, esReverso, interpretarDpi, leerMrz, MARCA_REVERSO, quitaRotulos, repararCui, validarCui } from "./dpi";
 
 // Todos los datos son inventados. La estructura sí es la de un DPI real: el CUI de 13 dígitos (8 de número + verificador + 2 de
 // departamento + 2 de municipio), una franja de lectura automática de 3 líneas y las etiquetas del documento.
@@ -251,5 +251,17 @@ describe("interpretarDpi", () => {
   it("las palabras de rótulos del documento (aunque estén cortadas) no entran al nombre", () => {
     expect(quitaRotulos("CODIG JAVIER AUGUSTO ESTRADA GORDILLO")).toBe("JAVIER AUGUSTO ESTRADA GORDILLO");
     expect(quitaRotulos("LUIS FERNANDO GOMEZ PEREZ")).toBe("LUIS FERNANDO GOMEZ PEREZ");
+  });
+  it("el texto del reverso, aunque el OCR deforme el lugar, no se toma como nombre del frente", () => {
+    const reverso = MARCA_REVERSO + `LUGAR DE NACIMIENTO\nCACA TEPEQUEZ TOCA\nANTIGUA GUATEMALA\n${mrz({ linea3: "" })}`;
+    const l = interpretarDpi([reverso, FRENTE], GEO);
+    expect(l.nombreCompleto?.valor).toBe("Luis Fernando Gómez Pérez");
+    const soloReverso = interpretarDpi([reverso], GEO);
+    expect(soloReverso.nombreCompleto).toBeUndefined();
+  });
+  it("esReverso distingue las caras por su contenido, no por el orden", () => {
+    expect(esReverso([mrz()])).toBe(true);
+    expect(esReverso(["LUGAR DE NACIMIENTO\nESTADO CIVIL SOLTERO"])).toBe(true);
+    expect(esReverso([FRENTE])).toBe(false);
   });
 });

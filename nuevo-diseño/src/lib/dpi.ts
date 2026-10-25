@@ -381,7 +381,18 @@ function candidatosCui(textos: string[]): string[] {
 }
 
 // ---------------------------------------------------------------------------------------------------------------- resultado final
-export function interpretarDpi(textos: string[], geo?: Geografia, hoy = new Date()): DpiLectura {
+/** Prefijo que marca los textos que salieron del reverso: nombre, sexo y fecha del FRENTE no deben leerse de ahí (el lugar de nacimiento parece un nombre). */
+export const MARCA_REVERSO = "\u0001R\n";
+const PISTAS_REVERSO = /LUGAR DE NACIMIENTO|ESTADO CIVIL|VECINDAD|RENAP|NUMERO DE SERIE/;
+/** ¿Estos textos (de una misma imagen) son del reverso? Lo dice la franja de lectura o los rótulos propios del reverso, no el orden de las fotos. */
+export function esReverso(textosDeUnaImagen: string[]): boolean {
+  const m = leerMrz(textosDeUnaImagen);
+  return !!(m.cui || m.nacimiento) || PISTAS_REVERSO.test(norm(textosDeUnaImagen.join("\n")));
+}
+
+export function interpretarDpi(crudos: string[], geo?: Geografia, hoy = new Date()): DpiLectura {
+  const textos = crudos.map((t) => (t.startsWith(MARCA_REVERSO) ? t.slice(MARCA_REVERSO.length) : t));
+  const frente = crudos.filter((t) => !t.startsWith(MARCA_REVERSO));   // sin el reverso
   const lineas = lineasDe(textos);
   const mrz = leerMrz(textos);
   const out: DpiLectura = {};
@@ -404,7 +415,7 @@ export function interpretarDpi(textos: string[], geo?: Geografia, hoy = new Date
   const deptoCui = cuiOk?.valido && cuiOk.departamentoCodigo ? departamentoDeCodigo(cuiOk.departamentoCodigo) : undefined;
 
   // ---- Nombre: frente (con tildes) y franja de lectura; la franja solo trae primer nombre y primer apellido, así que basta con que estén contenidos.
-  let delFrente = nombreDelFrente(textos, mrz.piezasNombre);
+  let delFrente = nombreDelFrente(frente, mrz.piezasNombre);
   const delMrz = mrz.nombre;
   if (delFrente) delFrente = quitaRotulos(delFrente) || undefined;
   if (delFrente && geo && esLugar(delFrente, geo)) delFrente = undefined;   // era el lugar de nacimiento o de vecindad, no el nombre
@@ -421,13 +432,13 @@ export function interpretarDpi(textos: string[], geo?: Geografia, hoy = new Date
   if (nombre) out.nombreCompleto = { valor: tituloNombre(nombre), estado: sim ? "verificado" : "revisar", ...(sim ? {} : { nota: delFrente && delMrz ? "El frente y la franja de lectura no coinciden del todo; revise la ortografía." : delFrente ? "Se leyó solo del frente; revise la ortografía." : "Se leyó solo de la franja de lectura (sin tildes y quizá incompleto); complete el nombre." }) };
 
   // ---- Sexo: franja y frente; solo etiquetas explícitas o la palabra completa.
-  const sF = sexoDelFrente(lineas), sM = mrz.sexo;
+  const sF = sexoDelFrente(lineasDe(frente)), sM = mrz.sexo;
   if (sF && sM) out.sexo = { valor: sF, estado: sF === sM ? "verificado" : "revisar", ...(sF === sM ? {} : { nota: "El frente y la franja de lectura dicen cosas distintas." }) };
   else if (sM) out.sexo = { valor: sM, estado: mrz.nacimientoVerificado ? "verificado" : "revisar" };
   else if (sF) out.sexo = { valor: sF, estado: "revisar", nota: "Se leyó solo del frente." };
 
   // ---- Fecha de nacimiento: la de la franja, si su dígito de control cuadra, manda siempre (el frente puede traer letras por dígitos).
-  const ff = fechaDelFrente(textos, hoy);
+  const ff = fechaDelFrente(frente, hoy);
   if (mrz.nacimiento && mrz.nacimientoVerificado) {
     out.fechaNacimiento = { valor: mrz.nacimiento, estado: "verificado", ...(ff.fecha && ff.fecha !== mrz.nacimiento ? { nota: "Se tomó la fecha de la franja de lectura (con dígito de control); el frente se leyó distinto." } : {}) };
   } else if (mrz.nacimiento && (!ff.fecha || ff.fecha === mrz.nacimiento)) {

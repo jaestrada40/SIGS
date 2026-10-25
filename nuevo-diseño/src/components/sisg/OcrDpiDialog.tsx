@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { AlertTriangle, Camera, CheckCircle2, Loader2, Minus, ScanLine, ShieldCheck, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { Geografia } from "@/lib/api";
-import { interpretarDpi, lecturaVacia, type DpiLectura } from "@/lib/dpi";
+import { esReverso, interpretarDpi, lecturaVacia, MARCA_REVERSO, type DpiLectura } from "@/lib/dpi";
 import { cn } from "@/lib/utils";
 
 export type { DpiLectura };
@@ -62,6 +62,7 @@ function variantes(bitmap: ImageBitmap, ancho: number, conBinaria: boolean) {
   return { gris, binaria };
 }
 
+const MARGEN_CAPTURA = 0.06;   // 6 % de cada lado del marco
 const FOTOGRAMAS = 7;   // ≈ 0,7 s con la tarjeta quieta
 
 /** Nitidez de un recorte: varianza del laplaciano sobre una copia reducida (más alta = más enfocada). */
@@ -127,6 +128,7 @@ async function leerImagenes(blobs: Blob[], avance: (texto: string) => void): Pro
     for (const [i, blob] of blobs.entries()) {
       const cara = blobs.length > 1 ? (i === 0 ? "el frente" : "el reverso") : "la imagen";
       const bitmap = await createImageBitmap(blob);
+      const inicio = textos.length;
       try {
         const porEscala = ESCALAS.map((ancho) => variantes(bitmap, ancho, ancho === 1400));
         await general.setParameters({ tessedit_pageseg_mode: PSM.AUTO });
@@ -142,6 +144,9 @@ async function leerImagenes(blobs: Blob[], avance: (texto: string) => void): Pro
         textos.push(...await leerFecha(general as never, mrz as never, media.gris, PSM));
         await mrz.setParameters({ tessedit_char_whitelist: "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789<", tessedit_pageseg_mode: PSM.SINGLE_BLOCK });   // deja el lector de la franja como estaba para la siguiente cara
       } finally { bitmap.close(); }
+      // Los textos del reverso se marcan para que el nombre, el sexo y la fecha del frente no salgan de ahí.
+      const deEsta = textos.splice(inicio);
+      textos.push(...(esReverso(deEsta) ? deEsta.map((x) => MARCA_REVERSO + x) : deEsta));
     }
   } finally { await general.terminate(); await mrz.terminate(); }
   return textos;
@@ -180,8 +185,10 @@ function CamaraDpi({ onListo, onCerrar }: { onListo: (blobs: Blob[]) => void; on
     const cm = m.getBoundingClientRect(), cg = g.getBoundingClientRect();
     const escala = Math.max(cm.width / v.videoWidth, cm.height / v.videoHeight);   // el video se muestra con object-cover
     const offX = (v.videoWidth * escala - cm.width) / 2, offY = (v.videoHeight * escala - cm.height) / 2;
-    const sx = Math.max(0, (cg.left - cm.left + offX) / escala), sy = Math.max(0, (cg.top - cm.top + offY) / escala);
-    const sw = Math.min(v.videoWidth - sx, cg.width / escala), sh = Math.min(v.videoHeight - sy, cg.height / escala);
+    // Un margen alrededor del marco: la franja de lectura queda en el borde de abajo y, si la tarjeta se sostiene un poco baja, se cortaría.
+    const mx = cg.width * MARGEN_CAPTURA, my = cg.height * MARGEN_CAPTURA;
+    const sx = Math.max(0, (cg.left - mx - cm.left + offX) / escala), sy = Math.max(0, (cg.top - my - cm.top + offY) / escala);
+    const sw = Math.min(v.videoWidth - sx, (cg.width + 2 * mx) / escala), sh = Math.min(v.videoHeight - sy, (cg.height + 2 * my) / escala);
     const c = document.createElement("canvas"); c.width = Math.round(sw); c.height = Math.round(sh);
     c.getContext("2d")?.drawImage(v, sx, sy, sw, sh, 0, 0, c.width, c.height);
     return c;
@@ -219,7 +226,7 @@ function CamaraDpi({ onListo, onCerrar }: { onListo: (blobs: Blob[]) => void; on
           <button type="button" onClick={onCerrar} aria-label="Cerrar cámara" className="rounded-lg p-1 hover:bg-accent"><X /></button>
         </div>
         <p className="mb-3 text-sm text-muted-foreground">
-          {frente ? "Ahora el reverso: la franja de letras y símbolos de abajo debe quedar dentro del marco." : "Coloque el frente dentro del marco, sin reflejos y con buena luz."}
+          {frente ? "Ahora el reverso: las 3 líneas de letras y símbolos de abajo deben verse completas dentro del marco." : "Coloque el frente dentro del marco, sin reflejos y con buena luz."}
         </p>
         <div ref={marco} className="relative aspect-[4/3] overflow-hidden rounded-xl bg-black">
           <video ref={video} autoPlay playsInline muted className="h-full w-full object-cover" />
