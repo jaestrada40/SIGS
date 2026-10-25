@@ -1,4 +1,5 @@
 import helmet from 'helmet';
+import { json } from 'express';
 import { NestFactory } from '@nestjs/core';
 import { AppModule, configureApp } from './app.module';
 
@@ -6,7 +7,10 @@ import { AppModule, configureApp } from './app.module';
 const FRONTEND = (process.env.FRONTEND_URL ?? 'http://localhost:8080').replace(/\/$/, '');
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  // Limita el cuerpo antes de parsearlo para evitar que una petición anónima
+  // enorme consuma memoria antes de llegar a las validaciones de los DTO.
+  const app = await NestFactory.create(AppModule, { bodyParser: false });
+  app.use(json({ limit: '1mb' }));
   configureApp(app);
   // Detrás de un proxy (Coolify/Traefik) la IP real viene en X-Forwarded-For; sin esto el bloqueo por intentos y el límite de peticiones verían todos la IP del proxy.
   if (process.env.TRUST_PROXY) app.getHttpAdapter().getInstance().set('trust proxy', Number(process.env.TRUST_PROXY) || process.env.TRUST_PROXY);
