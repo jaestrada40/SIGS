@@ -143,8 +143,9 @@ function fechaValida(a: number, m: number, d: number, hoy = new Date()) {
 const pad = (n: number) => String(n).padStart(2, "0");
 
 /** Todas las fechas plausibles del texto como [aaaa-mm-dd, posición, corregida]. «corregida»: hubo letras leídas como dígitos (O por 0, S por 5…), así que no es fiable. */
-function fechasEnTexto(texto: string, hoy = new Date()): [string, number, boolean][] {
-  const out: [string, number, boolean][] = [];
+/** [fecha, posición, ¿corregida?, fecha alternativa si una «S» del día pudo ser 5 o 6] */
+function fechasEnTexto(texto: string, hoy = new Date()): [string, number, boolean, (string | undefined)?][] {
+  const out: [string, number, boolean, (string | undefined)?][] = [];
   const crudo = sinTildes(texto).toUpperCase();
   for (const m of crudo.matchAll(/\b(\d{1,2})\s*[/.\-]\s*(\d{1,2})\s*[/.\-]\s*(\d{4})\b/g)) {
     const [d, mo, a] = [Number(m[1]), Number(m[2]), Number(m[3])];
@@ -154,7 +155,10 @@ function fechasEnTexto(texto: string, hoy = new Date()): [string, number, boolea
   for (const m of crudo.matchAll(/(?<![A-Z0-9])([0-9OQIL|S]{1,2})\s*(?:DE\s+)?-?\s*([A-Z]{3})[A-Z]*\.?\s*(?:DE\s+|-)?\s*([0-9OQIL|SB]{4})(?![A-Z0-9])/g)) {
     const mes = MESES[m[2]!]; if (!mes) continue;
     const [d, a] = [Number(aDigitos(m[1]!)), Number(aDigitos(m[3]!))];
-    if (fechaValida(a, mes, d, hoy)) out.push([`${a}-${pad(mes)}-${pad(d)}`, m.index ?? 0, /[^0-9]/.test(m[1]! + m[3]!)]);
+    if (!fechaValida(a, mes, d, hoy)) continue;
+    // «S» se confunde con 5 y con 6: aDigitos elige 5; se guarda el 6 como alternativa para avisar a la persona.
+    const alt = /S/.test(m[1]!) ? Number(m[1]!.replace(/S/g, "6").replace(/[OQ]/g, "0").replace(/[IL|]/g, "1")) : NaN;
+    out.push([`${a}-${pad(mes)}-${pad(d)}`, m.index ?? 0, /[^0-9]/.test(m[1]! + m[3]!), fechaValida(a, mes, alt, hoy) && alt !== d ? `${a}-${pad(mes)}-${pad(alt)}` : undefined]);
   }
   return out.sort((x, y) => x[1] - y[1]);
 }
@@ -240,6 +244,13 @@ function nombreEstructural(texto: string): string | undefined {
 }
 
 /** El nombre del frente: con etiquetas si se leyeron; si no, por posición en cada pasada. Gana el candidato que más se repite (los incompletos votan por el más completo). */
+/** ¿El texto es un departamento o municipio del catálogo? Una línea así (p. ej. el lugar de nacimiento) no es un nombre de persona. */
+export function esLugar(texto: string, geo: Geografia): boolean {
+  const pal = norm(texto).split(" ");
+  const aparece = (lugar: string) => { const t = norm(lugar).split(" "); return t.every((x) => pal.some((w) => lev(w, x) <= tolerancia(x.length))); };
+  return Object.entries(geo).some(([d, munis]) => aparece(d) || munis.some((m) => norm(m).includes(" ") && aparece(m)));
+}
+
 function nombreDelFrente(textos: string[], piezasMrz?: string[]): string | undefined {
   let candidatos = [nombreConEtiquetas(lineasDe(textos)), ...textos.map(nombreEstructural)].filter((c): c is string => !!c);
   if (piezasMrz && piezasMrz.length >= 2) {   // con la franja: solo valen los candidatos que contienen el primer nombre y el primer apellido que ella da
@@ -266,15 +277,15 @@ function sexoDelFrente(lineas: string[]): "F" | "M" | undefined {
   return palabra ? (palabra[1] === "MASCULINO" ? "M" : "F") : undefined;
 }
 
-function fechaDelFrente(textos: string[], hoy: Date): { fecha?: string | undefined; etiquetada: boolean; corregida: boolean } {
+function fechaDelFrente(textos: string[], hoy: Date): { fecha?: string | undefined; etiquetada: boolean; corregida: boolean; alterna?: string | undefined } {
   const lineas = lineasDe(textos);
   for (let i = 0; i < lineas.length; i++) {
     if (!/NACIMIENTO/.test(norm(lineas[i]!))) continue;
     const f = fechasEnTexto(lineas.slice(i, i + 3).join("\n"), hoy)[0];
-    if (f) return { fecha: f[0], etiquetada: true, corregida: f[2] };
+    if (f) return { fecha: f[0], etiquetada: true, corregida: f[2], alterna: f[3] };
   }
   const todas = textos.flatMap((t) => fechasEnTexto(t, hoy)).sort((a, b) => (a[0] < b[0] ? -1 : 1));
-  return { fecha: todas[0]?.[0], etiquetada: false, corregida: todas[0]?.[2] ?? false };   // sin etiqueta: la más antigua (emisión y vencimiento son posteriores)
+  return { fecha: todas[0]?.[0], etiquetada: false, corregida: todas[0]?.[2] ?? false, alterna: todas[0]?.[3] };   // sin etiqueta: la más antigua (emisión y vencimiento son posteriores)
 }
 
 // ---------------------------------------------------------------------------------------------------------------- lugar (catálogo)
@@ -379,6 +390,7 @@ export function interpretarDpi(textos: string[], geo?: Geografia, hoy = new Date
   // ---- Nombre: frente (con tildes) y franja de lectura; la franja solo trae primer nombre y primer apellido, así que basta con que estén contenidos.
   let delFrente = nombreDelFrente(textos, mrz.piezasNombre);
   const delMrz = mrz.nombre;
+  if (delFrente && geo && esLugar(delFrente, geo)) delFrente = undefined;   // era el lugar de nacimiento o de vecindad, no el nombre
   if (delFrente && mrz.piezasNombre?.[0]) {   // el nombre del frente empieza en el primer nombre de pila que da la franja: lo anterior es ruido del OCR
     const pal = delFrente.split(" "), primero = norm(mrz.piezasNombre[0]);
     const i = pal.findIndex((x) => lev(norm(x), primero) <= (primero.length >= 5 ? 1 : 0));
@@ -404,7 +416,7 @@ export function interpretarDpi(textos: string[], geo?: Geografia, hoy = new Date
   } else if (mrz.nacimiento && (!ff.fecha || ff.fecha === mrz.nacimiento)) {
     out.fechaNacimiento = { valor: mrz.nacimiento, estado: ff.fecha === mrz.nacimiento && !ff.corregida ? "verificado" : "revisar" };
   } else if (ff.fecha) {
-    out.fechaNacimiento = { valor: ff.fecha, estado: "revisar", nota: ff.corregida ? "El OCR confundió letras con números en la fecha; confírmela contra el documento." : mrz.nacimiento && mrz.nacimiento !== ff.fecha ? "El frente y la franja de lectura no coinciden." : "Se leyó solo del frente." };
+    out.fechaNacimiento = { valor: ff.fecha, estado: "revisar", nota: ff.corregida ? `El OCR confundió letras con números en la fecha${ff.alterna ? `; también podría ser ${ff.alterna.split("-").reverse().join("/")}` : ""}. Confírmela contra el documento.` : mrz.nacimiento && mrz.nacimiento !== ff.fecha ? "El frente y la franja de lectura no coinciden." : "Se leyó solo del frente." };
   }
 
   // ---- Departamento y municipio: siempre contra el catálogo.

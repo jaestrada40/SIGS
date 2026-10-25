@@ -228,4 +228,19 @@ describe("interpretarDpi", () => {
     expect(r.departamento).toBeUndefined();
     expect(r.dpi?.valor).toBe(CUI);
   });
+
+  it("una línea que es solo un lugar (p. ej. el lugar de nacimiento) no se toma como nombre", () => {
+    const atras = `LUGAR DE NACIMIENTO\nSACATEPEQUEZ\nANTIGUA GUATEMALA\nMUNICIPIO\n${mrz({ linea3: "" })}`;
+    const l = interpretarDpi([atras], GEO);
+    expect(l.nombreCompleto?.valor ?? "").not.toMatch(/Sacatepequez|Antigua/i);
+  });
+  it("si el nombre del frente es un lugar, se usa el de la franja de lectura", () => {
+    const l = interpretarDpi([`NOMBRE:\nSACATEPEQUEZ\nANTIGUA\nGUATEMALA\n${mrz()}`], GEO);
+    expect(l.nombreCompleto?.valor).toBe("Luis Gomez");
+  });
+  it("una «S» en el día se lee como 5 pero se avisa que también podría ser 6", () => {
+    const l = interpretarDpi(["FECHA DE NACIMIENTO\nOSENE1978"], GEO, new Date("2026-10-24"));
+    expect(l.fechaNacimiento).toMatchObject({ valor: "1978-01-05", estado: "revisar" });
+    expect(l.fechaNacimiento?.nota).toContain("06/01/1978");
+  });
 });
