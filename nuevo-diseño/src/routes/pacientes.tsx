@@ -5,7 +5,7 @@ import { Download, FileSpreadsheet, Loader2, Pencil, Phone, Search, UserPlus, X 
 import { toast } from "sonner";
 import { AppShell } from "@/components/sisg/AppShell";
 import { ImportDialog } from "@/components/sisg/ImportDialog";
-import { OcrDpi } from "@/components/sisg/OcrDpiDialog";
+import { OcrDpi, type DpiDatos } from "@/components/sisg/OcrDpiDialog";
 import { Avatar, Card, EmptyState, Field, FilterChip, inputCls, ListSkeleton, PageHeader, Tag } from "@/components/sisg/ui";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
@@ -151,11 +151,17 @@ function PacienteSheet({ sel, onClose }: { sel: Paciente | "nuevo" | null; onClo
   const [error, setError] = useState<string | null>(null);
   const modo = nuevo || editando;
 
-  function completarDpi(dpi: string) {
-    const input = document.getElementById("dpi") as HTMLInputElement | null;
-    if (!input) return;
-    input.value = dpi;
-    input.dispatchEvent(new Event("input", { bubbles: true }));
+  function completarDpi(datos: DpiDatos) {
+    const campos = ["dpi", "nombreCompleto", "fechaNacimiento", "departamento", "municipio"] as const;
+    for (const campo of campos) {
+      const valor = datos[campo];
+      const input = document.getElementById(campo) as HTMLInputElement | HTMLSelectElement | null;
+      if (input && valor) { input.value = valor; input.dispatchEvent(new Event("input", { bubbles: true })); input.dispatchEvent(new Event("change", { bubbles: true })); }
+    }
+    if (datos.sexo) {
+      const sexo = document.getElementById("sexo") as HTMLSelectElement | null;
+      if (sexo) { sexo.value = datos.sexo; sexo.dispatchEvent(new Event("change", { bubbles: true })); }
+    }
   }
 
   const m = useMutation({
