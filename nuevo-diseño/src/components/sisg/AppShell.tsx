@@ -27,8 +27,8 @@ function SidebarLogo() {
     <div className="flex flex-col items-center gap-1 text-center">
       <img src={ilustracion} alt="" width={72} height={72} className="h-[72px] w-[72px] object-contain" aria-hidden />
       <div className="leading-tight">
-        <p className={cn("font-display text-lg font-extrabold", inverted && "text-primary-foreground")}>SISG</p>
-        <p className={cn("text-[11px] font-medium", inverted ? "text-primary-foreground/80" : "text-muted-foreground")}>Salud de Guatemala</p>
+        <p className="font-display text-lg font-extrabold">SISG</p>
+        <p className="text-[11px] font-medium text-muted-foreground">Salud de Guatemala</p>
       </div>
     </div>
   );
