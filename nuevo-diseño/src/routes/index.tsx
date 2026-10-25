@@ -103,7 +103,10 @@ function Acceso() {
 
       <section className="flex items-center justify-center p-6 md:p-10">
         <div className="w-full max-w-md">
-          <div className="mb-8 lg:hidden"><Logo /></div>
+          <div className="mb-6 flex flex-col items-center gap-2 text-center lg:hidden">
+            <img src={ilustracion} alt="" width={160} height={160} className="h-40 w-40 object-contain" aria-hidden />
+            <Logo />
+          </div>
           {paso ? <PasoMfa paso={paso} volver={() => setPaso(null)} /> : (<>
           <h2 className="text-3xl font-extrabold">{tab === "login" ? "Bienvenido de vuelta" : "Registre su entidad"}</h2>
           <p className="mt-1 text-muted-foreground">{tab === "login" ? "Ingrese con el correo de su entidad." : "Toma menos de un minuto."}</p>
