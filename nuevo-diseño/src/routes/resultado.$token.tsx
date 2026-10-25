@@ -16,14 +16,11 @@ export const Route = createFileRoute("/resultado/$token")({
   component: Resultado,
 });
 
-/** Acepta 12/03/1985 o 1985-03-12 (o 4 dígitos del DPI) y lo deja como lo espera el servidor. */
-function normalizar(v: string) {
-  const t = v.trim(), m = /^(\d{1,2})[/-](\d{1,2})[/-](\d{4})$/.exec(t);
-  return m ? `${m[3]}-${m[2]!.padStart(2, "0")}-${m[1]!.padStart(2, "0")}` : t;
-}
+const campo = "h-11 w-full rounded-xl border bg-card px-3 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:border-primary";
 
 function Resultado() {
   const { token } = Route.useParams();
+  const [porDpi, setPorDpi] = useState(false);   // el centro puede no tener la fecha de nacimiento: entonces sirven los 4 últimos dígitos del DPI
   const [dato, setDato] = useState("");
   const [r, setR] = useState<ResultadoPublico | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -31,7 +28,7 @@ function Resultado() {
 
   async function enviar(ev: FormEvent) {
     ev.preventDefault(); setError(null); setCargando(true);
-    try { setR(await api.verResultado(token, normalizar(dato))); }
+    try { setR(await api.verResultado(token, dato.trim())); }
     catch (e) { setError(e instanceof ApiError ? e.message : "No pudimos verificar sus datos. Intente de nuevo."); }
     finally { setCargando(false); }
   }
@@ -46,10 +43,13 @@ function Resultado() {
             <p className="mt-1 text-sm text-muted-foreground">Para proteger su información, confirme que es usted.</p>
           </div>
           <div className="space-y-1.5">
-            <label htmlFor="dato" className="text-sm font-semibold">Su fecha de nacimiento</label>
-            <input id="dato" value={dato} onChange={(x) => setDato(x.target.value)} required autoComplete="off" inputMode="numeric" maxLength={10} placeholder="DD/MM/AAAA"
-              className="h-11 w-full rounded-xl border bg-card px-3 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:border-primary" />
-            <p className="text-xs text-muted-foreground">Si el centro no tiene su fecha, escriba los últimos 4 dígitos de su DPI.</p>
+            <label htmlFor="dato" className="text-sm font-semibold">{porDpi ? "Últimos 4 dígitos de su DPI" : "Su fecha de nacimiento"}</label>
+            {porDpi
+              ? <input key="dpi" id="dato" value={dato} onChange={(x) => setDato(x.target.value.replace(/\D/g, "").slice(0, 4))} required autoComplete="off" inputMode="numeric" maxLength={4} placeholder="0000" className={campo} />
+              : <input key="fecha" id="dato" type="date" value={dato} onChange={(x) => setDato(x.target.value)} required min="1900-01-01" max={new Date().toISOString().slice(0, 10)} className={campo} />}
+            <button type="button" className="text-xs text-primary underline underline-offset-2" onClick={() => { setPorDpi(!porDpi); setDato(""); setError(null); }}>
+              {porDpi ? "Usar mi fecha de nacimiento" : "El centro no tiene mi fecha: usar los últimos 4 dígitos de mi DPI"}
+            </button>
           </div>
           {error && <p role="alert" className="rounded-xl bg-coral-soft p-3 text-sm">{error}</p>}
           <Button type="submit" className="w-full" disabled={cargando}>{cargando && <Loader2 className="animate-spin" />} Ver resultado</Button>
