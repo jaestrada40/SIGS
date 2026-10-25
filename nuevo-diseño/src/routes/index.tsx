@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState, type FormEvent } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { AlertCircle, ArrowLeft, Building2, Check, Copy, Eye, EyeOff, HandHeart, KeyRound, Loader2, Microscope, ShieldCheck, Timer } from "lucide-react";
-import { api, ApiError, setSession, useSession, type AuthResponse, type MfaConfig, type PasoAcceso, type TipoEntidad } from "@/lib/api";
+import { AlertCircle, ArrowLeft, Check, Copy, Eye, EyeOff, KeyRound, Loader2, ShieldCheck, Timer } from "lucide-react";
+import { api, ApiError, esSuperadmin, setSession, useSession, type AuthResponse, type MfaConfig, type PasoAcceso } from "@/lib/api";
 import { Logo } from "@/components/sisg/AppShell";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -18,6 +19,7 @@ export const Route = createFileRoute("/")({
       { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
+  validateSearch: (s: Record<string, unknown>): { invitacion?: string } => (typeof s["invitacion"] === "string" ? { invitacion: s["invitacion"] } : {}),
   component: Acceso,
 });
 
@@ -55,8 +57,7 @@ const correoGuardado = () => { try { return localStorage.getItem(CLAVE_CORREO) ?
 function Acceso() {
   const session = useSession();
   const navigate = useNavigate();
-  const [tab, setTab] = useState<"login" | "registro">("login");
-  const [tipo, setTipo] = useState<TipoEntidad>("CENTRO_DIAGNOSTICO");
+  const { invitacion } = Route.useSearch();
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -65,25 +66,20 @@ function Acceso() {
   const [recordado] = useState(correoGuardado);
   const [recordar, setRecordar] = useState(() => recordado !== "");
   const f = useMemo(() => fortaleza(password), [password]);
+  // Con un enlace de invitación el formulario crea la contraseña de la entidad en lugar de iniciar sesión.
+  const inv = useQuery({ queryKey: ["invitacion", invitacion], queryFn: () => api.invitacion(invitacion!), enabled: !!invitacion, retry: false });
 
-  useEffect(() => { if (session) navigate({ to: "/inicio" }); }, [session, navigate]);
+  useEffect(() => { if (session) navigate({ to: esSuperadmin(session) ? "/plataforma" : "/inicio" }); }, [session, navigate]);
 
   async function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setError(null);
-    const fd = new FormData(e.currentTarget);
-    const correo = String(fd.get("correo") ?? "").trim();
-    if (tab === "registro" && password.length < 10) { setError("La contraseña debe tener al menos 10 caracteres."); return; }
+    const correo = String(new FormData(e.currentTarget).get("correo") ?? "").trim();
+    if (invitacion && password.length < 10) { setError("La contraseña debe tener al menos 10 caracteres."); return; }
     setLoading(true);
     try {
-      const res: PasoAcceso = tab === "login"
-        ? await api.login({ correo, password })
-        : await api.registro({
-            nombre: String(fd.get("nombre") ?? "").trim(), tipo, correo, password,
-            departamento: String(fd.get("departamento") ?? "").trim() || undefined,
-            telefono: String(fd.get("telefono") ?? "").trim() || undefined,
-          });
-      if (tab === "login") { try { recordar ? localStorage.setItem(CLAVE_CORREO, correo) : localStorage.removeItem(CLAVE_CORREO); } catch { /* sin almacenamiento: no se recuerda */ } }
+      const res: PasoAcceso = invitacion ? await api.aceptarInvitacion(invitacion, password) : await api.login({ correo, password });
+      if (!invitacion) { try { recordar ? localStorage.setItem(CLAVE_CORREO, correo) : localStorage.removeItem(CLAVE_CORREO); } catch { /* sin almacenamiento: no se recuerda */ } }
       setPassword("");
       setPaso(res);
     } catch (err) {
@@ -109,63 +105,33 @@ function Acceso() {
 
       <section className="flex items-center justify-center p-6 md:p-10">
         <div className="w-full max-w-md">
-          {paso ? <PasoMfa paso={paso} volver={() => { setPaso(null); setTab("login"); setTipo("CENTRO_DIAGNOSTICO"); }} /> : (<>
-          <h2 className="text-3xl font-extrabold">{tab === "login" ? "Bienvenido de vuelta" : "Registre su entidad"}</h2>
-          <p className="mt-1 text-muted-foreground">{tab === "login" ? "Ingrese con el correo de su entidad." : "Toma menos de un minuto."}</p>
+          {paso ? <PasoMfa paso={paso} volver={() => setPaso(null)} /> : invitacion && inv.isError ? (<>
+          <h2 className="text-3xl font-extrabold">Invitación no válida</h2>
+          <p className="mt-1 text-muted-foreground">El enlace no existe, ya se usó o venció. Pida uno nuevo a quien administra la plataforma.</p>
+          <Button className="mt-6" variant="outline" asChild><a href="/">Ir a iniciar sesión</a></Button>
+          </>) : (<>
+          <h2 className="text-3xl font-extrabold">{invitacion ? "Cree su contraseña" : "Bienvenido de vuelta"}</h2>
+          <p className="mt-1 text-muted-foreground">{invitacion ? (inv.data ? `Acceso de ${inv.data.entidad}. Después configurará la verificación en dos pasos.` : "Verificando la invitación…") : "Ingrese con el correo de su entidad."}</p>
 
-          <div role="tablist" aria-label="Acceso" className="mt-6 grid grid-cols-2 rounded-2xl bg-secondary p-1">
-            {(["login", "registro"] as const).map((t) => (
-              <button key={t} role="tab" aria-selected={tab === t} onClick={() => { setTab(t); setError(null); setVer(false); setPassword(""); setTipo("CENTRO_DIAGNOSTICO"); }}
-                className={cn("h-10 rounded-xl text-sm font-semibold transition-all", tab === t ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground")}>
-                {t === "login" ? "Iniciar sesión" : "Registrar entidad"}
-              </button>
-            ))}
-          </div>
-
-          <form key={tab} onSubmit={onSubmit} className="surface mt-6 space-y-4 p-6" noValidate={false}>
-            {tab === "registro" && (
-              <>
-                <fieldset>
-                  <legend className="mb-2 text-sm font-semibold">Tipo de entidad</legend>
-                  <div className="grid grid-cols-2 gap-3">
-                    {([
-                      { v: "CENTRO_DIAGNOSTICO", t: "Centro de diagnóstico", d: "Laboratorios, imágenes y estudios.", icon: Microscope, tone: "bg-blue-soft text-blue" },
-                      { v: "ORG_NO_LUCRATIVA", t: "Organismo no lucrativo", d: "Ligas de salud, APROFAM y campañas.", icon: HandHeart, tone: "bg-coral-soft text-coral" },
-                    ] as const).map((o) => (
-                      <label key={o.v} className={cn("lift cursor-pointer rounded-2xl border-2 bg-card p-3 transition-colors", tipo === o.v ? "border-primary bg-accent" : "border-border")}>
-                        <input type="radio" name="tipo" value={o.v} checked={tipo === o.v} onChange={() => setTipo(o.v)} className="sr-only" />
-                        <span className={cn("mb-2 flex h-10 w-10 items-center justify-center rounded-xl", o.tone)}><o.icon className="h-5 w-5" aria-hidden /></span>
-                        <span className="block text-sm font-bold leading-tight">{o.t}</span>
-                        <span className="mt-1 block text-xs text-muted-foreground">{o.d}</span>
-                      </label>
-                    ))}
-                  </div>
-                </fieldset>
-                <Campo id="nombre" label="Nombre de la entidad">
-                  <div className="relative">
-                    <Building2 className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" aria-hidden />
-                    <input id="nombre" name="nombre" required autoComplete="off" className={cn(field, "pl-9")} placeholder="Centro El Roble" />
-                  </div>
-                </Campo>
-              </>
-            )}
+          <form onSubmit={onSubmit} className="surface mt-6 space-y-4 p-6">
             <Campo id="correo" label="Correo electrónico">
-              <input id="correo" name="correo" type="email" required autoComplete={tab === "login" ? "email" : "off"} defaultValue={tab === "login" ? recordado : undefined} className={field} placeholder="contacto@entidad.gt" />
+              <input id="correo" name="correo" type="email" required autoComplete="email" readOnly={!!invitacion} key={invitacion ? inv.data?.correo : "login"}
+                defaultValue={invitacion ? inv.data?.correo : recordado} className={field} placeholder="contacto@entidad.gt" />
             </Campo>
-            <Campo id="password" label="Contraseña">
+            <Campo id="password" label={invitacion ? "Nueva contraseña" : "Contraseña"}>
               <div className="relative">
-                <input id="password" name="password" type={ver ? "text" : "password"} required minLength={tab === "registro" ? 10 : undefined}
-                  autoComplete={tab === "login" ? "current-password" : "new-password"} value={password} onChange={(e) => setPassword(e.target.value)} className={cn(field, "pr-11")} />
+                <input id="password" name="password" type={ver ? "text" : "password"} required minLength={invitacion ? 10 : undefined}
+                  autoComplete={invitacion ? "new-password" : "current-password"} value={password} onChange={(e) => setPassword(e.target.value)} className={cn(field, "pr-11")} />
                 <button type="button" onClick={() => setVer((v) => !v)} aria-label={ver ? "Ocultar contraseña" : "Mostrar contraseña"} aria-pressed={ver}
                   className="absolute right-1 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-lg text-muted-foreground hover:text-foreground">
                   {ver ? <EyeOff className="h-4 w-4" aria-hidden /> : <Eye className="h-4 w-4" aria-hidden />}
                 </button>
               </div>
             </Campo>
-            {tab === "login" && (
+            {!invitacion && (
               <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={recordar} onChange={(e) => setRecordar(e.target.checked)} /> Recordar mi correo</label>
             )}
-            {tab === "registro" && password && (
+            {invitacion && password && (
               <div aria-live="polite">
                 <div className="flex gap-1">
                   {[0, 1, 2, 3].map((i) => (
@@ -175,21 +141,15 @@ function Acceso() {
                 <p className="mt-1 text-xs text-muted-foreground">Fortaleza: <strong className="text-foreground">{niveles[f]!.label}</strong>{password.length < 10 && " · mínimo 10 caracteres"}</p>
               </div>
             )}
-            {tab === "registro" && (
-              <div className="grid grid-cols-2 gap-3">
-                <Campo id="departamento" label="Departamento"><input id="departamento" name="departamento" autoComplete="off" className={field} placeholder="Opcional" /></Campo>
-                <Campo id="telefono" label="Teléfono"><input id="telefono" name="telefono" type="tel" autoComplete="off" className={field} placeholder="Opcional" /></Campo>
-              </div>
-            )}
             {error && (
               <div role="alert" className="flex items-start gap-2 rounded-xl bg-coral-soft p-3 text-sm text-foreground">
                 <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-destructive" aria-hidden />
                 <span>{error}</span>
               </div>
             )}
-            <Button type="submit" size="lg" className="w-full" disabled={loading}>
+            <Button type="submit" size="lg" className="w-full" disabled={loading || (!!invitacion && !inv.data)}>
               {loading && <Loader2 className="animate-spin" aria-hidden />}
-              {tab === "login" ? "Iniciar sesión" : "Crear cuenta"}
+              {invitacion ? "Crear contraseña" : "Iniciar sesión"}
             </Button>
           </form>
           </>)}

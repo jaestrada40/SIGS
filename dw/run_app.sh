@@ -11,7 +11,7 @@ docker compose up -d --wait
 echo ">> exportando de Postgres ($PGDB) a CSV (sin contraseñas)"
 # El CSV lo escribe Python: en algunos equipos macOS la redirección del shell (> archivo) falla con «Operation not permitted» sobre data/.
 exp() { $PG -c "COPY ($2) TO STDOUT WITH (FORMAT csv)" | python3 -c 'import sys; open(sys.argv[1], "wb").write(sys.stdin.buffer.read())' "data/$1.csv"; }
-exp entidad  'SELECT id, nombre, tipo, departamento, telefono, correo FROM entidad ORDER BY id'
+exp entidad  'SELECT id, nombre, tipo, departamento, telefono, correo FROM entidad WHERE tipo <> '"'"'PLATAFORMA'"'"' ORDER BY id'
 exp paciente 'SELECT id, "entidadId", "nombreCompleto", dpi, "fechaNacimiento", sexo, departamento, municipio, telefono, estado FROM paciente ORDER BY id'
 exp estudio  'SELECT id, "entidadId", "pacienteId", "tipoEstudio", "salaEquipo", fecha, hora, especialista, resultado, estado FROM estudio ORDER BY id'
 exp campana  'SELECT id, "entidadId", nombre, area, departamento, ubicacion, "fechaInicio", "fechaFin", "personasAtendidas", estado FROM campana ORDER BY id'

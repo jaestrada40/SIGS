@@ -1,7 +1,7 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
-import { Tent, BarChart3, ClipboardList, FlaskConical, Send, HeartPulse, LayoutDashboard, LogOut, Megaphone, Menu, Search, UserCog, Users, X } from "lucide-react";
-import { api, esAdmin, esCentro, puedeEscribir, ROLES, setSession, useSession, veAuditoria } from "@/lib/api";
+import { Building2, Tent, BarChart3, ClipboardList, FlaskConical, Send, HeartPulse, LayoutDashboard, LogOut, Megaphone, Menu, Search, UserCog, Users, X } from "lucide-react";
+import { api, esAdmin, esCentro, esSuperadmin, puedeEscribir, ROLES, setSession, useSession, veAuditoria } from "@/lib/api";
 import { CuentaDialog } from "./CuentaDialog";
 import { useQueryClient } from "@tanstack/react-query";
 import { Skeleton } from "./ui";
@@ -52,7 +52,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   }
 
   const centro = esCentro(session.entidad);
-  const items = [
+  const items = esSuperadmin(session) ? [{ to: "/plataforma", label: "Entidades", icon: Building2 }] : [
     { to: "/inicio", label: "Inicio", icon: LayoutDashboard },
     { to: "/pacientes", label: "Pacientes", icon: Users },
     centro
@@ -71,7 +71,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       <div className="rounded-2xl bg-secondary p-3">
         <p className="truncate text-sm font-bold">{session.entidad.nombre}</p>
         <span className="mt-1 inline-block rounded-full bg-card px-2 py-0.5 text-[11px] font-semibold text-secondary-foreground">
-          {centro ? "Centro de diagnóstico" : "Organismo no lucrativo"}
+          {esSuperadmin(session) ? "Plataforma" : centro ? "Centro de diagnóstico" : "Organismo no lucrativo"}
         </span>
         <p className="mt-2 truncate text-xs text-muted-foreground">{session.usuario.nombre === ROLES[session.usuario.rol].label ? session.usuario.nombre : `${session.usuario.nombre} · ${ROLES[session.usuario.rol].label}`}</p>
       </div>

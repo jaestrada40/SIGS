@@ -17,6 +17,7 @@ import { Route as ImpactoRouteImport } from './routes/impacto'
 import { Route as InicioRouteImport } from './routes/inicio'
 import { Route as JornadaRouteImport } from './routes/jornada'
 import { Route as PacientesRouteImport } from './routes/pacientes'
+import { Route as PlataformaRouteImport } from './routes/plataforma'
 import { Route as ReferidosRouteImport } from './routes/referidos'
 import { Route as UsuariosRouteImport } from './routes/usuarios'
 import { Route as ResultadoTokenRouteImport } from './routes/resultado.$token'
@@ -61,6 +62,11 @@ const PacientesRoute = PacientesRouteImport.update({
   path: '/pacientes',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PlataformaRoute = PlataformaRouteImport.update({
+  id: '/plataforma',
+  path: '/plataforma',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ReferidosRoute = ReferidosRouteImport.update({
   id: '/referidos',
   path: '/referidos',
@@ -86,6 +92,7 @@ export interface FileRoutesByFullPath {
   '/inicio': typeof InicioRoute
   '/jornada': typeof JornadaRoute
   '/pacientes': typeof PacientesRoute
+  '/plataforma': typeof PlataformaRoute
   '/referidos': typeof ReferidosRoute
   '/usuarios': typeof UsuariosRoute
   '/resultado/$token': typeof ResultadoTokenRoute
@@ -99,6 +106,7 @@ export interface FileRoutesByTo {
   '/inicio': typeof InicioRoute
   '/jornada': typeof JornadaRoute
   '/pacientes': typeof PacientesRoute
+  '/plataforma': typeof PlataformaRoute
   '/referidos': typeof ReferidosRoute
   '/usuarios': typeof UsuariosRoute
   '/resultado/$token': typeof ResultadoTokenRoute
@@ -113,6 +121,7 @@ export interface FileRoutesById {
   '/inicio': typeof InicioRoute
   '/jornada': typeof JornadaRoute
   '/pacientes': typeof PacientesRoute
+  '/plataforma': typeof PlataformaRoute
   '/referidos': typeof ReferidosRoute
   '/usuarios': typeof UsuariosRoute
   '/resultado/$token': typeof ResultadoTokenRoute
@@ -128,6 +137,7 @@ export interface FileRouteTypes {
     | '/inicio'
     | '/jornada'
     | '/pacientes'
+    | '/plataforma'
     | '/referidos'
     | '/usuarios'
     | '/resultado/$token'
@@ -141,6 +151,7 @@ export interface FileRouteTypes {
     | '/inicio'
     | '/jornada'
     | '/pacientes'
+    | '/plataforma'
     | '/referidos'
     | '/usuarios'
     | '/resultado/$token'
@@ -154,6 +165,7 @@ export interface FileRouteTypes {
     | '/inicio'
     | '/jornada'
     | '/pacientes'
+    | '/plataforma'
     | '/referidos'
     | '/usuarios'
     | '/resultado/$token'
@@ -168,6 +180,7 @@ export interface RootRouteChildren {
   InicioRoute: typeof InicioRoute
   JornadaRoute: typeof JornadaRoute
   PacientesRoute: typeof PacientesRoute
+  PlataformaRoute: typeof PlataformaRoute
   ReferidosRoute: typeof ReferidosRoute
   UsuariosRoute: typeof UsuariosRoute
   ResultadoTokenRoute: typeof ResultadoTokenRoute
@@ -231,6 +244,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PacientesRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/plataforma': {
+      id: '/plataforma'
+      path: '/plataforma'
+      fullPath: '/plataforma'
+      preLoaderRoute: typeof PlataformaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/referidos': {
       id: '/referidos'
       path: '/referidos'
@@ -264,6 +284,7 @@ const rootRouteChildren: RootRouteChildren = {
   InicioRoute: InicioRoute,
   JornadaRoute: JornadaRoute,
   PacientesRoute: PacientesRoute,
+  PlataformaRoute: PlataformaRoute,
   ReferidosRoute: ReferidosRoute,
   UsuariosRoute: UsuariosRoute,
   ResultadoTokenRoute: ResultadoTokenRoute,

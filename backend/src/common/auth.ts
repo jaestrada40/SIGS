@@ -36,6 +36,7 @@ export class RolGuard implements CanActivate {
     if (!req.user) return true;   // rutas públicas o con su propio guard
     const roles = this.r.getAllAndOverride<Rol[]>('roles', [ctx.getHandler(), ctx.getClass()]);
     if (roles) { if (!roles.includes(req.user.rol)) throw new ForbiddenException(); return true; }
+    if (req.user.rol === Rol.SUPERADMIN) throw new ForbiddenException();   // el superadmin solo entra a lo que lo nombra: nunca toca datos de pacientes
     if (req.user.rol === Rol.AUDITOR && req.method !== 'GET') throw new ForbiddenException('El rol Auditor es de solo lectura.');
     return true;
   }

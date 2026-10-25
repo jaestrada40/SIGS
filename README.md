@@ -20,7 +20,7 @@ docker compose up -d && npm install && npm run start:dev
 # Interfaz (otra terminal)
 cd nuevo-diseño && npm install && npm run dev      # http://localhost:8080
 ```
-Se necesitan `JWT_SECRET` (mínimo 32 caracteres) y `MFA_KEY` (32 bytes en base64); la API no arranca sin ellos. Al registrar una entidad, el MFA es obligatorio.
+Se necesitan `JWT_SECRET` (mínimo 32 caracteres) y `MFA_KEY` (32 bytes en base64); la API no arranca sin ellos. No hay registro público: el superadministrador (`SUPERADMIN_CORREO` y `SUPERADMIN_PASSWORD`, que se crea al primer arranque) da de alta cada entidad y le entrega un enlace de invitación de un solo uso (72 h), con el que crea su contraseña. El MFA es obligatorio.
 
 ## Producción
 Ver [`DESPLIEGUE.md`](DESPLIEGUE.md).

@@ -42,6 +42,9 @@ services:
       CORS_ORIGINS: ${CORS_ORIGINS:-}
       # Crea el esquema al arrancar. Déjelo en true en el primer despliegue y tras cambiar el esquema; ver DESPLIEGUE.md.
       DB_SYNC: ${DB_SYNC:-false}
+      # Opcionales: crean el superadministrador la primera vez que arranca (después pueden quitarse).
+      SUPERADMIN_CORREO: ${SUPERADMIN_CORREO:-}
+      SUPERADMIN_PASSWORD: ${SUPERADMIN_PASSWORD:-}
       # Detrás del proxy de Coolify: toma la IP real del cliente (bloqueo por intentos y límite de peticiones).
       TRUST_PROXY: ${TRUST_PROXY:-1}
     expose:

@@ -22,6 +22,7 @@ import { AlertasController } from './alertas/alertas';
 import { EnlaceResultado, EnlacesController, PublicoController } from './enlaces/enlaces';
 import { ReferidosController } from './referidos/referidos';
 import { Referido } from './referidos/referido.entity';
+import { PlataformaController, SuperadminInicial } from './plataforma/plataforma';
 import { Usuario } from './usuarios/usuario.entity';
 import { UsuariosController } from './usuarios/usuarios';
 
@@ -50,7 +51,7 @@ export const configureApp = (app: INestApplication) => app.useGlobalPipes(new Va
     PassportModule,
     JwtModule.registerAsync({ inject: [ConfigService], useFactory: (c: ConfigService) => ({ secret: c.getOrThrow('JWT_SECRET'), signOptions: { expiresIn: '2h', issuer: 'sisg', algorithm: 'HS256' } }) }),
   ],
-  controllers: [AuthController, PacientesController, EstudiosController, CampanasController, DashboardController, BitacoraController, UsuariosController, CatalogosController, SaludController, ReferidosController, ImpactoController, AlertasController, FhirController, JornadaController, EnlacesController, PublicoController],
-  providers: [JwtStrategy, { provide: APP_GUARD, useClass: ThrottlerGuard }, { provide: APP_GUARD, useClass: JwtAuthGuard }, { provide: APP_GUARD, useClass: RolGuard }, TipoGuard],
+  controllers: [AuthController, PacientesController, EstudiosController, CampanasController, DashboardController, BitacoraController, UsuariosController, CatalogosController, SaludController, ReferidosController, ImpactoController, AlertasController, FhirController, JornadaController, EnlacesController, PublicoController, PlataformaController],
+  providers: [JwtStrategy, SuperadminInicial, { provide: APP_GUARD, useClass: ThrottlerGuard }, { provide: APP_GUARD, useClass: JwtAuthGuard }, { provide: APP_GUARD, useClass: RolGuard }, TipoGuard],
 })
 export class AppModule {}

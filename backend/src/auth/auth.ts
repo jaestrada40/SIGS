@@ -1,4 +1,4 @@
-import { Body, ConflictException, Controller, Headers, HttpException, Injectable, Ip, Post, Req, Res, UnauthorizedException, UseGuards } from '@nestjs/common';
+import { Body, ConflictException, Controller, Get, Headers, HttpException, Injectable, Ip, NotFoundException, Param, Post, Req, Res, UnauthorizedException, UseGuards } from '@nestjs/common';
 import type { Response } from 'express';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
@@ -9,14 +9,14 @@ import * as bcrypt from 'bcrypt';
 import { authenticator } from 'otplib';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import * as QRCode from 'qrcode';
-import { DataSource, Repository } from 'typeorm';
-import { Public } from '../common/auth';
+import { Repository } from 'typeorm';
+import { Public, Roles } from '../common/auth';
 import { Bitacora, registrar } from '../common/bitacora';
 import { cifrar, codigoRecuperacion, descifrar, normalizarRecuperacion, sha256 } from '../common/cripto';
 import { Rol } from '../common/enums';
 import { Entidad } from '../entidades/entidad.entity';
 import { Usuario } from '../usuarios/usuario.entity';
-import { CambiarPasswordDto, CodigoDto, LoginDto, MfaVerificarDto, RegistroDto } from './auth.dto';
+import { CambiarPasswordDto, CodigoDto, InvitacionDto, LoginDto, MfaVerificarDto } from './auth.dto';
 
 const ISSUER = 'sisg';
 const cookieToken = (req: any) => req?.headers?.cookie?.split(';').map((x: string) => x.trim()).find((x: string) => x.startsWith('sisg_session='))?.slice('sisg_session='.length);
@@ -69,7 +69,7 @@ export class AuthController {
     @InjectRepository(Usuario) private repo: Repository<Usuario>,
     @InjectRepository(Entidad) private entidades: Repository<Entidad>,
     @InjectRepository(Bitacora) private bit: Repository<Bitacora>,
-    private jwt: JwtService, private db: DataSource,
+    private jwt: JwtService,
   ) {}
 
   private evento(u: Usuario, accion: string, detalle: Record<string, unknown> | null = null) {
@@ -120,16 +120,29 @@ export class AuthController {
   }
   private async limpiar(u: Usuario, k: string) { fallos.delete(k); await this.repo.update(u.id, { intentosFallidos: 0, bloqueadoHasta: null }); }
 
-  // Crea la entidad y su primer usuario administrador en una sola transacción.
+  // Invitación de un solo uso que entrega el superadmin: la entidad crea aquí su contraseña y sigue al MFA obligatorio.
+  private porInvitacion(token: string) {
+    return this.repo.findOne({ where: { invitacionHash: sha256(token), activo: true }, select: { ...SEG, invitacionVence: true } })
+      .then((u) => { if (!u?.invitacionVence || u.invitacionVence < new Date()) throw new NotFoundException('La invitación no existe o venció.'); return u; });
+  }
+
+  @Throttle({ default: { limit: 10, ttl: 60_000 } })
+  @Get('invitacion/:token')
+  async invitacion(@Param('token') token: string) {
+    const u = await this.porInvitacion(token);
+    return { entidad: (await this.entidades.findOneByOrFail({ id: u.entidadId })).nombre, correo: u.correo };
+  }
+
   @Throttle({ default: { limit: 5, ttl: 60_000 } })
-  @Post('registro')
-  async registro(@Body() { password, correo, nombre, ...resto }: RegistroDto) {
-    if (await this.repo.findOneBy({ correo }) || await this.entidades.findOneBy({ correo })) throw new ConflictException('correo ya registrado');
-    const u = await this.db.transaction(async (m) => {
-      const e = await m.save(m.create(Entidad, { ...resto, nombre, correo }));
-      return m.save(m.create(Usuario, { entidadId: e.id, nombre: 'Administrador', correo, rol: Rol.ADMIN, passwordHash: await bcrypt.hash(password, COSTO_BCRYPT) }));
-    });
-    await registrar(this.bit, { entidadId: u.entidadId, usuarioId: u.id }, 'usuario', u.id, 'CREAR', { campos: ['entidad', 'administrador'] });
+  @Post('invitacion/:token')
+  async aceptarInvitacion(@Param('token') token: string, @Body() { password }: InvitacionDto) {
+    const u = await this.porInvitacion(token);
+    // Condicional y atómico: dos usos simultáneos del mismo enlace no pasan los dos.
+    const r = await this.repo.createQueryBuilder().update(Usuario)
+      .set({ passwordHash: await bcrypt.hash(password, COSTO_BCRYPT), invitacionHash: null, invitacionVence: null, sesionesDesde: new Date(Date.now() - 1) })
+      .where('id = :id AND "invitacionHash" = :h', { id: u.id, h: sha256(token) }).execute();
+    if (r.affected !== 1) throw new NotFoundException('La invitación no existe o venció.');
+    await this.evento(u, 'INVITACION_ACEPTADA');
     return this.siguientePaso(u);
   }
 
@@ -198,6 +211,7 @@ export class AuthController {
 
   // Cierra la sesión en el servidor: todo token emitido hasta ahora deja de valer.
   @Public(false)
+  @Roles(...Object.values(Rol))
   @UseGuards(AuthGuard('jwt'))
   @Post('logout')
   async logout(@Req() { user }: { user: { usuarioId: number; entidadId: number } }, @Res({ passthrough: true }) res: Response) {
@@ -209,6 +223,7 @@ export class AuthController {
 
   // Cambio de contraseña propio: exige la actual, cierra las demás sesiones y devuelve una sesión nueva.
   @Public(false)
+  @Roles(...Object.values(Rol))
   @UseGuards(AuthGuard('jwt'))
   @Throttle({ default: { limit: 5, ttl: 60_000 } })
   @Post('cambiar-password')

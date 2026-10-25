@@ -10,14 +10,8 @@ describe('auth + MFA', () => {
   beforeAll(async () => (app = await crearApp()));
   afterAll(() => app.close());
 
-  it('registro no da sesión: solo un token de configuración de MFA', async () => {
-    const res = await http().post('/auth/registro').send({ nombre: 'X', tipo: 'ORG_NO_LUCRATIVA', correo: 'nuevo@test.com', password: 'secreto1234' });
-    expect(res.status).toBe(201);
-    expect(res.body.estado).toBe('mfa_configurar');
-    expect(res.body.access_token).toBeUndefined();
-    expect(JSON.stringify(res.body)).not.toContain('passwordHash');
-    // el token parcial NO abre la API
-    await http().get('/pacientes').set('Authorization', `Bearer ${res.body.setup_token}`).expect(401);
+  it('ya no hay registro público', async () => {
+    await http().post('/auth/registro').send({ nombre: 'X', tipo: 'ORG_NO_LUCRATIVA', correo: 'nuevo@test.com', password: 'secreto1234' }).expect(404);
   });
 
   it('flujo completo: activar MFA, login pide código, código correcto da sesión', async () => {
@@ -89,18 +83,6 @@ describe('auth + MFA', () => {
   it('un correo inexistente también se bloquea igual (429): el bloqueo no revela cuentas', async () => {
     for (let i = 0; i < 5; i++) await login('fantasma@test.com', 'incorrecta123').expect(401);
     await login('fantasma@test.com').expect(429);
-  });
-
-  it('correo duplicado -> 409', async () => {
-    const { correo } = await registrar(app, 'ORG_NO_LUCRATIVA');
-    await http().post('/auth/registro').send({ nombre: 'X', tipo: 'ORG_NO_LUCRATIVA', correo, password: 'secreto1234' }).expect(409);
-  });
-
-  it('validación -> 400 (tipo inválido, password corta, correo inválido)', async () => {
-    const s = (b) => http().post('/auth/registro').send(b);
-    await s({ nombre: 'X', tipo: 'OTRO', correo: 'a@b.com', password: 'secreto1234' }).expect(400);
-    await s({ nombre: 'X', tipo: 'ORG_NO_LUCRATIVA', correo: 'a@b.com', password: '123456789' }).expect(400);
-    await s({ nombre: 'X', tipo: 'ORG_NO_LUCRATIVA', correo: 'no-correo', password: 'secreto1234' }).expect(400);
   });
 
   it('rutas protegidas sin token -> 401', async () => {

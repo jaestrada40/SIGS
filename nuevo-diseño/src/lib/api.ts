@@ -2,10 +2,11 @@ import { useSyncExternalStore } from "react";
 
 export const API_URL = (import.meta.env["VITE_API_URL"] as string | undefined) ?? "http://localhost:3000";
 
-export type TipoEntidad = "CENTRO_DIAGNOSTICO" | "ORG_NO_LUCRATIVA";
+export type TipoEntidad = "CENTRO_DIAGNOSTICO" | "ORG_NO_LUCRATIVA" | "PLATAFORMA";
 export interface Entidad { id: number | string; nombre: string; tipo: TipoEntidad }
-export type Rol = "ADMIN" | "OPERADOR" | "AUDITOR";
+export type Rol = "SUPERADMIN" | "ADMIN" | "OPERADOR" | "AUDITOR";
 export const ROLES: Record<Rol, { label: string; desc: string }> = {
+  SUPERADMIN: { label: "Superadministrador", desc: "Da de alta las entidades de la plataforma. No ve datos de pacientes." },
   ADMIN: { label: "Administrador", desc: "Gestiona usuarios, ve la auditoría y registra datos." },
   OPERADOR: { label: "Operador", desc: "Registra y actualiza pacientes, estudios o campañas." },
   AUDITOR: { label: "Auditor", desc: "Solo lectura: consulta datos y la auditoría." },
@@ -13,6 +14,10 @@ export const ROLES: Record<Rol, { label: string; desc: string }> = {
 export interface UsuarioSesion { id: number; nombre: string; correo: string; rol: Rol }
 export interface AuthResponse { entidad: Entidad; usuario: UsuarioSesion }
 export interface UsuarioGestion { id: number; nombre: string; correo: string; rol: Rol; activo: boolean; mfaActivo: boolean; creadoEn: string; ultimoAcceso: string | null }
+export interface EntidadAlta {
+  id: number; nombre: string; tipo: TipoEntidad; correo: string; departamento: string | null; telefono: string | null;
+  estado: "activa" | "invitada" | "invitacion_vencida" | "sin_administrador"; ultimoAcceso: string | null;
+}
 export type Geografia = Record<string, string[]>;
 // Tras la contraseña el servidor nunca da sesión: pide el código MFA o exige configurarlo.
 export type PasoAcceso =
@@ -91,6 +96,7 @@ export function setSession(s: Session | null) {
   if (s) localStorage.setItem(KEY, JSON.stringify(s)); else localStorage.removeItem(KEY);
   listeners.forEach((l) => l());
 }
+export const esSuperadmin = (s: Session | null) => s?.usuario.rol === "SUPERADMIN";
 export const esAdmin = (s: Session | null) => s?.usuario.rol === "ADMIN";
 export const puedeEscribir = (s: Session | null) => !!s && s.usuario.rol !== "AUDITOR";
 export const veAuditoria = (s: Session | null) => s?.usuario.rol === "ADMIN" || s?.usuario.rol === "AUDITOR";
@@ -145,8 +151,12 @@ export const api = {
   mfaConfigurar: (setupToken: string) => request<MfaConfig>("/auth/mfa/configurar", { method: "POST", headers: { Authorization: `Bearer ${setupToken}` } }),
   mfaActivar: (setupToken: string, codigo: string) =>
     request<AuthResponse & { recuperacion: string[] }>("/auth/mfa/activar", { method: "POST", body: JSON.stringify({ codigo }), headers: { Authorization: `Bearer ${setupToken}` } }),
-  registro: (b: { nombre: string; tipo: TipoEntidad; correo: string; password: string; departamento?: string | undefined; telefono?: string | undefined }) =>
-    post<PasoAcceso>("/auth/registro", b),
+  invitacion: (token: string) => request<{ entidad: string; correo: string }>(`/auth/invitacion/${encodeURIComponent(token)}`),
+  aceptarInvitacion: (token: string, password: string) => post<PasoAcceso>(`/auth/invitacion/${encodeURIComponent(token)}`, { password }),
+  entidades: () => request<EntidadAlta[]>("/plataforma/entidades"),
+  crearEntidad: (b: { nombre: string; tipo: Exclude<TipoEntidad, "PLATAFORMA">; correo: string; departamento?: string | undefined; telefono?: string | undefined }) =>
+    post<{ entidad: EntidadAlta; invitacion: string; vence: string }>("/plataforma/entidades", b),
+  reinvitar: (id: number) => post<{ invitacion: string; vence: string }>(`/plataforma/entidades/${id}/invitacion`, {}),
   dashboard: () => request<DashboardCentro | DashboardOrg>("/dashboard"),
   pacientes: () => request<Paciente[]>("/pacientes"),
   paciente: (id: string | number) => request<Paciente>(`/pacientes/${id}`),

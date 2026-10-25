@@ -1,7 +1,7 @@
 import { Column, CreateDateColumn, Entity, Index, PrimaryGeneratedColumn } from 'typeorm';
 import { Rol } from '../common/enums';
 
-// Persona que inicia sesión. Varias por entidad; ADMIN gestiona, OPERADOR registra datos, AUDITOR solo lee y ve la auditoría.
+// Persona que inicia sesión. Varias por entidad; SUPERADMIN da de alta entidades (solo en la entidad de plataforma); ADMIN gestiona, OPERADOR registra datos, AUDITOR solo lee y ve la auditoría.
 @Entity('usuario')
 export class Usuario {
   @PrimaryGeneratedColumn() id: number;
@@ -22,4 +22,6 @@ export class Usuario {
   @Column({ type: 'int', default: 0, select: false }) intentosFallidos: number;
   @Column({ type: 'timestamptz', nullable: true, select: false }) bloqueadoHasta: Date | null;
   @Column({ type: 'timestamptz', nullable: true, select: false }) sesionesDesde: Date | null;   // tokens anteriores a esta fecha quedan revocados
+  @Column({ type: 'varchar', nullable: true, select: false }) invitacionHash: string | null;       // SHA-256 del enlace de invitación (de un solo uso)
+  @Column({ type: 'timestamptz', nullable: true, select: false }) invitacionVence: Date | null;
 }

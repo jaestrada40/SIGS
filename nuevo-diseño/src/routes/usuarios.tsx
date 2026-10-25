@@ -25,7 +25,7 @@ export const Route = createFileRoute("/usuarios")({
   component: () => <AppShell><Usuarios /></AppShell>,
 });
 
-const tonoRol: Record<Rol, "teal" | "blue" | "amber"> = { ADMIN: "teal", OPERADOR: "blue", AUDITOR: "amber" };
+const tonoRol: Record<Rol, "teal" | "blue" | "amber"> = { SUPERADMIN: "teal", ADMIN: "teal", OPERADOR: "blue", AUDITOR: "amber" };
 
 /** Contraseña aleatoria de 16 caracteres (sin símbolos ambiguos) con el generador criptográfico del navegador. */
 function generarPassword() {
@@ -67,7 +67,7 @@ function Usuarios() {
         actions={<Button onClick={() => setAccion({ tipo: "nuevo" })}><UserPlus /> Nuevo usuario</Button>} />
 
       <div className="mb-4 grid gap-3 md:grid-cols-3">
-        {(Object.keys(ROLES) as Rol[]).map((r) => (
+        {(Object.keys(ROLES) as Rol[]).filter((r) => r !== "SUPERADMIN").map((r) => (
           <Card key={r}><Tag tone={tonoRol[r]}>{ROLES[r].label}</Tag><p className="mt-2 text-sm text-muted-foreground">{ROLES[r].desc}</p></Card>
         ))}
       </div>
@@ -204,7 +204,7 @@ function UsuarioForm({ u, onClose, onDone }: { u: UsuarioGestion | null; onClose
         {!u && <Field id="correo" label="Correo electrónico" required><input id="correo" name="correo" type="email" required maxLength={120} autoComplete="off" className={inputCls} /></Field>}
         <Field id="rol" label="Rol" required>
           <select id="rol" value={rol} onChange={(e) => setRol(e.target.value as Rol)} disabled={yo} className={inputCls}>
-            {(Object.keys(ROLES) as Rol[]).map((r) => <option key={r} value={r}>{ROLES[r].label}</option>)}
+            {(Object.keys(ROLES) as Rol[]).filter((r) => r !== "SUPERADMIN").map((r) => <option key={r} value={r}>{ROLES[r].label}</option>)}
           </select>
         </Field>
         <p className="-mt-1 text-xs text-muted-foreground">{yo ? "No puede cambiar su propio rol." : ROLES[rol].desc}{u && rol !== u.rol && " Se cerrará su sesión para aplicar el cambio."}</p>

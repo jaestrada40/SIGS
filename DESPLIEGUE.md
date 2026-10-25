@@ -33,7 +33,9 @@ Cada aplicación tiene su `Dockerfile` (`backend/Dockerfile` y `nuevo-diseño/Do
 
 ## 3. Comprobar que quedó bien
 - `https://api.sudominio.com/salud` responde `{"estado":"ok"}`.
-- Abra `https://app.sudominio.com`, vaya a **Registrar entidad**, cree la cuenta y configure el MFA con su app autenticadora. Guarde los códigos de recuperación.
+- Defina `SUPERADMIN_CORREO` y `SUPERADMIN_PASSWORD` antes del primer arranque. Entre a `https://app.sudominio.com` con esa cuenta y configure el MFA con su app autenticadora; guarde los códigos de recuperación.
+- En **Entidades** cree cada centro u organismo: se genera un enlace de invitación de un solo uso (vence en 72 h) que usted le envía; con él la entidad crea su contraseña y su MFA. No hay registro público.
+- Esta versión agrega columnas y valores de enumeración: en una base existente active `DB_SYNC=true` una vez (con respaldo) y vuelva a `false`.
 - La primera cuenta de cada entidad es **Administrador**; desde **Usuarios** se crean los demás.
 
 ## 4. Cosas que debe saber
