@@ -49,6 +49,9 @@ const niveles = [
   { label: "Excelente", cls: "bg-primary" },
 ];
 
+const CLAVE_CORREO = "sisg.correo";
+const correoGuardado = () => { try { return localStorage.getItem(CLAVE_CORREO) ?? ""; } catch { return ""; } };
+
 function Acceso() {
   const session = useSession();
   const navigate = useNavigate();
@@ -59,6 +62,8 @@ function Acceso() {
   const [loading, setLoading] = useState(false);
   const [paso, setPaso] = useState<PasoAcceso | null>(null);
   const [ver, setVer] = useState(false);
+  const [recordado] = useState(correoGuardado);
+  const [recordar, setRecordar] = useState(() => recordado !== "");
   const f = useMemo(() => fortaleza(password), [password]);
 
   useEffect(() => { if (session) navigate({ to: "/inicio" }); }, [session, navigate]);
@@ -78,6 +83,7 @@ function Acceso() {
             departamento: String(fd.get("departamento") ?? "").trim() || undefined,
             telefono: String(fd.get("telefono") ?? "").trim() || undefined,
           });
+      if (tab === "login") { try { recordar ? localStorage.setItem(CLAVE_CORREO, correo) : localStorage.removeItem(CLAVE_CORREO); } catch { /* sin almacenamiento: no se recuerda */ } }
       setPassword("");
       setPaso(res);
     } catch (err) {
@@ -103,20 +109,20 @@ function Acceso() {
 
       <section className="flex items-center justify-center p-6 md:p-10">
         <div className="w-full max-w-md">
-          {paso ? <PasoMfa paso={paso} volver={() => setPaso(null)} /> : (<>
+          {paso ? <PasoMfa paso={paso} volver={() => { setPaso(null); setTab("login"); setTipo("CENTRO_DIAGNOSTICO"); }} /> : (<>
           <h2 className="text-3xl font-extrabold">{tab === "login" ? "Bienvenido de vuelta" : "Registre su entidad"}</h2>
           <p className="mt-1 text-muted-foreground">{tab === "login" ? "Ingrese con el correo de su entidad." : "Toma menos de un minuto."}</p>
 
           <div role="tablist" aria-label="Acceso" className="mt-6 grid grid-cols-2 rounded-2xl bg-secondary p-1">
             {(["login", "registro"] as const).map((t) => (
-              <button key={t} role="tab" aria-selected={tab === t} onClick={() => { setTab(t); setError(null); setVer(false); }}
+              <button key={t} role="tab" aria-selected={tab === t} onClick={() => { setTab(t); setError(null); setVer(false); setPassword(""); setTipo("CENTRO_DIAGNOSTICO"); }}
                 className={cn("h-10 rounded-xl text-sm font-semibold transition-all", tab === t ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground")}>
                 {t === "login" ? "Iniciar sesión" : "Registrar entidad"}
               </button>
             ))}
           </div>
 
-          <form onSubmit={onSubmit} className="surface mt-6 space-y-4 p-6" noValidate={false}>
+          <form key={tab} onSubmit={onSubmit} className="surface mt-6 space-y-4 p-6" noValidate={false}>
             {tab === "registro" && (
               <>
                 <fieldset>
@@ -138,13 +144,13 @@ function Acceso() {
                 <Campo id="nombre" label="Nombre de la entidad">
                   <div className="relative">
                     <Building2 className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" aria-hidden />
-                    <input id="nombre" name="nombre" required className={cn(field, "pl-9")} placeholder="Centro El Roble" />
+                    <input id="nombre" name="nombre" required autoComplete="off" className={cn(field, "pl-9")} placeholder="Centro El Roble" />
                   </div>
                 </Campo>
               </>
             )}
             <Campo id="correo" label="Correo electrónico">
-              <input id="correo" name="correo" type="email" required autoComplete="email" className={field} placeholder="contacto@entidad.gt" />
+              <input id="correo" name="correo" type="email" required autoComplete={tab === "login" ? "email" : "off"} defaultValue={tab === "login" ? recordado : undefined} className={field} placeholder="contacto@entidad.gt" />
             </Campo>
             <Campo id="password" label="Contraseña">
               <div className="relative">
@@ -156,6 +162,9 @@ function Acceso() {
                 </button>
               </div>
             </Campo>
+            {tab === "login" && (
+              <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={recordar} onChange={(e) => setRecordar(e.target.checked)} /> Recordar mi correo</label>
+            )}
             {tab === "registro" && password && (
               <div aria-live="polite">
                 <div className="flex gap-1">
@@ -168,8 +177,8 @@ function Acceso() {
             )}
             {tab === "registro" && (
               <div className="grid grid-cols-2 gap-3">
-                <Campo id="departamento" label="Departamento"><input id="departamento" name="departamento" className={field} placeholder="Opcional" /></Campo>
-                <Campo id="telefono" label="Teléfono"><input id="telefono" name="telefono" type="tel" className={field} placeholder="Opcional" /></Campo>
+                <Campo id="departamento" label="Departamento"><input id="departamento" name="departamento" autoComplete="off" className={field} placeholder="Opcional" /></Campo>
+                <Campo id="telefono" label="Teléfono"><input id="telefono" name="telefono" type="tel" autoComplete="off" className={field} placeholder="Opcional" /></Campo>
               </div>
             )}
             {error && (
