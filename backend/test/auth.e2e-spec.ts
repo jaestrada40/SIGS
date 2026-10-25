@@ -1,7 +1,7 @@
 import { authenticator } from 'otplib';
 import request from 'supertest';
 import { DataSource } from 'typeorm';
-import { codigoSiguiente, crearApp, registrar } from './helpers';
+import { codigoSiguiente, crearApp, registrar, tokenDe } from './helpers';
 
 describe('auth + MFA', () => {
   let app;
@@ -30,7 +30,8 @@ describe('auth + MFA', () => {
     await http().get('/dashboard').set('Authorization', `Bearer ${l.body.mfa_token}`).expect(401);
     const ok = await http().post('/auth/mfa/verificar').send({ mfa_token: l.body.mfa_token, codigo: codigoSiguiente(secreto) });
     expect(ok.status).toBe(201);
-    expect(ok.body.access_token).toBeDefined();
+    expect(tokenDe(ok)).toBeDefined();   // la sesión viaja en cookie HttpOnly
+    expect(ok.body.access_token).toBeUndefined();   // y ya no en el cuerpo
     expect(JSON.stringify(ok.body)).not.toMatch(/passwordHash|mfaSecreto/);
   });
 
@@ -82,7 +83,7 @@ describe('auth + MFA', () => {
     await new Promise((r) => setTimeout(r, 5));
     const l = await login(correo);
     const ok = await http().post('/auth/mfa/verificar').send({ mfa_token: l.body.mfa_token, codigo: codigoSiguiente(secreto) });
-    await http().get('/pacientes').set('Authorization', `Bearer ${ok.body.access_token}`).expect(200);
+    await http().get('/pacientes').set('Authorization', `Bearer ${tokenDe(ok)}`).expect(200);
   });
 
   it('un correo inexistente también se bloquea igual (429): el bloqueo no revela cuentas', async () => {

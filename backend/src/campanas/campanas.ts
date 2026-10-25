@@ -1,11 +1,12 @@
 import { Body, Controller, Get, NotFoundException, Param, ParseIntPipe, Patch, Post, UseGuards } from '@nestjs/common';
 import { PartialType } from '@nestjs/mapped-types';
 import { InjectRepository } from '@nestjs/typeorm';
-import { IsDateString, IsEnum, IsInt, IsNotEmpty, IsOptional, IsString, Min } from 'class-validator';
+import { IsDateString, IsEnum, IsInt, IsNotEmpty, IsNumber, IsOptional, IsString, Max, Min } from 'class-validator';
 import { Column, Entity, PrimaryGeneratedColumn, Repository } from 'typeorm';
 import { Entidad, SoloTipo, TipoGuard } from '../common/auth';
 import { Bitacora, registrar } from '../common/bitacora';
 import { Area, EstadoCampana, TipoEntidad } from '../common/enums';
+import { numerico } from '../common/numerico';
 
 @Entity('campana')
 export class Campana {
@@ -19,6 +20,7 @@ export class Campana {
   @Column({ type: 'date', nullable: true }) fechaFin: string;
   @Column({ default: 0 }) personasAtendidas: number;
   @Column({ type: 'enum', enum: EstadoCampana, default: EstadoCampana.PROGRAMADA }) estado: EstadoCampana;
+  @Column({ type: 'numeric', precision: 12, scale: 2, nullable: true, transformer: numerico }) costo: number | null;   // costo total en quetzales (opcional)
 }
 
 export class CreateCampanaDto {
@@ -30,6 +32,7 @@ export class CreateCampanaDto {
   @IsOptional() @IsString() ubicacion?: string;
   @IsOptional() @IsInt() @Min(0) personasAtendidas?: number;
   @IsOptional() @IsEnum(EstadoCampana) estado?: EstadoCampana;
+  @IsOptional() @IsNumber({ maxDecimalPlaces: 2 }) @Min(0) @Max(100_000_000) costo?: number;
 }
 class UpdateCampanaDto extends PartialType(CreateCampanaDto) {}
 

@@ -15,6 +15,13 @@ import { DashboardController } from './dashboard/dashboard';
 import { Entidad } from './entidades/entidad.entity';
 import { Estudio, EstudiosController } from './estudios/estudios';
 import { Paciente, PacientesController } from './pacientes/pacientes';
+import { ImpactoController } from './impacto/impacto';
+import { Atencion, JornadaController } from './jornada/jornada';
+import { FhirController } from './fhir/fhir';
+import { AlertasController } from './alertas/alertas';
+import { EnlaceResultado, EnlacesController, PublicoController } from './enlaces/enlaces';
+import { ReferidosController } from './referidos/referidos';
+import { Referido } from './referidos/referido.entity';
 import { Usuario } from './usuarios/usuario.entity';
 import { UsuariosController } from './usuarios/usuarios';
 
@@ -34,16 +41,16 @@ export const configureApp = (app: INestApplication) => app.useGlobalPipes(new Va
       useFactory: (c: ConfigService) => ({
         type: 'postgres',
         host: c.get('DB_HOST'), port: Number(c.get('DB_PORT')), username: c.get('DB_USER'), password: c.get('DB_PASS'), database: c.get('DB_NAME'),
-        entities: [Entidad, Usuario, Paciente, Estudio, Campana, Bitacora],
+        entities: [Entidad, Usuario, Paciente, Estudio, Campana, Bitacora, Referido, EnlaceResultado, Atencion],
         // shortcut: sin migraciones el esquema se crea con synchronize. En producción solo si DB_SYNC=true (primer arranque o tras un cambio de esquema; ver DESPLIEGUE.md).
         synchronize: c.get('NODE_ENV') !== 'production' || c.get('DB_SYNC') === 'true',
       }),
     }),
-    TypeOrmModule.forFeature([Entidad, Usuario, Paciente, Estudio, Campana, Bitacora]),
+    TypeOrmModule.forFeature([Entidad, Usuario, Paciente, Estudio, Campana, Bitacora, Referido, EnlaceResultado, Atencion]),
     PassportModule,
     JwtModule.registerAsync({ inject: [ConfigService], useFactory: (c: ConfigService) => ({ secret: c.getOrThrow('JWT_SECRET'), signOptions: { expiresIn: '2h', issuer: 'sisg', algorithm: 'HS256' } }) }),
   ],
-  controllers: [AuthController, PacientesController, EstudiosController, CampanasController, DashboardController, BitacoraController, UsuariosController, CatalogosController, SaludController],
+  controllers: [AuthController, PacientesController, EstudiosController, CampanasController, DashboardController, BitacoraController, UsuariosController, CatalogosController, SaludController, ReferidosController, ImpactoController, AlertasController, FhirController, JornadaController, EnlacesController, PublicoController],
   providers: [JwtStrategy, { provide: APP_GUARD, useClass: ThrottlerGuard }, { provide: APP_GUARD, useClass: JwtAuthGuard }, { provide: APP_GUARD, useClass: RolGuard }, TipoGuard],
 })
 export class AppModule {}

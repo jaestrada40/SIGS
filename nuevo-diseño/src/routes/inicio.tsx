@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { Activity, FileSpreadsheet, FlaskConical, Megaphone, Plus, Sparkles, UserPlus, Users, HandHeart, type LucideIcon } from "lucide-react";
+import { Activity, AlertTriangle, FileSpreadsheet, FlaskConical, Megaphone, Plus, Sparkles, UserPlus, Users, HandHeart, type LucideIcon } from "lucide-react";
 import { Area, AreaChart, Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { AppShell } from "@/components/sisg/AppShell";
 import { Timeline } from "@/components/sisg/Timeline";
@@ -60,6 +60,7 @@ function Inicio() {
   const bit = useQuery({ queryKey: ["bitacora"], queryFn: api.bitacora, enabled: veAuditoria(session) });   // el operador no tiene acceso a la auditoría
   const estudios = useQuery({ queryKey: ["estudios"], queryFn: api.estudios, enabled: centro });
   const campanas = useQuery({ queryKey: ["campanas"], queryFn: api.campanas, enabled: !centro });
+  const alertas = useQuery({ queryKey: ["alertas"], queryFn: api.alertas });
   const mov = bit.data ?? [];
 
   const chart = useMemo(() => {
@@ -136,6 +137,22 @@ function Inicio() {
         )}
         {stats.map((s) => <Stat key={s.label} {...s} />)}
       </section>
+
+      {(alertas.data ?? []).length > 0 && (
+        <section aria-label="Pendientes" className="rounded-2xl border bg-card p-4 shadow-sm">
+          <h2 className="mb-2 flex items-center gap-2 text-lg font-bold"><AlertTriangle className="h-5 w-5 text-amber" aria-hidden /> Para atender</h2>
+          <ul className="divide-y">
+            {(alertas.data ?? []).map((a) => (
+              <li key={a.clave}>
+                <Link to={a.ruta} className="flex items-center gap-3 py-2.5 text-sm hover:text-primary">
+                  <span className={`h-2.5 w-2.5 shrink-0 rounded-full ${a.nivel === "alta" ? "bg-coral" : "bg-amber"}`} aria-label={a.nivel === "alta" ? "Prioridad alta" : "Prioridad media"} />
+                  {a.mensaje}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
 
       <section aria-label="Acciones rápidas" className="grid grid-cols-2 gap-3 md:grid-cols-4">
         {quick.map((q) => (

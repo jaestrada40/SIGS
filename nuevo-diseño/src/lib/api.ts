@@ -30,13 +30,13 @@ export interface Paciente {
 export interface Estudio {
   id: number | string; pacienteId: number | string; tipoEstudio: string; fecha: string;
   hora?: string | null; salaEquipo?: string | null; especialista?: string | null;
-  estado?: string | null; resultado?: string | null;
+  estado?: string | null; resultado?: string | null; monto?: number | null;
 }
 export type AreaCampana = "CARDIOVASCULAR" | "RESPIRATORIA" | "PLANIFICACION" | "ONCOLOGICO_OTRO";
 export type EstadoCampana = "PROGRAMADA" | "EN_CURSO" | "FINALIZADA";
 export interface Campana {
   id: number | string; nombre: string; area: AreaCampana; fechaInicio: string; fechaFin?: string | null;
-  departamento?: string | null; ubicacion?: string | null; personasAtendidas?: number | null; estado?: EstadoCampana | null;
+  departamento?: string | null; ubicacion?: string | null; personasAtendidas?: number | null; estado?: EstadoCampana | null; costo?: number | null;
 }
 export interface Movimiento {
   id: number | string; tabla: string; registroId: number | string;
@@ -45,7 +45,32 @@ export interface Movimiento {
   usuario: { id: number; nombre: string; correo: string; rol: Rol } | null;
 }
 export type Accion = "CREAR" | "MODIFICAR" | "IMPORTAR" | "INICIO_SESION" | "CIERRE_SESION" | "MFA_ACTIVADO" | "BLOQUEO" | "CAMBIO_PASSWORD"
-  | "ACTIVAR" | "DESACTIVAR" | "RESTABLECER_MFA" | "RESTABLECER_PASSWORD" | "EXPORTAR";
+  | "ACTIVAR" | "DESACTIVAR" | "RESTABLECER_MFA" | "RESTABLECER_PASSWORD" | "EXPORTAR" | "ACCESO" | "ACCESO_FALLIDO";
+export type EstadoReferido = "PENDIENTE" | "AGENDADO" | "ATENDIDO" | "NO_LLEGO" | "CANCELADO";
+export interface Referido {
+  id: number; campanaId: number | null; nombreCompleto: string; sexo: Sexo; dpi: string | null; fechaNacimiento: string | null; telefono: string | null;
+  tipoEstudio: string; motivo: string | null; estado: EstadoReferido; codigo: string; fechaCita: string | null; creadoEn: string; atendidoEn: string | null;
+  /** El centro, para quien envía; el organismo, para quien recibe. */
+  contraparte: string;
+}
+export interface CentroReferencia { id: number; nombre: string; departamento: string | null }
+export interface ResumenReferidos { total: number; pendientes: number; atendidos: number; noLlegaron: number; tasaAtencion: number | null }
+interface Demografia { pacientes: number; sexo: { sexo: string; total: number }[]; edades: { rango: string; total: number }[]; departamentos: { departamento: string; total: number }[] }
+export interface PuntoMes { mes: string; valor: number; ingresos?: number }
+export interface Barra { etiqueta: string; valor: number; ingresos?: number; campanas?: number }
+export type ImpactoCentro = Demografia & {
+  tipo: "CENTRO"; generadoEn: string; porMes: PuntoMes[]; porTipo: Barra[]; referidos: ResumenReferidos;
+  resumen: { estudios: number; realizados: number; programados: number; cancelados: number; tasaCancelacion: number | null; ingresos: number; ticketPromedio: number | null; realizadosConMonto: number; realizadosSinMonto: number };
+};
+export type ImpactoOrg = Demografia & {
+  tipo: "ORG"; generadoEn: string; porMes: PuntoMes[]; porArea: Barra[]; porDepartamento: Barra[]; referidos: ResumenReferidos;
+  porCampana: (Barra & { id: number; costo: number | null; referidos: number; atendidos: number })[];
+  resumen: { campanas: number; enCurso: number; personas: number; costo: number; campanasConCosto: number; costoPorPersona: number | null };
+};
+export type Impacto = ImpactoCentro | ImpactoOrg;
+export interface Alerta { clave: string; nivel: "alta" | "media"; cantidad: number; mensaje: string; ruta: string }
+export interface EnlaceResultado { id: number; expiraEn: string; revocadoEn: string | null; accesos: number; intentosFallidos: number; ultimoAccesoEn: string | null; creadoEn: string }
+export interface ResultadoPublico { centro: string; paciente: string; tipoEstudio: string; fecha: string; resultado: string; expiraEn: string }
 export type DashboardCentro = { totalPacientes: number; totalEstudios: number };
 export type DashboardOrg = { totalPacientes: number; totalCampanas: number; totalPersonasAtendidas: number };
 
@@ -96,7 +121,7 @@ async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
   } catch {
     throw new ApiError(0, "No pudimos conectar con el servidor. Verifique su conexión e intente de nuevo.");
   }
-  if (res.status === 401 && !path.startsWith("/auth/")) {
+  if (res.status === 401 && !path.startsWith("/auth/") && !path.startsWith("/publico/")) {
     setSession(null);
     throw new ApiError(401, "Su sesión expiró. Inicie sesión de nuevo.");
   }
@@ -136,7 +161,21 @@ export const api = {
   crearCampana: (b: Omit<Campana, "id">) => post<Campana>("/campanas", b),
   editarCampana: (id: string | number, b: Partial<Campana>) => patch<Campana>(`/campanas/${id}`, b),
   bitacora: () => request<Movimiento[]>("/bitacora"),
-  registrarExportacion: (recurso: "paciente" | "estudio" | "campana" | "bitacora", filas: number) => post<{ ok: boolean }>("/bitacora/exportacion", { recurso, filas }),
+  fhir: (recurso: "Patient" | "DiagnosticReport" | "Organization") => request<unknown>(`/fhir/${recurso}`),
+  sincronizarJornada: (campanaId: number, items: unknown[]) => post<{ resultados: { claveCliente: string; estado: "ok" | "duplicado" | "repetido" | "error"; mensaje?: string }[] }>("/jornada/sincronizar", { campanaId, items }),
+  alertas: () => request<Alerta[]>("/alertas"),
+  enlaces: (estudioId: number | string) => request<EnlaceResultado[]>(`/enlaces?estudioId=${estudioId}`),
+  crearEnlace: (estudioId: number | string, dias: number) => post<{ id: number; token: string; expiraEn: string }>("/enlaces", { estudioId: Number(estudioId), dias }),
+  revocarEnlace: (id: number) => post<{ ok: boolean }>(`/enlaces/${id}/revocar`, {}),
+  verResultado: (token: string, verificacion: string) => post<ResultadoPublico>("/publico/resultado", { token, verificacion }),
+  impacto: () => request<Impacto>("/impacto"),
+  referidos: () => request<Referido[]>("/referidos"),
+  centrosReferencia: () => request<CentroReferencia[]>("/referidos/centros"),
+  crearReferido: (b: { pacienteId: number; campanaId?: number | undefined; centroId: number; tipoEstudio: string; motivo?: string | undefined; consentimiento: boolean }) => post<Referido>("/referidos", b),
+  agendarReferido: (id: number, b: { fecha: string; hora?: string | undefined }) => post<{ ok: boolean }>(`/referidos/${id}/agendar`, b),
+  noLlegoReferido: (id: number) => post<{ ok: boolean }>(`/referidos/${id}/no-llego`, {}),
+  cancelarReferido: (id: number) => post<{ ok: boolean }>(`/referidos/${id}/cancelar`, {}),
+  registrarExportacion: (recurso: "paciente" | "estudio" | "campana" | "bitacora" | "referido" | "impacto", filas: number) => post<{ ok: boolean }>("/bitacora/exportacion", { recurso, filas }),
   geografia: () => request<Geografia>("/catalogos/geografia"),
   cambiarPassword: (b: { actual: string; nueva: string }) => post<AuthResponse>("/auth/cambiar-password", b),
   usuarios: () => request<UsuarioGestion[]>("/usuarios"),
@@ -147,6 +186,7 @@ export const api = {
 };
 
 // ---------- Formato ----------
+export const fmtQ = (n: number) => `Q ${new Intl.NumberFormat("es-GT", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(n)}`;
 export const fmtNum = (n: number) => new Intl.NumberFormat("es-GT").format(n);
 export function fmtFecha(iso?: string | null) {
   if (!iso) return "—";

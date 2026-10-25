@@ -135,6 +135,9 @@ function CampanaSheet({ sel, onClose, onDifusion }: { sel: Campana | "nuevo" | n
     if (g("fechaFin") && g("fechaFin") < g("fechaInicio")) { setError("La fecha de fin no puede ser antes del inicio."); return; }
     const b: Omit<Campana, "id"> = { nombre: g("nombre"), area: g("area") as AreaCampana, fechaInicio: g("fechaInicio"), estado: g("estado") as EstadoCampana, personasAtendidas: pa ? Number(pa) : 0 };
     for (const k of ["fechaFin", "departamento", "ubicacion"] as const) { const v = g(k); if (v) b[k] = v; }
+    const costo = g("costo");
+    if (costo && !/^\d+(\.\d{1,2})?$/.test(costo)) { setError("El costo debe ser un número con hasta 2 decimales."); return; }
+    if (costo) b.costo = Number(costo); else if (c?.costo != null) b.costo = null;
     m.mutate(b);
   }
 
@@ -168,6 +171,7 @@ function CampanaSheet({ sel, onClose, onDifusion }: { sel: Campana | "nuevo" | n
               </select>
             </Field>
           </div>
+          <Field id="costo" label="Costo total de la campaña (Q)"><input id="costo" name="costo" type="number" min={0} step="0.01" defaultValue={c?.costo ?? ""} placeholder="Opcional: permite calcular el costo por persona atendida" className={inputCls} /></Field>
           {error && <p role="alert" className="rounded-xl bg-coral-soft p-3 text-sm">{error}</p>}
           <div className="flex flex-wrap justify-end gap-2 pt-2">
             {c && <Button type="button" variant="secondary" className="mr-auto" onClick={() => onDifusion(c)}><Sparkles /> Redactar difusión</Button>}

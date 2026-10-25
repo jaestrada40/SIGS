@@ -13,9 +13,13 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as ActividadRouteImport } from './routes/actividad'
 import { Route as CampanasRouteImport } from './routes/campanas'
 import { Route as EstudiosRouteImport } from './routes/estudios'
+import { Route as ImpactoRouteImport } from './routes/impacto'
 import { Route as InicioRouteImport } from './routes/inicio'
+import { Route as JornadaRouteImport } from './routes/jornada'
 import { Route as PacientesRouteImport } from './routes/pacientes'
+import { Route as ReferidosRouteImport } from './routes/referidos'
 import { Route as UsuariosRouteImport } from './routes/usuarios'
+import { Route as ResultadoTokenRouteImport } from './routes/resultado.$token'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -37,9 +41,19 @@ const EstudiosRoute = EstudiosRouteImport.update({
   path: '/estudios',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ImpactoRoute = ImpactoRouteImport.update({
+  id: '/impacto',
+  path: '/impacto',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const InicioRoute = InicioRouteImport.update({
   id: '/inicio',
   path: '/inicio',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const JornadaRoute = JornadaRouteImport.update({
+  id: '/jornada',
+  path: '/jornada',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PacientesRoute = PacientesRouteImport.update({
@@ -47,9 +61,19 @@ const PacientesRoute = PacientesRouteImport.update({
   path: '/pacientes',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ReferidosRoute = ReferidosRouteImport.update({
+  id: '/referidos',
+  path: '/referidos',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const UsuariosRoute = UsuariosRouteImport.update({
   id: '/usuarios',
   path: '/usuarios',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ResultadoTokenRoute = ResultadoTokenRouteImport.update({
+  id: '/resultado/$token',
+  path: '/resultado/$token',
   getParentRoute: () => rootRouteImport,
 } as any)
 
@@ -58,18 +82,26 @@ export interface FileRoutesByFullPath {
   '/actividad': typeof ActividadRoute
   '/campanas': typeof CampanasRoute
   '/estudios': typeof EstudiosRoute
+  '/impacto': typeof ImpactoRoute
   '/inicio': typeof InicioRoute
+  '/jornada': typeof JornadaRoute
   '/pacientes': typeof PacientesRoute
+  '/referidos': typeof ReferidosRoute
   '/usuarios': typeof UsuariosRoute
+  '/resultado/$token': typeof ResultadoTokenRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/actividad': typeof ActividadRoute
   '/campanas': typeof CampanasRoute
   '/estudios': typeof EstudiosRoute
+  '/impacto': typeof ImpactoRoute
   '/inicio': typeof InicioRoute
+  '/jornada': typeof JornadaRoute
   '/pacientes': typeof PacientesRoute
+  '/referidos': typeof ReferidosRoute
   '/usuarios': typeof UsuariosRoute
+  '/resultado/$token': typeof ResultadoTokenRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -77,9 +109,13 @@ export interface FileRoutesById {
   '/actividad': typeof ActividadRoute
   '/campanas': typeof CampanasRoute
   '/estudios': typeof EstudiosRoute
+  '/impacto': typeof ImpactoRoute
   '/inicio': typeof InicioRoute
+  '/jornada': typeof JornadaRoute
   '/pacientes': typeof PacientesRoute
+  '/referidos': typeof ReferidosRoute
   '/usuarios': typeof UsuariosRoute
+  '/resultado/$token': typeof ResultadoTokenRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -88,27 +124,39 @@ export interface FileRouteTypes {
     | '/actividad'
     | '/campanas'
     | '/estudios'
+    | '/impacto'
     | '/inicio'
+    | '/jornada'
     | '/pacientes'
+    | '/referidos'
     | '/usuarios'
+    | '/resultado/$token'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/actividad'
     | '/campanas'
     | '/estudios'
+    | '/impacto'
     | '/inicio'
+    | '/jornada'
     | '/pacientes'
+    | '/referidos'
     | '/usuarios'
+    | '/resultado/$token'
   id:
     | '__root__'
     | '/'
     | '/actividad'
     | '/campanas'
     | '/estudios'
+    | '/impacto'
     | '/inicio'
+    | '/jornada'
     | '/pacientes'
+    | '/referidos'
     | '/usuarios'
+    | '/resultado/$token'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -116,9 +164,13 @@ export interface RootRouteChildren {
   ActividadRoute: typeof ActividadRoute
   CampanasRoute: typeof CampanasRoute
   EstudiosRoute: typeof EstudiosRoute
+  ImpactoRoute: typeof ImpactoRoute
   InicioRoute: typeof InicioRoute
+  JornadaRoute: typeof JornadaRoute
   PacientesRoute: typeof PacientesRoute
+  ReferidosRoute: typeof ReferidosRoute
   UsuariosRoute: typeof UsuariosRoute
+  ResultadoTokenRoute: typeof ResultadoTokenRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -151,11 +203,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof EstudiosRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/impacto': {
+      id: '/impacto'
+      path: '/impacto'
+      fullPath: '/impacto'
+      preLoaderRoute: typeof ImpactoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/inicio': {
       id: '/inicio'
       path: '/inicio'
       fullPath: '/inicio'
       preLoaderRoute: typeof InicioRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/jornada': {
+      id: '/jornada'
+      path: '/jornada'
+      fullPath: '/jornada'
+      preLoaderRoute: typeof JornadaRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/pacientes': {
@@ -165,11 +231,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PacientesRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/referidos': {
+      id: '/referidos'
+      path: '/referidos'
+      fullPath: '/referidos'
+      preLoaderRoute: typeof ReferidosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/usuarios': {
       id: '/usuarios'
       path: '/usuarios'
       fullPath: '/usuarios'
       preLoaderRoute: typeof UsuariosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/resultado/$token': {
+      id: '/resultado/$token'
+      path: '/resultado/$token'
+      fullPath: '/resultado/$token'
+      preLoaderRoute: typeof ResultadoTokenRouteImport
       parentRoute: typeof rootRouteImport
     }
   }
@@ -180,9 +260,13 @@ const rootRouteChildren: RootRouteChildren = {
   ActividadRoute: ActividadRoute,
   CampanasRoute: CampanasRoute,
   EstudiosRoute: EstudiosRoute,
+  ImpactoRoute: ImpactoRoute,
   InicioRoute: InicioRoute,
+  JornadaRoute: JornadaRoute,
   PacientesRoute: PacientesRoute,
+  ReferidosRoute: ReferidosRoute,
   UsuariosRoute: UsuariosRoute,
+  ResultadoTokenRoute: ResultadoTokenRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

@@ -1,13 +1,15 @@
 import { Body, Controller, Get, NotFoundException, Param, ParseIntPipe, Patch, Post, UseGuards } from '@nestjs/common';
 import { OmitType, PartialType } from '@nestjs/mapped-types';
 import { InjectRepository } from '@nestjs/typeorm';
-import { IsDateString, IsInt, IsNotEmpty, IsOptional, IsString, Matches } from 'class-validator';
+import { IsDateString, IsInt, IsNotEmpty, IsNumber, IsOptional, IsString, Matches, Max, Min } from 'class-validator';
 import { Column, Entity, In, PrimaryGeneratedColumn, Repository } from 'typeorm';
 import { Entidad, SoloTipo, TipoGuard } from '../common/auth';
 import { TipoEntidad } from '../common/enums';
 import { Bitacora, registrar } from '../common/bitacora';
 import { rechazar, validarFilas } from '../common/importar';
 import { Paciente } from '../pacientes/pacientes';
+import { Referido } from '../referidos/referido.entity';
+import { numerico } from '../common/numerico';
 
 @Entity('estudio')
 export class Estudio {
@@ -21,6 +23,7 @@ export class Estudio {
   @Column({ nullable: true }) especialista: string;
   @Column({ type: 'text', nullable: true }) resultado: string;
   @Column({ nullable: true }) estado: string;
+  @Column({ type: 'numeric', precision: 12, scale: 2, nullable: true, transformer: numerico }) monto: number | null;   // cobro en quetzales (opcional)
 }
 
 export class CreateEstudioDto {
@@ -32,6 +35,7 @@ export class CreateEstudioDto {
   @IsOptional() @IsString() especialista?: string;
   @IsOptional() @IsString() resultado?: string;
   @IsOptional() @IsString() estado?: string;
+  @IsOptional() @IsNumber({ maxDecimalPlaces: 2 }) @Min(0) @Max(10_000_000) monto?: number;
 }
 // En el archivo el paciente se identifica por su DPI (el id interno no lo conoce quien trae un Excel).
 class ImportEstudioDto extends OmitType(CreateEstudioDto, ['pacienteId'] as const) {
@@ -43,7 +47,7 @@ class UpdateEstudioDto extends PartialType(OmitType(CreateEstudioDto, ['paciente
 @SoloTipo(TipoEntidad.CENTRO_DIAGNOSTICO)
 @Controller('estudios')
 export class EstudiosController {
-  constructor(@InjectRepository(Estudio) private repo: Repository<Estudio>, @InjectRepository(Paciente) private pacientes: Repository<Paciente>, @InjectRepository(Bitacora) private bit: Repository<Bitacora>) {}
+  constructor(@InjectRepository(Estudio) private repo: Repository<Estudio>, @InjectRepository(Paciente) private pacientes: Repository<Paciente>, @InjectRepository(Bitacora) private bit: Repository<Bitacora>, @InjectRepository(Referido) private referidos: Repository<Referido>) {}
   @Get() list(@Entidad() { entidadId }) { return this.repo.findBy({ entidadId }); }
   @Post() async create(@Entidad() u, @Body() dto: CreateEstudioDto) {
     // the paciente must belong to the same entidad
@@ -70,6 +74,11 @@ export class EstudiosController {
   @Patch(':id') async update(@Entidad() u, @Param('id', ParseIntPipe) id: number, @Body() dto: UpdateEstudioDto) {
     const r = await this.repo.save(Object.assign(await this.one(u, id), dto));
     await registrar(this.bit, u, 'estudio', id, 'MODIFICAR', { campos: Object.keys(dto) });
+    // Si el estudio venía de un referido agendado y ya se realizó, el referido pasa a «atendido» (el organismo verá el estado, nunca el resultado).
+    if (dto.estado === 'REALIZADO') {
+      const ref = await this.referidos.findOneBy({ estudioId: id, entidadDestinoId: u.entidadId, estado: 'AGENDADO' });
+      if (ref) { await this.referidos.update(ref.id, { estado: 'ATENDIDO', atendidoEn: new Date() }); await registrar(this.bit, u, 'referido', ref.id, 'MODIFICAR', { campos: ['estado'] }); }
+    }
     return r;
   }
 }

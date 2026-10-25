@@ -1,6 +1,6 @@
 import request from 'supertest';
 import { DataSource } from 'typeorm';
-import { codigoSiguiente, crearApp, crearUsuario, entrar, registrar } from './helpers';
+import { codigoSiguiente, crearApp, crearUsuario, entrar, registrar, tokenDe } from './helpers';
 
 describe('usuarios, roles y auditoría', () => {
   let app;
@@ -116,7 +116,7 @@ describe('usuarios, roles y auditoría', () => {
     await http().post('/auth/cambiar-password').set(admin.auth).send({ actual: 'secreto1234', nueva: 'corta' }).expect(400);
     const r = await http().post('/auth/cambiar-password').set(admin.auth).send({ actual: 'secreto1234', nueva: 'NuevaClave#2026' }).expect(201);
     await http().get('/pacientes').set(admin.auth).expect(401);   // el token anterior murió
-    await http().get('/pacientes').set({ Authorization: `Bearer ${r.body.access_token}` }).expect(200);
+    await http().get('/pacientes').set({ Authorization: `Bearer ${tokenDe(r)}` }).expect(200);
     await http().post('/auth/login').send({ correo: admin.correo, password: 'secreto1234' }).expect(401);
   });
   it('las exportaciones quedan en la auditoría (quién, qué, cuántas filas) y las pueden hacer todos los roles de lectura', async () => {

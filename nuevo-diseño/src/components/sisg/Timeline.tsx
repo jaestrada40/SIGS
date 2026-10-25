@@ -17,8 +17,10 @@ export const acciones: Record<Accion, { label: string; icon: LucideIcon; tone: T
   RESTABLECER_MFA: { label: "MFA restablecido", icon: ShieldOff, tone: "blue", seguridad: true },
   RESTABLECER_PASSWORD: { label: "Contraseña restablecida", icon: Lock, tone: "blue", seguridad: true },
   EXPORTAR: { label: "Exportación", icon: Download, tone: "coral", seguridad: true },
+  ACCESO: { label: "Resultado consultado por la persona", icon: ShieldCheck, tone: "teal", seguridad: true },
+  ACCESO_FALLIDO: { label: "Intento fallido en un enlace", icon: ShieldAlert, tone: "coral", seguridad: true },
 };
-const tablas: Record<string, [string, string, boolean]> = { pacientes: ["Paciente", "Pacientes", false], paciente: ["Paciente", "Pacientes", false], estudios: ["Estudio", "Estudios", false], estudio: ["Estudio", "Estudios", false], campanas: ["Campaña", "Campañas", true], campana: ["Campaña", "Campañas", true], bitacora: ["Registro de auditoría", "Registros de auditoría", false], usuario: ["Usuario", "Usuarios", false] };
+const tablas: Record<string, [string, string, boolean]> = { pacientes: ["Paciente", "Pacientes", false], paciente: ["Paciente", "Pacientes", false], estudios: ["Estudio", "Estudios", false], estudio: ["Estudio", "Estudios", false], campanas: ["Campaña", "Campañas", true], campana: ["Campaña", "Campañas", true], bitacora: ["Registro de auditoría", "Registros de auditoría", false], usuario: ["Usuario", "Usuarios", false], referido: ["Referido", "Referidos", false], impacto: ["Reporte de indicadores", "Reportes de indicadores", false], enlace: ["Enlace de resultado", "Enlaces de resultado", false] };
 
 export function describir(m: Movimiento) {
   const [t, pl, fem] = tablas[m.tabla.toLowerCase()] ?? [m.tabla, m.tabla, false];

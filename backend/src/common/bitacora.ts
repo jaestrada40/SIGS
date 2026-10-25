@@ -25,7 +25,7 @@ export const registrar = (repo: Repository<Bitacora>, q: Quien, tabla: string, r
   repo.save(repo.create({ entidadId: q.entidadId, usuarioId: q.usuarioId ?? null, tabla, registroId, accion, detalle }));
 
 export class ExportacionDto {
-  @IsIn(['paciente', 'estudio', 'campana', 'bitacora']) recurso: string;
+  @IsIn(['paciente', 'estudio', 'campana', 'bitacora', 'referido', 'impacto']) recurso: string;
   @IsInt() @Min(0) @Max(1_000_000) filas: number;
 }
 

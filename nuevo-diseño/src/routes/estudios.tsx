@@ -5,6 +5,7 @@ import { CalendarClock, CheckCircle2, Download, FileSpreadsheet, FlaskConical, L
 import { toast } from "sonner";
 import { AppShell } from "@/components/sisg/AppShell";
 import { ImportDialog } from "@/components/sisg/ImportDialog";
+import { AvisosEstudio } from "@/components/sisg/AvisosEstudio";
 import { OcrDpi } from "@/components/sisg/OcrDpiDialog";
 import { Card, EmptyState, Field, FilterChip, IconChip, inputCls, ListSkeleton, PageHeader, Tag, type Tono } from "@/components/sisg/ui";
 import { Button } from "@/components/ui/button";
@@ -155,6 +156,9 @@ function EstudioSheet({ sel, pacientes, onClose }: { sel: Estudio | "nuevo" | nu
     if (!pid || !g("tipoEstudio") || !g("fecha")) { setError("Paciente, tipo de estudio y fecha son obligatorios."); return; }
     const b: Omit<Estudio, "id"> = { pacienteId: isNaN(Number(pid)) ? pid : Number(pid), tipoEstudio: g("tipoEstudio"), fecha: g("fecha") };
     for (const k of ["hora", "salaEquipo", "especialista", "estado", "resultado"] as const) { const v = g(k); if (v) b[k] = v; }
+    const monto = g("monto");
+    if (monto && !/^\d+(\.\d{1,2})?$/.test(monto)) { setError("El monto debe ser un número con hasta 2 decimales."); return; }
+    if (monto) b.monto = Number(monto); else if (e?.monto != null) b.monto = null;   // vaciar el campo lo borra
     m.mutate(b);
   }
 
@@ -165,6 +169,7 @@ function EstudioSheet({ sel, pacientes, onClose }: { sel: Estudio | "nuevo" | nu
           <SheetTitle className="font-display text-2xl">{e ? e.tipoEstudio : "Nuevo estudio"}</SheetTitle>
           <SheetDescription>{e ? "Actualice el estado o registre el resultado." : "Los campos con * son obligatorios."}</SheetDescription>
         </SheetHeader>
+        {e && <AvisosEstudio e={e} paciente={pacientes.find((p) => String(p.id) === String(e.pacienteId))} />}
         <form onSubmit={submit} className="mt-6 space-y-4" key={e?.id ?? "nuevo"}>
           <Field id="pacienteId" label="Paciente" required>
             <input type="search" value={filtro} onChange={(x) => setFiltro(x.target.value)} placeholder="Buscar paciente por nombre o DPI…" aria-label="Buscar paciente" className={`${inputCls} mb-2`} />
@@ -188,6 +193,7 @@ function EstudioSheet({ sel, pacientes, onClose }: { sel: Estudio | "nuevo" | nu
               {Object.entries(ESTADOS).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
             </select>
           </Field>
+          <Field id="monto" label="Monto cobrado (Q)"><input id="monto" name="monto" type="number" min={0} step="0.01" defaultValue={e?.monto ?? ""} placeholder="Opcional" className={inputCls} /></Field>
           <Field id="resultado" label="Resultado"><textarea id="resultado" name="resultado" rows={3} defaultValue={e?.resultado ?? ""} className={`${inputCls} h-auto py-2`} /></Field>
           {error && <p role="alert" className="rounded-xl bg-coral-soft p-3 text-sm">{error}</p>}
           <div className="flex justify-end gap-2 pt-2">

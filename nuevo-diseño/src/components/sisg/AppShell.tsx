@@ -1,7 +1,7 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
-import { ClipboardList, FlaskConical, HeartPulse, LayoutDashboard, LogOut, Megaphone, Menu, Search, UserCog, Users, X } from "lucide-react";
-import { api, esAdmin, esCentro, ROLES, setSession, useSession, veAuditoria } from "@/lib/api";
+import { Tent, BarChart3, ClipboardList, FlaskConical, Send, HeartPulse, LayoutDashboard, LogOut, Megaphone, Menu, Search, UserCog, Users, X } from "lucide-react";
+import { api, esAdmin, esCentro, puedeEscribir, ROLES, setSession, useSession, veAuditoria } from "@/lib/api";
 import { CuentaDialog } from "./CuentaDialog";
 import { useQueryClient } from "@tanstack/react-query";
 import { Skeleton } from "./ui";
@@ -58,6 +58,9 @@ export function AppShell({ children }: { children: ReactNode }) {
     centro
       ? { to: "/estudios", label: "Estudios", icon: FlaskConical }
       : { to: "/campanas", label: "Campañas", icon: Megaphone },
+    { to: "/referidos", label: "Referidos", icon: Send },
+    ...(!centro && puedeEscribir(session) ? [{ to: "/jornada", label: "Jornada", icon: Tent }] : []),
+    ...(veAuditoria(session) ? [{ to: "/impacto", label: centro ? "Indicadores" : "Impacto", icon: BarChart3 }] : []),
     ...(veAuditoria(session) ? [{ to: "/actividad", label: "Auditoría", icon: ClipboardList }] : []),
     ...(esAdmin(session) ? [{ to: "/usuarios", label: "Usuarios", icon: UserCog }] : []),
   ] as { to: string; label: string; icon: typeof Users }[];
@@ -98,7 +101,7 @@ export function AppShell({ children }: { children: ReactNode }) {
 
   return (
     <div className="flex min-h-screen">
-      <aside className="sticky top-0 hidden h-screen w-64 shrink-0 border-r bg-sidebar/90 backdrop-blur lg:block">{nav}</aside>
+      <aside className="sticky top-0 hidden h-screen w-64 shrink-0 border-r bg-sidebar/90 backdrop-blur print:hidden lg:block">{nav}</aside>
       {open && (
         <div className="fixed inset-0 z-40 lg:hidden" role="dialog" aria-modal="true" aria-label="Menú">
           <button className="absolute inset-0 bg-foreground/40" aria-label="Cerrar menú" onClick={() => setOpen(false)} />
@@ -111,7 +114,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         </div>
       )}
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="sticky top-0 z-30 flex items-center gap-3 border-b bg-background/80 px-4 py-3 backdrop-blur md:px-8">
+        <header className="sticky top-0 z-30 flex items-center gap-3 border-b bg-background/80 px-4 py-3 backdrop-blur print:hidden md:px-8">
           <button className="flex h-11 w-11 items-center justify-center rounded-xl hover:bg-accent lg:hidden" onClick={() => setOpen(true)} aria-label="Abrir menú">
             <Menu className="h-5 w-5" />
           </button>
