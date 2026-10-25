@@ -62,6 +62,25 @@ function variantes(bitmap: ImageBitmap, ancho: number, conBinaria: boolean) {
   return { gris, binaria };
 }
 
+const FOTOGRAMAS = 7;   // ≈ 0,7 s con la tarjeta quieta
+
+/** Nitidez de un recorte: varianza del laplaciano sobre una copia reducida (más alta = más enfocada). */
+export function nitidez(c: HTMLCanvasElement): number {
+  const w = 480, h = Math.max(3, Math.round((c.height * w) / c.width));
+  const t = document.createElement("canvas"); t.width = w; t.height = h;
+  const g = t.getContext("2d", { willReadFrequently: true });
+  if (!g) return 0;
+  g.drawImage(c, 0, 0, w, h);
+  const d = g.getImageData(0, 0, w, h).data, l = new Float32Array(w * h);
+  for (let i = 0; i < w * h; i++) l[i] = 0.299 * d[i * 4]! + 0.587 * d[i * 4 + 1]! + 0.114 * d[i * 4 + 2]!;
+  let s = 0, s2 = 0, n = 0;
+  for (let y = 1; y < h - 1; y++) for (let x = 1; x < w - 1; x++) {
+    const i = y * w + x, v = 4 * l[i]! - l[i - 1]! - l[i + 1]! - l[i - w]! - l[i + w]!;
+    s += v; s2 += v * v; n++;
+  }
+  return s2 / n - (s / n) ** 2;
+}
+
 /** La franja de lectura automática (MRZ) está en la parte baja del reverso: se lee aparte, con solo sus caracteres posibles. */
 function recorteInferior(origen: HTMLCanvasElement, fraccion = 0.45) {
   const alto = Math.round(origen.height * fraccion), c = document.createElement("canvas");
@@ -136,6 +155,7 @@ function CamaraDpi({ onListo, onCerrar }: { onListo: (blobs: Blob[]) => void; on
   const stream = useRef<MediaStream | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [frente, setFrente] = useState<Blob | null>(null);
+  const [capturando, setCapturando] = useState(false);
 
   useEffect(() => {
     let cancelado = false;
@@ -144,16 +164,19 @@ function CamaraDpi({ onListo, onCerrar }: { onListo: (blobs: Blob[]) => void; on
         const s = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: "environment" }, width: { ideal: 1920 }, height: { ideal: 1080 } }, audio: false });
         if (cancelado) { s.getTracks().forEach((t) => t.stop()); return; }
         stream.current = s;
+        // Enfoque continuo cuando la cámara lo ofrece (en muchas webcams y teléfonos viene apagado al cerrar la distancia).
+        const pista = s.getVideoTracks()[0];
+        if ((pista?.getCapabilities?.() as { focusMode?: string[] } | undefined)?.focusMode?.includes("continuous")) void pista?.applyConstraints({ advanced: [{ focusMode: "continuous" } as MediaTrackConstraintSet] }).catch(() => undefined);
         if (video.current) video.current.srcObject = s;
       } catch { setError("No se pudo abrir la cámara. Revise el permiso del navegador (la cámara solo funciona con HTTPS o en localhost) o use una imagen."); }
     })();
     return () => { cancelado = true; stream.current?.getTracks().forEach((t) => t.stop()); };
   }, []);
 
-  /** Recorta del fotograma solo lo que queda dentro del marco, con la resolución completa de la cámara. */
-  async function capturar(): Promise<Blob | null> {
+  /** Recorta del fotograma actual solo lo que queda dentro del marco, con la resolución completa de la cámara. */
+  function recortar(): HTMLCanvasElement | null {
     const v = video.current, m = marco.current, g = guia.current;
-    if (!v || !m || !g || !v.videoWidth) { setError("Espere a que la cámara esté lista."); return null; }
+    if (!v || !m || !g || !v.videoWidth) return null;
     const cm = m.getBoundingClientRect(), cg = g.getBoundingClientRect();
     const escala = Math.max(cm.width / v.videoWidth, cm.height / v.videoHeight);   // el video se muestra con object-cover
     const offX = (v.videoWidth * escala - cm.width) / 2, offY = (v.videoHeight * escala - cm.height) / 2;
@@ -161,14 +184,27 @@ function CamaraDpi({ onListo, onCerrar }: { onListo: (blobs: Blob[]) => void; on
     const sw = Math.min(v.videoWidth - sx, cg.width / escala), sh = Math.min(v.videoHeight - sy, cg.height / escala);
     const c = document.createElement("canvas"); c.width = Math.round(sw); c.height = Math.round(sh);
     c.getContext("2d")?.drawImage(v, sx, sy, sw, sh, 0, 0, c.width, c.height);
-    const blob = await new Promise<Blob | null>((r) => c.toBlob(r, "image/jpeg", 0.92));
+    return c;
+  }
+
+  /** Varios fotogramas seguidos y se queda el más nítido: un solo fotograma de una webcam suele salir movido o sin enfocar. */
+  async function capturar(): Promise<Blob | null> {
+    let mejor: HTMLCanvasElement | null = null, mejorNitidez = -1;
+    for (let i = 0; i < FOTOGRAMAS; i++) {
+      const c = recortar();
+      if (!c) { setError("Espere a que la cámara esté lista."); return null; }
+      const n = nitidez(c);
+      if (n > mejorNitidez) { mejor = c; mejorNitidez = n; }
+      if (i < FOTOGRAMAS - 1) await new Promise((r) => setTimeout(r, 110));
+    }
+    const blob = await new Promise<Blob | null>((r) => mejor!.toBlob(r, "image/jpeg", 0.92));
     if (!blob) setError("No se pudo capturar la imagen.");
     return blob;
   }
 
   async function onCapturar() {
-    setError(null);
-    const blob = await capturar();
+    setError(null); setCapturando(true);
+    const blob = await capturar().finally(() => setCapturando(false));
     if (!blob) return;
     if (!frente) { setFrente(blob); return; }
     onListo([frente, blob]);
@@ -191,7 +227,7 @@ function CamaraDpi({ onListo, onCerrar }: { onListo: (blobs: Blob[]) => void; on
         </div>
         {error && <p role="alert" className="mt-3 rounded-lg bg-coral-soft p-2 text-sm">{error}</p>}
         <div className="mt-4 flex flex-wrap gap-2">
-          <Button type="button" className="flex-1" onClick={() => void onCapturar()} disabled={!!error && !stream.current}><Camera /> Capturar {lado}</Button>
+          <Button type="button" className="flex-1" onClick={() => void onCapturar()} disabled={(!!error && !stream.current) || capturando}><Camera /> {capturando ? "Mantenga quieta la tarjeta…" : `Capturar ${lado}`}</Button>
           {frente && <Button type="button" variant="outline" onClick={() => onListo([frente])}>Omitir reverso</Button>}
         </div>
         {frente && <p className="mt-2 flex items-center gap-1.5 text-xs text-muted-foreground"><CheckCircle2 className="h-3.5 w-3.5 text-primary" aria-hidden /> Frente capturado. Con el reverso se verifican más datos.</p>}
