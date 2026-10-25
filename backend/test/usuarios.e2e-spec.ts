@@ -23,6 +23,13 @@ describe('usuarios, roles y auditoría', () => {
     await http().post('/usuarios').set(admin.auth).send({ nombre: 'X', correo: 'z@test.com', rol: 'OPERADOR', password: 'corta' }).expect(400);
   });
 
+  it('un ADMIN de entidad no puede crear ni ascender a nadie a SUPERADMIN', async () => {
+    const admin = await registrar(app, 'CENTRO_DIAGNOSTICO');
+    const op = await crearUsuario(app, admin, 'OPERADOR');
+    await http().post('/usuarios').set(admin.auth).send({ nombre: 'X', correo: 'x@test.com', rol: 'SUPERADMIN', password: 'ClaveInicial#2026' }).expect(400);
+    await http().patch(`/usuarios/${op.id}`).set(admin.auth).send({ rol: 'SUPERADMIN' }).expect(400);
+  });
+
   it('solo ADMIN gestiona usuarios; OPERADOR y AUDITOR reciben 403', async () => {
     const admin = await registrar(app, 'CENTRO_DIAGNOSTICO');
     for (const rol of ['OPERADOR', 'AUDITOR'] as const) {

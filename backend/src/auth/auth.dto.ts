@@ -1,5 +1,8 @@
-import { IsEmail, IsEnum, IsIn, IsNotEmpty, IsOptional, IsString, MaxLength, MinLength } from 'class-validator';
+import { IsEmail, IsIn, IsNotEmpty, IsOptional, IsString, MaxLength, MinLength } from 'class-validator';
 import { Rol, TipoEntidad } from '../common/enums';
+
+// SUPERADMIN solo lo crea SuperadminInicial: ningún administrador de entidad puede asignarlo.
+const ROLES_ENTIDAD = [Rol.ADMIN, Rol.OPERADOR, Rol.AUDITOR];
 
 export class LoginDto {
   @IsEmail() @MaxLength(120) correo: string;
@@ -28,12 +31,12 @@ export class CambiarPasswordDto {
 export class CrearUsuarioDto {
   @IsString() @IsNotEmpty() @MaxLength(120) nombre: string;
   @IsEmail() @MaxLength(120) correo: string;
-  @IsEnum(Rol) rol: Rol;
+  @IsIn(ROLES_ENTIDAD) rol: Rol;
   @IsString() @MinLength(10) @MaxLength(72) password: string;
 }
 export class ActualizarUsuarioDto {
   @IsOptional() @IsString() @IsNotEmpty() @MaxLength(120) nombre?: string;
-  @IsOptional() @IsEnum(Rol) rol?: Rol;
+  @IsOptional() @IsIn(ROLES_ENTIDAD) rol?: Rol;
   @IsOptional() activo?: boolean;
 }
 export class NuevaPasswordDto {
