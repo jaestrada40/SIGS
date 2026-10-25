@@ -6,7 +6,8 @@ type Props = { onFound: (dpi: string) => void };
 async function reconocerDpi(blob: Blob) {
   const image = await createImageBitmap(blob);
   const canvas = document.createElement("canvas");
-  canvas.width = image.width * 2; canvas.height = image.height * 2;
+  canvas.width = image.width * 2;
+  canvas.height = image.height * 2;
   const ctx = canvas.getContext("2d");
   if (!ctx) throw new Error("canvas");
   ctx.filter = "grayscale(1) contrast(1.8)";
@@ -14,11 +15,16 @@ async function reconocerDpi(blob: Blob) {
   const procesada = await new Promise<Blob>((resolve, reject) => canvas.toBlob((b) => b ? resolve(b) : reject(new Error("imagen")), "image/png"));
   const { createWorker } = await import("tesseract.js");
   const worker = await createWorker("eng");
-  await worker.setParameters({ tessedit_pageseg_mode: "6", tessedit_char_whitelist: "0123456789" });
+  await worker.setParameters({ tessedit_pageseg_mode: "6", tessedit_char_whitelist: "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789<" });
   const { data: { text } } = await worker.recognize(procesada);
   await worker.terminate();
-  const candidatos = (text.match(/[0-9][0-9\s-]{11,20}[0-9]/g) ?? []).map((x) => x.replace(/\D/g, "")).filter((x) => x.length === 13);
-  return candidatos[0] ?? text.replace(/\D/g, "").match(/\d{13}/)?.[0];
+  const normalizado = text.toUpperCase().replace(/[OQ]/g, "0").replace(/[IL]/g, "1");
+  // En el DPI guatemalteco la MRZ contiene GTM + el número de DPI de 13 dígitos.
+  const mrz = normalizado.match(/GTM\s*([0-9]{13})/);
+  if (mrz) return mrz[1];
+  const candidatos = (normalizado.match(/[0-9][0-9\s-]{11,20}[0-9]/g) ?? [])
+    .map((x) => x.replace(/\D/g, "")).filter((x) => x.length === 13);
+  return candidatos[0] ?? normalizado.replace(/\D/g, "").match(/\d{13}/)?.[0];
 }
 
 /** OCR local: la imagen no sale del navegador. Solo devuelve un DPI candidato. */
