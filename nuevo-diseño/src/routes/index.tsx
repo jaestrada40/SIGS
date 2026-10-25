@@ -63,8 +63,10 @@ function Acceso() {
   const [loading, setLoading] = useState(false);
   const [paso, setPaso] = useState<PasoAcceso | null>(null);
   const [ver, setVer] = useState(false);
-  const [recordado] = useState(correoGuardado);
-  const [recordar, setRecordar] = useState(() => recordado !== "");
+  // localStorage solo existe en el navegador: se lee tras montar para que el HTML del servidor y el del cliente coincidan.
+  const [recordado, setRecordado] = useState("");
+  const [recordar, setRecordar] = useState(false);
+  useEffect(() => { const c = correoGuardado(); setRecordado(c); setRecordar(c !== ""); }, []);
   const f = useMemo(() => fortaleza(password), [password]);
   // Con un enlace de invitación el formulario crea la contraseña de la entidad en lugar de iniciar sesión.
   const inv = useQuery({ queryKey: ["invitacion", invitacion], queryFn: () => api.invitacion(invitacion!), enabled: !!invitacion, retry: false });
@@ -115,7 +117,7 @@ function Acceso() {
 
           <form onSubmit={onSubmit} className="surface mt-6 space-y-4 p-6">
             <Campo id="correo" label="Correo electrónico">
-              <input id="correo" name="correo" type="email" required autoComplete="email" readOnly={!!invitacion} key={invitacion ? inv.data?.correo : "login"}
+              <input id="correo" name="correo" type="email" required autoComplete="email" readOnly={!!invitacion} key={invitacion ? inv.data?.correo : `login${recordado}`}
                 defaultValue={invitacion ? inv.data?.correo : recordado} className={field} placeholder="contacto@entidad.gt" />
             </Campo>
             <Campo id="password" label={invitacion ? "Nueva contraseña" : "Contraseña"}>
