@@ -5,6 +5,7 @@ import { Download, FileSpreadsheet, Loader2, Pencil, Phone, Search, UserPlus, X 
 import { toast } from "sonner";
 import { AppShell } from "@/components/sisg/AppShell";
 import { ImportDialog } from "@/components/sisg/ImportDialog";
+import { OcrDpi } from "@/components/sisg/OcrDpiDialog";
 import { Avatar, Card, EmptyState, Field, FilterChip, inputCls, ListSkeleton, PageHeader, Tag } from "@/components/sisg/ui";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
@@ -150,6 +151,13 @@ function PacienteSheet({ sel, onClose }: { sel: Paciente | "nuevo" | null; onClo
   const [error, setError] = useState<string | null>(null);
   const modo = nuevo || editando;
 
+  function completarDpi(dpi: string) {
+    const input = document.getElementById("dpi") as HTMLInputElement | null;
+    if (!input) return;
+    input.value = dpi;
+    input.dispatchEvent(new Event("input", { bubbles: true }));
+  }
+
   const m = useMutation({
     mutationFn: (b: Omit<Paciente, "id">) => (p ? api.editarPaciente(p.id, b) : api.crearPaciente(b)),
     onSuccess: () => {
@@ -212,7 +220,7 @@ function PacienteSheet({ sel, onClose }: { sel: Paciente | "nuevo" | null; onClo
               </Field>
               <Field id="fechaNacimiento" label="Fecha de nacimiento"><input id="fechaNacimiento" name="fechaNacimiento" type="date" defaultValue={p?.fechaNacimiento ?? ""} className={inputCls} /></Field>
             </div>
-            <Field id="dpi" label="DPI"><input id="dpi" name="dpi" inputMode="numeric" maxLength={13} defaultValue={p?.dpi ?? ""} placeholder="13 dígitos"
+            <Field id="dpi" label="DPI"><OcrDpi onFound={completarDpi} /><input id="dpi" name="dpi" inputMode="numeric" maxLength={13} defaultValue={p?.dpi ?? ""} placeholder="13 dígitos"
               onInput={(e) => { e.currentTarget.value = e.currentTarget.value.replace(/\D/g, ""); }} className={inputCls} /></Field>
             <Ubicacion depto={p?.departamento ?? ""} municipio={p?.municipio ?? ""} />
             <div className="grid grid-cols-2 gap-3">
