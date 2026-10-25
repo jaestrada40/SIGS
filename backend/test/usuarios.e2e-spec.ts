@@ -1,6 +1,6 @@
 import request from 'supertest';
 import { DataSource } from 'typeorm';
-import { crearApp, crearUsuario, entrar, registrar } from './helpers';
+import { codigoSiguiente, crearApp, crearUsuario, entrar, registrar } from './helpers';
 
 describe('usuarios, roles y auditoría', () => {
   let app;
@@ -136,4 +136,21 @@ describe('usuarios, roles y auditoría', () => {
     expect(p.usuario.correo).toBe(op.correo);
     expect(b.find((m) => m.tabla === 'bitacora').usuario.rol).toBe('AUDITOR');
   });
+  it('los tokens parciales de MFA también se revocan al restablecer la contraseña o el MFA', async () => {
+    const admin = await registrar(app, 'CENTRO_DIAGNOSTICO');
+    // usuario sin MFA: su token de configuración deja de servir tras restablecerle la contraseña
+    const nuevo = await crearUsuario(app, admin, 'OPERADOR');
+    await http().post(`/usuarios/${nuevo.id}/restablecer-mfa`).set(admin.auth).expect(201);
+    const l1 = await http().post('/auth/login').send({ correo: nuevo.correo, password: 'ClaveInicial#2026' });
+    expect(l1.body.estado).toBe('mfa_configurar');
+    await http().post(`/usuarios/${nuevo.id}/restablecer-password`).set(admin.auth).send({ password: 'ClaveNueva#2026' }).expect(201);
+    await http().post('/auth/mfa/configurar').set('Authorization', `Bearer ${l1.body.setup_token}`).expect(401);
+    // usuario con MFA: su token de verificación deja de servir tras restablecerle el MFA
+    const con = await crearUsuario(app, admin, 'OPERADOR');
+    const l2 = await http().post('/auth/login').send({ correo: con.correo, password: 'ClaveInicial#2026' });
+    expect(l2.body.estado).toBe('mfa_requerido');
+    await http().post(`/usuarios/${con.id}/restablecer-mfa`).set(admin.auth).expect(201);
+    await http().post('/auth/mfa/verificar').send({ mfa_token: l2.body.mfa_token, codigo: codigoSiguiente(con.secreto) }).expect(401);
+  });
+
 });

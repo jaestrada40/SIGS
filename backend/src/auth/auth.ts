@@ -84,7 +84,7 @@ export class AuthController {
     return this.sesion(u);
   }
   private temporal(u: Usuario, scope: 'mfa' | 'mfa-setup') {
-    return this.jwt.signAsync({ sub: u.id, scope }, { expiresIn: scope === 'mfa' ? '5m' : '15m' });
+    return this.jwt.signAsync({ sub: u.id, scope, ms: Date.now() }, { expiresIn: scope === 'mfa' ? '5m' : '15m' });
   }
   // Tras la contraseña nadie recibe sesión completa: o ya tiene MFA (pide el código) o debe configurarlo.
   private async siguientePaso(u: Usuario) {
@@ -96,6 +96,8 @@ export class AuthController {
       if (p.scope !== scope) throw new Error('scope');
       const u = await this.repo.findOne({ where: { id: p.sub }, select: SEG });
       if (!u || !u.activo) throw new Error('sin usuario');
+      // Un restablecimiento de contraseña o de MFA, un cambio de rol o un cierre de sesión invalidan también estos tokens parciales (misma regla que la sesión completa).
+      if (u.sesionesDesde && (p.ms ?? 0) <= u.sesionesDesde.getTime()) throw new Error('revocado');
       return u;
     } catch { throw new UnauthorizedException(); }
   }
