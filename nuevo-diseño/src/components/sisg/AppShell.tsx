@@ -1,18 +1,17 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
-import { ClipboardList, FlaskConical, HeartPulse, LayoutDashboard, LogOut, Megaphone, Menu, Search, UserCog, Users, X } from "lucide-react";
+import { ClipboardList, FlaskConical, LayoutDashboard, LogOut, Megaphone, Menu, Search, UserCog, Users, X } from "lucide-react";
 import { api, esAdmin, esCentro, ROLES, setSession, useSession, veAuditoria } from "@/lib/api";
 import { CuentaDialog } from "./CuentaDialog";
 import { useQueryClient } from "@tanstack/react-query";
 import { Skeleton } from "./ui";
 import { cn } from "@/lib/utils";
+import ilustracion from "@/assets/ilustracion-cuidado.png";
 
 export function Logo({ inverted }: { inverted?: boolean }) {
   return (
-    <div className="flex items-center gap-2.5">
-      <span className={cn("flex h-10 w-10 items-center justify-center rounded-xl", inverted ? "bg-primary-foreground/15 text-primary-foreground" : "bg-gradient-primary text-primary-foreground shadow-glow")}>
-        <HeartPulse className="h-5 w-5" aria-hidden />
-      </span>
+    <div className="flex flex-col items-center gap-1 text-center">
+      <img src={ilustracion} alt="" width={72} height={72} className="h-[72px] w-[72px] object-contain" aria-hidden />
       <div className="leading-tight">
         <p className={cn("font-display text-lg font-extrabold", inverted && "text-primary-foreground")}>SISG</p>
         <p className={cn("text-[11px] font-medium", inverted ? "text-primary-foreground/80" : "text-muted-foreground")}>Salud de Guatemala</p>
