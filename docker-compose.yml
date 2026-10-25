@@ -12,7 +12,9 @@ services:
       POSTGRES_PASSWORD: ${DB_PASS:?defina DB_PASS}
       POSTGRES_DB: ${DB_NAME:-sisg}
     volumes:
-      - sisg_pgdata:/var/lib/postgresql/data
+      # Volumen nuevo para inicializar PostgreSQL con las credenciales actuales.
+      # El volumen anterior se conserva para no borrar datos accidentalmente.
+      - sisg_pgdata_v2:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
       interval: 10s
@@ -60,4 +62,4 @@ services:
       - "3000"
 
 volumes:
-  sisg_pgdata:
+  sisg_pgdata_v2:
