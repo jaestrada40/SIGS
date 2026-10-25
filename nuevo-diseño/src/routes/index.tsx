@@ -230,7 +230,7 @@ function PasoMfa({ paso, volver }: { paso: PasoAcceso; volver: () => void }) {
     try {
       if (paso.estado === "mfa_requerido") {
         const r = await api.mfaVerificar({ mfa_token: paso.mfa_token, codigo: codigo.trim() });
-        setSession({ token: r.access_token, entidad: r.entidad, usuario: r.usuario });
+        setSession({ entidad: r.entidad, usuario: r.usuario });
       } else {
         setEntregado(await api.mfaActivar(paso.setup_token, codigo.trim()));
       }
@@ -252,7 +252,7 @@ function PasoMfa({ paso, volver }: { paso: PasoAcceso; volver: () => void }) {
           </ul>
           <Button type="button" variant="outline" size="sm" className="w-full" onClick={() => copiar(entregado.recuperacion.join("\n"))}><Copy /> Copiar códigos</Button>
           <label className="flex items-start gap-2 text-sm"><input type="checkbox" checked={guardados} onChange={(e) => setGuardados(e.target.checked)} className="mt-1" /> Ya los guardé en un lugar seguro.</label>
-          <Button type="button" size="lg" className="w-full" disabled={!guardados} onClick={() => setSession({ token: entregado.access_token, entidad: entregado.entidad, usuario: entregado.usuario })}><Check /> Continuar</Button>
+          <Button type="button" size="lg" className="w-full" disabled={!guardados} onClick={() => setSession({ entidad: entregado.entidad, usuario: entregado.usuario })}><Check /> Continuar</Button>
         </div>
       </>
     );

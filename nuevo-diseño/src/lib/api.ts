@@ -11,7 +11,7 @@ export const ROLES: Record<Rol, { label: string; desc: string }> = {
   AUDITOR: { label: "Auditor", desc: "Solo lectura: consulta datos y la auditoría." },
 };
 export interface UsuarioSesion { id: number; nombre: string; correo: string; rol: Rol }
-export interface AuthResponse { access_token: string; entidad: Entidad; usuario: UsuarioSesion }
+export interface AuthResponse { entidad: Entidad; usuario: UsuarioSesion }
 export interface UsuarioGestion { id: number; nombre: string; correo: string; rol: Rol; activo: boolean; mfaActivo: boolean; creadoEn: string; ultimoAcceso: string | null }
 export type Geografia = Record<string, string[]>;
 // Tras la contraseña el servidor nunca da sesión: pide el código MFA o exige configurarlo.
@@ -19,7 +19,7 @@ export type PasoAcceso =
   | { estado: "mfa_requerido"; mfa_token: string }
   | { estado: "mfa_configurar"; setup_token: string };
 export interface MfaConfig { secreto: string; otpauth: string; qr: string }
-export interface Session { token: string; entidad: Entidad; usuario: UsuarioSesion }
+export interface Session { entidad: Entidad; usuario: UsuarioSesion }
 
 export type Sexo = "F" | "M" | "NE";
 export interface Paciente {
@@ -89,10 +89,10 @@ export class ApiError extends Error {
 async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
   const s = read();
   const headers: Record<string, string> = { "Content-Type": "application/json" };
-  if (s && !path.startsWith("/auth/")) headers["Authorization"] = `Bearer ${s.token}`;
+  const credentials: RequestCredentials = "include";
   let res: Response;
   try {
-    res = await fetch(`${API_URL}${path}`, { ...init, headers: { ...headers, ...(init.headers as object) } });
+    res = await fetch(`${API_URL}${path}`, { ...init, credentials, headers: { ...headers, ...(init.headers as object) } });
   } catch {
     throw new ApiError(0, "No pudimos conectar con el servidor. Verifique su conexión e intente de nuevo.");
   }
@@ -115,7 +115,7 @@ const patch = <T,>(p: string, b: unknown) => request<T>(p, { method: "PATCH", bo
 export const api = {
   login: (b: { correo: string; password: string }) => post<PasoAcceso>("/auth/login", b),
   // Revoca en el servidor todos los tokens de esta entidad; si falla, igual se cierra la sesión local.
-  logout: () => request<{ ok: boolean }>("/auth/logout", { method: "POST", headers: { Authorization: `Bearer ${read()?.token ?? ""}` } }).catch(() => null),
+  logout: () => request<{ ok: boolean }>("/auth/logout", { method: "POST" }).catch(() => null),
   mfaVerificar: (b: { mfa_token: string; codigo: string }) => post<AuthResponse>("/auth/mfa/verificar", b),
   mfaConfigurar: (setupToken: string) => request<MfaConfig>("/auth/mfa/configurar", { method: "POST", headers: { Authorization: `Bearer ${setupToken}` } }),
   mfaActivar: (setupToken: string, codigo: string) =>

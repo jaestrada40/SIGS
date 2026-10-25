@@ -23,7 +23,7 @@ export function CuentaDialog({ open, onOpenChange, session }: { open: boolean; o
     setLoading(true);
     try {
       const r = await api.cambiarPassword({ actual, nueva });
-      setSession({ token: r.access_token, entidad: r.entidad, usuario: r.usuario });   // las demás sesiones se cierran en el servidor
+      setSession({ entidad: r.entidad, usuario: r.usuario });   // las demás sesiones se cierran en el servidor
       toast.success("Contraseña actualizada");
       form.reset(); onOpenChange(false);
     } catch (err) {

@@ -1,4 +1,5 @@
-import { Body, ConflictException, Controller, Headers, HttpException, Injectable, Ip, Post, Req, UnauthorizedException, UseGuards } from '@nestjs/common';
+import { Body, ConflictException, Controller, Headers, HttpException, Injectable, Ip, Post, Req, Res, UnauthorizedException, UseGuards } from '@nestjs/common';
+import type { Response } from 'express';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { AuthGuard, PassportStrategy } from '@nestjs/passport';
@@ -18,6 +19,7 @@ import { Usuario } from '../usuarios/usuario.entity';
 import { CambiarPasswordDto, CodigoDto, LoginDto, MfaVerificarDto, RegistroDto } from './auth.dto';
 
 const ISSUER = 'sisg';
+const cookieToken = (req: any) => req?.headers?.cookie?.split(';').map((x: string) => x.trim()).find((x: string) => x.startsWith('sisg_session='))?.slice('sisg_session='.length);
 authenticator.options = { window: 1 };   // tolera ±30 s de desfase de reloj
 // Paso de tiempo (30 s) al que corresponde un código válido, o null si no lo es.
 const pasoValido = (secreto: string, codigo: string) => {
@@ -49,7 +51,7 @@ const SEG = { id: true, entidadId: true, nombre: true, correo: true, rol: true, 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
   constructor(cfg: ConfigService, @InjectRepository(Usuario) private repo: Repository<Usuario>) {
-    super({ jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(), secretOrKey: cfg.getOrThrow('JWT_SECRET'), algorithms: ['HS256'], issuer: ISSUER });
+    super({ jwtFromRequest: (req) => cookieToken(req) ?? ExtractJwt.fromAuthHeaderAsBearerToken()(req), secretOrKey: cfg.getOrThrow('JWT_SECRET'), algorithms: ['HS256'], issuer: ISSUER });
   }
   async validate(p: { sub: number; tipo: string; scope?: string; ms?: number }) {
     if (p.scope !== 'full') throw new UnauthorizedException();
@@ -73,15 +75,16 @@ export class AuthController {
   private evento(u: Usuario, accion: string, detalle: Record<string, unknown> | null = null) {
     return registrar(this.bit, { entidadId: u.entidadId, usuarioId: u.id }, 'sesion', u.id, accion, detalle);
   }
-  private async sesion(u: Usuario) {
+  private async sesion(u: Usuario, res?: Response) {
     const e = await this.entidades.findOneByOrFail({ id: u.entidadId });
     const access_token = await this.jwt.signAsync({ sub: u.id, tipo: e.tipo, scope: 'full', ms: Date.now() });
-    return { access_token, entidad: { id: e.id, nombre: e.nombre, tipo: e.tipo }, usuario: { id: u.id, nombre: u.nombre, correo: u.correo, rol: u.rol } };
+    res?.cookie('sisg_session', access_token, { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'strict', maxAge: 2 * 60 * 60 * 1000, path: '/' });
+    return { entidad: { id: e.id, nombre: e.nombre, tipo: e.tipo }, usuario: { id: u.id, nombre: u.nombre, correo: u.correo, rol: u.rol } };
   }
-  private async iniciar(u: Usuario) {
+  private async iniciar(u: Usuario, res?: Response) {
     await this.repo.update(u.id, { ultimoAcceso: new Date() });
     await this.evento(u, 'INICIO_SESION');
-    return this.sesion(u);
+    return this.sesion(u, res);
   }
   private temporal(u: Usuario, scope: 'mfa' | 'mfa-setup') {
     return this.jwt.signAsync({ sub: u.id, scope, ms: Date.now() }, { expiresIn: scope === 'mfa' ? '5m' : '15m' });
@@ -146,7 +149,7 @@ export class AuthController {
   // Paso 2 del inicio de sesión: código de la app autenticadora o un código de recuperación (de un solo uso).
   @Throttle({ default: { limit: 10, ttl: 60_000 } })
   @Post('mfa/verificar')
-  async verificar(@Body() { mfa_token, codigo }: MfaVerificarDto, @Ip() ip: string) {
+  async verificar(@Body() { mfa_token, codigo }: MfaVerificarDto, @Ip() ip: string, @Res({ passthrough: true }) res: Response) {
     const u = await this.deToken(mfa_token, 'mfa');
     const k = `mfa|${ip}|${u.id}`;
     bloqueado(k);
@@ -157,7 +160,7 @@ export class AuthController {
     else ok = await this.consumirRecuperacion(u, sha256(normalizarRecuperacion(c)));
     if (!ok) return this.fallo(u, k);
     await this.limpiar(u, k);
-    return this.iniciar(u);
+    return this.iniciar(u, res);
   }
 
   // Configuración (obligatoria la primera vez): usa el setup_token que se entrega tras la contraseña.
@@ -174,7 +177,7 @@ export class AuthController {
 
   @Throttle({ default: { limit: 10, ttl: 60_000 } })
   @Post('mfa/activar')
-  async activar(@Headers('authorization') h: string | undefined, @Body() { codigo }: CodigoDto, @Ip() ip: string) {
+  async activar(@Headers('authorization') h: string | undefined, @Body() { codigo }: CodigoDto, @Ip() ip: string, @Res({ passthrough: true }) res: Response) {
     const u = await this.deToken(this.deBearer(h), 'mfa-setup');
     const k = `mfa|${ip}|${u.id}`;
     bloqueado(k);
@@ -190,16 +193,17 @@ export class AuthController {
     if (r.affected !== 1) throw new ConflictException('La verificación en dos pasos ya está activa.');
     await this.limpiar(u, k);
     await this.evento(u, 'MFA_ACTIVADO');
-    return { ...(await this.iniciar(u)), recuperacion: codigos };
+    return { ...(await this.iniciar(u, res)), recuperacion: codigos };
   }
 
   // Cierra la sesión en el servidor: todo token emitido hasta ahora deja de valer.
   @Public(false)
   @UseGuards(AuthGuard('jwt'))
   @Post('logout')
-  async logout(@Req() { user }: { user: { usuarioId: number; entidadId: number } }) {
+  async logout(@Req() { user }: { user: { usuarioId: number; entidadId: number } }, @Res({ passthrough: true }) res: Response) {
     await this.repo.update(user.usuarioId, { sesionesDesde: new Date() });
     await registrar(this.bit, user, 'sesion', user.usuarioId, 'CIERRE_SESION');
+    res.clearCookie('sisg_session', { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'strict', path: '/' });
     return { ok: true };
   }
 
@@ -208,13 +212,13 @@ export class AuthController {
   @UseGuards(AuthGuard('jwt'))
   @Throttle({ default: { limit: 5, ttl: 60_000 } })
   @Post('cambiar-password')
-  async cambiarPassword(@Req() { user }: { user: { usuarioId: number } }, @Body() { actual, nueva }: CambiarPasswordDto) {
+  async cambiarPassword(@Req() { user }: { user: { usuarioId: number } }, @Body() { actual, nueva }: CambiarPasswordDto, @Res({ passthrough: true }) res: Response) {
     const u = await this.repo.findOneOrFail({ where: { id: user.usuarioId }, select: SEG });
     if (!(await bcrypt.compare(actual, u.passwordHash))) throw new HttpException('La contraseña actual no es correcta.', 400);
     if (actual === nueva) throw new HttpException('La contraseña nueva debe ser distinta de la actual.', 400);
     await this.repo.update(u.id, { passwordHash: await bcrypt.hash(nueva, COSTO_BCRYPT), sesionesDesde: new Date(Date.now() - 1) });
     await this.evento(u, 'CAMBIO_PASSWORD');
-    return this.sesion(u);
+    return this.sesion(u, res);
   }
 
   // Cada código TOTP sirve una sola vez: el paso de tiempo solo puede avanzar (la actualización condicional es atómica).

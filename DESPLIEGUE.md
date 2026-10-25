@@ -39,7 +39,7 @@ Cada aplicación tiene su `Dockerfile` (`backend/Dockerfile` y `nuevo-diseño/Do
 ## 4. Cosas que debe saber
 - **`API_URL` se incorpora al compilar la interfaz.** Si cambia el dominio de la API, cambie la variable y **vuelva a desplegar con reconstrucción** (no basta con reiniciar).
 - **`FRONTEND_URL` debe ser exactamente el dominio de la interfaz** (con `https://`): es el único origen que la API acepta por CORS.
-- **Esquema de la base de datos (`DB_SYNC`).** El proyecto aún no tiene migraciones: con `DB_SYNC=true` la API crea las tablas al arrancar. Úselo en el primer despliegue. Después conviene poner `DB_SYNC=false`, y volver a `true` solo cuando una actualización cambie el esquema, **con un respaldo antes**, porque la sincronización automática puede borrar columnas que ya no existan en el código.
+- **Esquema de la base de datos (`DB_SYNC`).** El valor predeterminado de producción es `false` para evitar cambios automáticos del esquema. En una base nueva, configure temporalmente `DB_SYNC=true` para crear las tablas, haga un respaldo y vuelva a `false`; no lo active durante despliegues normales porque la sincronización automática puede borrar columnas que ya no existan en el código.
 - **Respaldo.** La base vive en el volumen `sisg_pgdata`. Haga copias periódicas, por ejemplo con una tarea programada de Coolify:
   ```bash
   docker exec <contenedor-db> pg_dump -U "$DB_USER" "$DB_NAME" | gzip > sisg_$(date +%F).sql.gz
@@ -48,7 +48,7 @@ Cada aplicación tiene su `Dockerfile` (`backend/Dockerfile` y `nuevo-diseño/Do
 - **IP real del cliente.** `TRUST_PROXY=1` hace que el bloqueo por intentos fallidos y el límite de peticiones usen la IP del cliente y no la del proxy. No lo quite detrás de Coolify.
 
 ## 5. Límites conocidos (antes de usar datos reales de pacientes)
-- La sesión se guarda en el navegador (`localStorage`); lo más seguro es una cookie `HttpOnly`.
+- La sesión autenticada se mantiene en una cookie `HttpOnly`, `Secure` y `SameSite=Strict`; el navegador solo conserva metadatos no sensibles de la interfaz.
 - No hay recuperación de contraseña por correo: un administrador la restablece desde **Usuarios**.
 - Sin migraciones de base de datos ni respaldo automático (ver arriba).
 - La exportación a CSV se registra en la auditoría desde el navegador; no se genera en el servidor.
