@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Loader2, ScanLine } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { Camera, Loader2, ScanLine, X } from "lucide-react";
 
 type Props = { onFound: (dpi: string) => void };
 
@@ -7,6 +7,49 @@ type Props = { onFound: (dpi: string) => void };
 export function OcrDpi({ onFound }: Props) {
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
+  const [camara, setCamara] = useState(false);
+  const [lado, setLado] = useState<"frente" | "reverso">("frente");
+  const [frente, setFrente] = useState<Blob | null>(null);
+  const video = useRef<HTMLVideoElement>(null);
+  const stream = useRef<MediaStream | null>(null);
+
+  useEffect(() => () => stream.current?.getTracks().forEach((t) => t.stop()), []);
+  useEffect(() => { if (camara && video.current && stream.current) video.current.srcObject = stream.current; }, [camara]);
+
+  async function abrirCamara() {
+    setMsg(null);
+    try {
+      stream.current = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: "environment" }, width: { ideal: 1280 } }, audio: false });
+      setLado("frente"); setFrente(null); setCamara(true);
+      if (video.current) video.current.srcObject = stream.current;
+    } catch { setMsg("No se pudo abrir la cámara. Verifique el permiso del navegador o use una imagen."); }
+  }
+
+  function cerrarCamara() {
+    stream.current?.getTracks().forEach((t) => t.stop()); stream.current = null; setCamara(false); setFrente(null);
+  }
+
+  async function capturar() {
+    const v = video.current;
+    if (!v || !v.videoWidth) { setMsg("Espere a que la cámara esté lista."); return; }
+    const c = document.createElement("canvas"); c.width = v.videoWidth; c.height = v.videoHeight;
+    c.getContext("2d")?.drawImage(v, 0, 0);
+    const blob = await new Promise<Blob | null>((resolve) => c.toBlob(resolve, "image/jpeg", 0.9));
+    if (!blob) { setMsg("No se pudo capturar la imagen."); return; }
+    if (lado === "frente") { setFrente(blob); setLado("reverso"); return; }
+    if (!frente) { setMsg("Primero capture el frente del DPI."); return; }
+    cerrarCamara();
+    setBusy(true); setMsg(null);
+    try {
+      const { createWorker } = await import("tesseract.js");
+      const worker = await createWorker("eng");
+      const { data: { text } } = await worker.recognize(frente);
+      await worker.terminate();
+      const dpi = text.replace(/[^0-9]/g, " ").match(/\d{13}/g)?.[0];
+      if (!dpi) setMsg("No encontramos el DPI en el frente. Intente con mejor luz y enfoque."); else onFound(dpi);
+    } catch { setMsg("No se pudo reconocer el DPI. Intente nuevamente."); }
+    finally { setBusy(false); setFrente(null); }
+  }
 
   async function leer(file: File) {
     setMsg(null);
@@ -26,7 +69,18 @@ export function OcrDpi({ onFound }: Props) {
     finally { setBusy(false); }
   }
 
+  if (camara) return <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4">
+    <div className="w-full max-w-lg rounded-2xl bg-background p-4 shadow-xl">
+      <div className="mb-3 flex items-center justify-between"><strong>Escanear {lado} del DPI</strong><button type="button" onClick={cerrarCamara} aria-label="Cerrar cámara"><X /></button></div>
+      <p className="mb-3 text-sm text-muted-foreground">Alinee todo el documento dentro del marco y asegúrese de tener buena luz.</p>
+      <div className="overflow-hidden rounded-xl bg-black"><video ref={video} autoPlay playsInline muted className="aspect-[4/3] w-full object-cover" /></div>
+      <button type="button" onClick={() => void capturar()} className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 py-3 font-semibold text-primary-foreground"><Camera /> Capturar {lado}</button>
+    </div>
+  </div>;
+
   return <div className="space-y-2">
+    <button type="button" onClick={() => void abrirCamara()} disabled={busy} className="inline-flex items-center gap-1.5 text-sm font-semibold text-primary hover:underline"><Camera className="h-4 w-4" /> Escanear DPI con cámara</button>
+    <span className="mx-2 text-xs text-muted-foreground">o</span>
     <label className="inline-flex cursor-pointer items-center gap-1.5 text-sm font-semibold text-primary hover:underline">
       {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <ScanLine className="h-4 w-4" />}
       {busy ? "Reconociendo DPI…" : "Reconocer DPI desde imagen"}
