@@ -3,7 +3,7 @@ import { Body, Controller, Get, HttpCode, NotFoundException, Param, ParseIntPipe
 import { InjectRepository } from '@nestjs/typeorm';
 import { Throttle } from '@nestjs/throttler';
 import { IsInt, IsOptional, IsString, Length, Max, Min } from 'class-validator';
-import { Column, CreateDateColumn, Entity, Index, PrimaryGeneratedColumn, Repository } from 'typeorm';
+import { Column, CreateDateColumn, Entity, Index, PrimaryGeneratedColumn, Repository, ForeignKey } from 'typeorm';
 import { Entidad, Public, SoloTipo, TipoGuard } from '../common/auth';
 import { TipoEntidad } from '../common/enums';
 import { Bitacora, registrar } from '../common/bitacora';
@@ -19,8 +19,8 @@ const sha = (t: string) => createHash('sha256').update(t).digest('hex');
 @Entity('enlace_resultado')
 export class EnlaceResultado {
   @PrimaryGeneratedColumn() id: number;
-  @Column() entidadId: number;
-  @Column() estudioId: number;
+  @ForeignKey('Entidad') @Column() entidadId: number;
+  @ForeignKey('Estudio') @Column() estudioId: number;
   @Index({ unique: true }) @Column() tokenHash: string;
   @Column({ type: 'timestamptz' }) expiraEn: Date;
   @Column({ type: 'timestamptz', nullable: true }) revocadoEn: Date | null;

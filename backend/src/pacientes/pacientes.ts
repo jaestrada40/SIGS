@@ -4,7 +4,7 @@ import { PartialType } from '@nestjs/mapped-types';
 import { InjectRepository } from '@nestjs/typeorm';
 import { IsDateString, IsEnum, IsNotEmpty, IsOptional, IsString, Matches, MaxLength } from 'class-validator';
 import { DepartamentoValido, MunicipioDelDepartamento, normalizarTelefono, TELEFONO_GT } from '../common/geografia';
-import { Column, Entity, PrimaryGeneratedColumn, Repository } from 'typeorm';
+import { Column, Entity, PrimaryGeneratedColumn, Repository, ForeignKey } from 'typeorm';
 import { Entidad } from '../common/auth';
 import { Sexo } from '../common/enums';
 import { Bitacora, registrar } from '../common/bitacora';
@@ -13,7 +13,7 @@ import { validarFilas } from '../common/importar';
 @Entity('paciente')
 export class Paciente {
   @PrimaryGeneratedColumn() id: number;
-  @Column() entidadId: number;
+  @ForeignKey('Entidad') @Column() entidadId: number;
   @Column() nombreCompleto: string;
   @Column({ nullable: true }) dpi: string;
   @Column({ type: 'date', nullable: true }) fechaNacimiento: string;

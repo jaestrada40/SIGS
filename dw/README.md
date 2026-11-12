@@ -20,6 +20,7 @@ Usuario `root`, contraseña `sisg_dev` (solo local).
 | `sql/02_fuente_datos.sql` | Datos sintéticos (≈6,000 pacientes, ≈12,000 estudios, 150 campañas) |
 | `sql/03_fuente_triggers.sql` | Reglas de negocio y bitácora de auditoría |
 | `sql/04_dw_esquema.sql` | **Modelo estrella**, tabla de sumarización, rol `analista` |
+| `sql/04b_dw_vistas.sql` | **Vistas** `v_*`: una por cada consulta 1 a 8 de `06_consultas.sql` (`SELECT * FROM v_estudios_mes_categoria;`) |
 | `sql/05_dw_etl.sql` | **ETL** con procedimientos almacenados y `etl_log` |
 | `sql/06_consultas.sql` | **Queries** analíticos |
 

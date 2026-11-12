@@ -2,7 +2,7 @@ import { BadRequestException, Body, Controller, NotFoundException, Post, UseGuar
 import { InjectDataSource } from '@nestjs/typeorm';
 import { plainToInstance } from 'class-transformer';
 import { ArrayMaxSize, ArrayMinSize, IsArray, IsInt, validate } from 'class-validator';
-import { Column, CreateDateColumn, DataSource, Entity, Index, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, CreateDateColumn, DataSource, Entity, Index, PrimaryGeneratedColumn, ForeignKey } from 'typeorm';
 import { Entidad, SoloTipo, TipoGuard } from '../common/auth';
 import { Bitacora, registrar } from '../common/bitacora';
 import { TipoEntidad } from '../common/enums';
@@ -20,9 +20,9 @@ const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-
 @Index(['campanaId', 'pacienteId'], { unique: true })
 export class Atencion {
   @PrimaryGeneratedColumn() id: number;
-  @Column() entidadId: number;
-  @Column() campanaId: number;
-  @Column() pacienteId: number;
+  @ForeignKey('Entidad') @Column() entidadId: number;
+  @ForeignKey('Campana') @Column() campanaId: number;
+  @ForeignKey('Paciente') @Column() pacienteId: number;
   @Column() claveCliente: string;
   @Column({ type: 'timestamptz' }) atendidoEn: Date;
   @CreateDateColumn({ type: 'timestamptz' }) creadoEn: Date;

@@ -1,11 +1,11 @@
-import { Column, CreateDateColumn, Entity, Index, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, CreateDateColumn, Entity, Index, PrimaryGeneratedColumn, ForeignKey } from 'typeorm';
 import { Rol } from '../common/enums';
 
 // Persona que inicia sesión. Varias por entidad; SUPERADMIN da de alta entidades (solo en la entidad de plataforma); ADMIN gestiona, OPERADOR registra datos, AUDITOR solo lee y ve la auditoría.
 @Entity('usuario')
 export class Usuario {
   @PrimaryGeneratedColumn() id: number;
-  @Index() @Column() entidadId: number;
+  @ForeignKey('Entidad') @Index() @Column() entidadId: number;
   @Column() nombre: string;
   @Column({ unique: true }) correo: string;
   @Column({ type: 'enum', enum: Rol, default: Rol.OPERADOR }) rol: Rol;

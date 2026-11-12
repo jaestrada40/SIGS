@@ -1,4 +1,4 @@
-import { Column, CreateDateColumn, Entity, Index, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, CreateDateColumn, Entity, Index, PrimaryGeneratedColumn, ForeignKey } from 'typeorm';
 import { Sexo } from '../common/enums';
 
 export const ESTADOS_REFERIDO = ['PENDIENTE', 'AGENDADO', 'ATENDIDO', 'NO_LLEGO', 'CANCELADO'] as const;
@@ -12,9 +12,9 @@ export type EstadoReferido = (typeof ESTADOS_REFERIDO)[number];
 @Index(['entidadDestinoId', 'id'])
 export class Referido {
   @PrimaryGeneratedColumn() id: number;
-  @Column() entidadOrigenId: number;
-  @Column() entidadDestinoId: number;
-  @Column({ type: 'int', nullable: true }) campanaId: number | null;
+  @ForeignKey('Entidad') @Column() entidadOrigenId: number;
+  @ForeignKey('Entidad') @Column() entidadDestinoId: number;
+  @ForeignKey('Campana') @Column({ type: 'int', nullable: true }) campanaId: number | null;
 
   // --- copia mínima de la persona, consentida ---
   @Column() nombreCompleto: string;
@@ -28,7 +28,7 @@ export class Referido {
   @Column({ type: 'varchar', default: 'PENDIENTE' }) estado: EstadoReferido;
   @Column({ unique: true }) codigo: string;                       // para que la persona lo muestre en el centro
   @Column({ type: 'timestamptz' }) consentimientoEn: Date;
-  @Column({ type: 'int', nullable: true }) estudioId: number | null;   // estudio que creó el centro al agendar
+  @ForeignKey('Estudio') @Column({ type: 'int', nullable: true }) estudioId: number | null;   // estudio que creó el centro al agendar
   @Column({ type: 'date', nullable: true }) fechaCita: string | null;
   @CreateDateColumn() creadoEn: Date;
   @Column({ type: 'timestamptz', nullable: true }) atendidoEn: Date | null;

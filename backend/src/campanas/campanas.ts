@@ -2,7 +2,7 @@ import { Body, Controller, Get, NotFoundException, Param, ParseIntPipe, Patch, P
 import { PartialType } from '@nestjs/mapped-types';
 import { InjectRepository } from '@nestjs/typeorm';
 import { IsDateString, IsEnum, IsInt, IsNotEmpty, IsNumber, IsOptional, IsString, Max, Min } from 'class-validator';
-import { Column, Entity, PrimaryGeneratedColumn, Repository } from 'typeorm';
+import { Column, Entity, PrimaryGeneratedColumn, Repository, ForeignKey } from 'typeorm';
 import { Entidad, SoloTipo, TipoGuard } from '../common/auth';
 import { Bitacora, registrar } from '../common/bitacora';
 import { Area, EstadoCampana, TipoEntidad } from '../common/enums';
@@ -11,7 +11,7 @@ import { numerico } from '../common/numerico';
 @Entity('campana')
 export class Campana {
   @PrimaryGeneratedColumn() id: number;
-  @Column() entidadId: number;
+  @ForeignKey('Entidad') @Column() entidadId: number;
   @Column() nombre: string;
   @Column({ type: 'enum', enum: Area }) area: Area;
   @Column({ nullable: true }) departamento: string;

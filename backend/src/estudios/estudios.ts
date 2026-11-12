@@ -2,7 +2,7 @@ import { Body, Controller, Get, NotFoundException, Param, ParseIntPipe, Patch, P
 import { OmitType, PartialType } from '@nestjs/mapped-types';
 import { InjectRepository } from '@nestjs/typeorm';
 import { IsDateString, IsInt, IsNotEmpty, IsNumber, IsOptional, IsString, Matches, Max, Min } from 'class-validator';
-import { Column, Entity, In, PrimaryGeneratedColumn, Repository } from 'typeorm';
+import { Column, Entity, In, PrimaryGeneratedColumn, Repository, ForeignKey } from 'typeorm';
 import { Entidad, SoloTipo, TipoGuard } from '../common/auth';
 import { TipoEntidad } from '../common/enums';
 import { Bitacora, registrar } from '../common/bitacora';
@@ -14,8 +14,8 @@ import { numerico } from '../common/numerico';
 @Entity('estudio')
 export class Estudio {
   @PrimaryGeneratedColumn() id: number;
-  @Column() entidadId: number;
-  @Column() pacienteId: number;
+  @ForeignKey('Entidad') @Column() entidadId: number;
+  @ForeignKey('Paciente') @Column() pacienteId: number;
   @Column() tipoEstudio: string;
   @Column({ nullable: true }) salaEquipo: string;
   @Column({ type: 'date' }) fecha: string;

@@ -1,7 +1,7 @@
 import { Body, Controller, Get, Post } from '@nestjs/common';
 import { IsIn, IsInt, Max, Min } from 'class-validator';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Column, CreateDateColumn, Entity, Index, PrimaryGeneratedColumn, Repository } from 'typeorm';
+import { Column, CreateDateColumn, Entity, Index, PrimaryGeneratedColumn, Repository, ForeignKey } from 'typeorm';
 import { Entidad, Roles } from './auth';
 import { Rol } from './enums';
 import { Usuario } from '../usuarios/usuario.entity';
@@ -11,7 +11,7 @@ import { Usuario } from '../usuarios/usuario.entity';
 @Index(['entidadId', 'id'])
 export class Bitacora {
   @PrimaryGeneratedColumn() id: number;
-  @Column() entidadId: number;
+  @ForeignKey('Entidad') @Column() entidadId: number;
   @Column() tabla: string;
   @Column({ type: 'int', nullable: true }) usuarioId: number | null;   // quién lo hizo
   @Column({ type: 'int', nullable: true }) registroId: number | null;
