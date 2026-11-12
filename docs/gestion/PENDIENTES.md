@@ -11,7 +11,8 @@ Corte: 24 de octubre de 2026. Marca cada casilla cuando esté hecho.
 - [ ] **Horas reales trabajadas (AC)** por paquete, para calcular CPI y EAC. Sin esto el reporte de estado queda incompleto.
 - [ ] **Carnés** de los tres integrantes en la carátula.
 - [ ] **Apéndice A (declaración de IA):** completar el *nivel de modificación* con el porcentaje o descripción real de lo que el grupo revisó y reescribió. Es el campo que marca ⚠. **Sin la declaración la nota máxima es 60%.** Preguntar si Bases de Datos II exige la misma declaración.
-- [ ] **Medir usabilidad y desempeño** (tabla de especificación de calidad): una prueba con 3 a 5 personas y el tiempo de las consultas 1 y 8.
+- [x] **Desempeño medido (11 nov. 2026):** consulta 1 (sobre `fact_estudio`, 12,239 filas) ≈ 9.3 ms; consulta 8 (sobre `fact_estudio_mensual`, 1,753 filas) ≈ 1.2 ms, unas 8 veces más rápida. Promedio de 50 ejecuciones tras 3 de calentamiento, repetido 3 veces (7.7x a 7.9x), en MySQL 8 de Docker con datos sintéticos.
+- [ ] **Medir usabilidad** (tabla de especificación de calidad): una prueba con 3 a 5 personas.
 
 ## 2b. Lo que dejó la clase del 24 de octubre (riesgos) y los cambios de ese día
 - [ ] **Laboratorio A1-b (individual):** cada integrante completa su fila de la TABLA VI de `04_riesgos_calidad.md` (sistema, compilación, estado, decisión) y la **Parte B** (una vulnerabilidad vigente de su versión exacta, consultada en el NVD, con CVE, CVSS, explotación conocida, versión corregida y aviso del fabricante). Hoy solo está la fila del integrante 1, con su Parte B (CVE-2026-65395, consultada el 24 de oct.; **confírmenla en la ficha del NVD antes de entregar**). Faltan los integrantes 2 y 3. Cada quien escribe su mensaje de 3 líneas al gerente.
