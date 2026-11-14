@@ -34,6 +34,35 @@ Esta guía sirve para explicar el proyecto de principio a fin: por qué hay dos 
 
 Si MySQL da *Public Key Retrieval is not allowed*: *Driver properties*, `allowPublicKeyRetrieval=true`.
 
+## 2b. Levantar todo y usuarios para la demostración
+
+**Levantar (de cero):**
+```bash
+cd backend && docker compose up -d --wait      # base de la app (MySQL, 3306)
+npm run start:dev                                # API en http://localhost:3000
+node db/demo.mjs                                 # datos de ejemplo (solo la primera vez)
+cd ../nuevo-diseño && npm run dev -- --port 5173 # interfaz en http://localhost:5173
+cd ../dw && ./run.sh                             # almacén con datos sintéticos (3307)
+```
+
+**Usuarios** (contraseña de todos: `Demo#2026sisg`). El MFA se configura en el primer ingreso de cada cuenta: necesitas una app de códigos en el celular.
+
+| Entidad | Rol | Correo |
+|---|---|---|
+| Centro Diagnóstico Vida | Administrador | `centro@demo.sisg` |
+| Centro Diagnóstico Vida | Operador | `operador.centro@demo.sisg` |
+| Centro Diagnóstico Vida | Auditor | `auditor.centro@demo.sisg` |
+| Fundación Luz y Salud (organización) | Administrador | `org@demo.sisg` |
+| Fundación Luz y Salud (organización) | Operador | `operador.org@demo.sisg` |
+| Fundación Luz y Salud (organización) | Auditor | `auditor.org@demo.sisg` |
+| SISG Plataforma | Superadministrador | `admin@sisg.local` (contraseña en `SUPERADMIN_PASSWORD` de `backend/.env`) |
+
+Qué mostrar con cada uno:
+- **Centro (admin o auditor):** estudios, ingresos por mes, alertas (estudio vencido, sin resultado, sin monto) e indicadores de impacto.
+- **Organización (admin):** campañas, personas atendidas, costo por persona y referidos hacia el centro.
+- **Operador:** puede registrar pero no ve los ingresos (los indicadores son solo de administrador y auditor).
+- **Superadmin:** crea entidades, envía invitaciones y ve la auditoría de toda la plataforma.
+
 ## 3. Qué mostrar en MySQL (lo que pide el curso)
 
 ### 3.1 ER de las fuentes: base `sisg_fuente`
@@ -90,7 +119,7 @@ Conexión `sisg` → base `sisg` → *Tables*. Hay 9 tablas.
    - `referido` → `entidad` (origen y destino), `campana` y `estudio`
    - `enlace_resultado` → `estudio`
 4. **Seguridad en la app:** `usuario` guarda solo hashes de contraseña y el secreto MFA cifrado. `bitacora` es la auditoría.
-5. **Datos:** la base arranca vacía (solo la entidad del superadmin). Antes de presentar, registra unos pacientes, estudios y campañas desde la interfaz y luego haz `SELECT * FROM entidad;` o `SELECT * FROM paciente;` para mostrarlos.
+5. **Datos:** `node db/demo.mjs` carga 2 entidades, 7 usuarios, 65 pacientes, 91 estudios, 6 campañas y 18 referidos. Haz `SELECT * FROM entidad;` o `SELECT * FROM paciente;` para mostrarlos.
 
 Si preguntan por qué esta base no es estrella: "Es transaccional. Está normalizada para escribir sin duplicar datos. La estrella está en el almacén."
 
