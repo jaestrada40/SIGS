@@ -1,7 +1,7 @@
 # SISG · Almacén de datos del Grupo 4 (MySQL)
 
 Proyecto final de Bases de Datos II: ER de las fuentes, modelo estrella, ETL y consultas.
-Todo corre en un MySQL 8 de Docker, separado del app de Postgres. Los datos son sintéticos.
+Todo corre en un MySQL 8 de Docker, separado de la base de la app (otro contenedor MySQL). Los datos son sintéticos.
 
 ## Cómo correrlo
 
@@ -24,7 +24,7 @@ Usuario `root`, contraseña `sisg_dev` (solo local).
 | `sql/05_dw_etl.sql` | **ETL** con procedimientos almacenados y `etl_log` |
 | `sql/06_consultas.sql` | **Queries** analíticos |
 
-## Alimentar el DW desde la app (Postgres → MySQL)
+## Alimentar el DW desde la app (base de la app → almacén)
 
 ```bash
 ./run_app.sh            # lee la base `sisg` del app (contenedor backend-db-1)
@@ -98,7 +98,7 @@ es `dim_geografia` (departamento → municipio): solo conviene si la jerarquía 
 - **ETL de recarga completa.** Borra y vuelve a cargar. Con este volumen basta. Para producción: carga incremental con marca de agua en `etl_log`.
 - **Dato desconocido:** `geo_key = -1` y `grupo_etario_key = -1` evitan perder hechos sin municipio o sin fecha de nacimiento.
 - **Datos sintéticos aleatorios:** los resultados de las consultas no significan nada real.
-- **La app sigue en Postgres.** Este DW no se alimenta del app, sino del esquema `sisg_fuente`. Falta decidir cómo conectarlos.
+- **La app también es MySQL** (contenedor `backend-db-1`, puerto 3306). El puente `run_app.sh` la exporta a CSV y alimenta `sisg_fuente`.
 
 ## Si la profesora pide SQL Server (T-SQL)
 

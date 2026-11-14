@@ -2,32 +2,32 @@
 
 Esta guía sirve para explicar el proyecto de principio a fin: por qué hay dos bases, qué mostrar en cada una y cómo contestar las preguntas del docente.
 
-## 1. Por qué hay dos bases (Postgres y MySQL)
+## 1. Por qué hay dos bases (la aplicación y el almacén, las dos en MySQL)
 
-**Explicado simple:** Postgres es la tienda y MySQL es el cuaderno de cuentas del dueño.
+**Explicado simple:** la base de la aplicación es la tienda y el almacén es el cuaderno de cuentas del dueño. Las dos son MySQL 8, en contenedores distintos.
 
-| | **Postgres** | **MySQL** |
+| | **Aplicación (MySQL)** | **Almacén (MySQL)** |
 |---|---|---|
 | Qué es | Base de la **aplicación** (OLTP) | **Almacén de datos** para análisis (DW) |
 | Para qué sirve | Registrar el día a día: pacientes, estudios, campañas, usuarios | Responder preguntas de negocio: cuánto, dónde, cuándo |
 | Cómo se guarda | Cada dato una sola vez, rápido para escribir | Datos ordenados en estrella, rápido para consultar |
 | Quién lo usa | La API (NestJS) y la interfaz web | El analista, con consultas y vistas |
-| Dónde está | Docker `backend-db-1`, puerto **5433**, base `sisg` | Docker `dw-mysql-1`, puerto **3307**, bases `sisg_fuente` y `sisg_dw` |
+| Dónde está | Docker `backend-db-1`, puerto **3306**, base `sisg` | Docker `dw-mysql-1`, puerto **3307**, bases `sisg_fuente` y `sisg_dw` |
 
 **Por qué no una sola:**
-1. La aplicación ya estaba hecha sobre Postgres (backend, pruebas, despliegue). Migrarla no aporta nada.
+1. Una base transaccional y una analítica tienen formas distintas (normalizada contra estrella): no se mezclan en el mismo esquema.
 2. El curso pide un almacén aparte: ER de la fuente, estrella, ETL y consultas. Un ETL necesita origen y destino.
 3. Las consultas analíticas pesadas no deben competir con quien registra pacientes.
 4. MySQL fue la decisión del grupo (24 de octubre, definitiva).
 
-**Cómo se conectan:** el puente (`dw/run_app.sh`) exporta las tablas de Postgres a CSV, las carga en MySQL y corre el ETL. Al final hay una reconciliación que da diferencia 0.
+**Cómo se conectan:** el puente (`dw/run_app.sh`) exporta las tablas de la aplicación a CSV, las carga en MySQL y corre el ETL. Al final hay una reconciliación que da diferencia 0.
 
 ## 2. Conexiones en DBeaver
 
-| | MySQL (lo principal del curso) | Postgres (la aplicación) |
+| | Almacén (lo principal del curso) | Aplicación |
 |---|---|---|
-| Driver | MySQL | PostgreSQL |
-| Host / puerto | `localhost` / **3307** | `localhost` / **5433** |
+| Driver | MySQL | MySQL |
+| Host / puerto | `localhost` / **3307** | `localhost` / **3306** |
 | Usuario | `root` | `sisg` |
 | Contraseña | `sisg_dev` | `DB_PASS` de `backend/.env` |
 | Base | vacía, con *Show all databases* marcado | `sisg` |
@@ -77,9 +77,9 @@ Las dimensiones **conformadas** (compartidas por las dos estrellas) son `dim_tie
 - **Rol `analista`:** solo lectura sobre `sisg_dw` (mínimo privilegio).
 - **Reconciliación:** `dw/sql/07_reconciliacion.sql` debe dar diferencia 0 entre fuente y almacén.
 
-## 4. Qué mostrar en Postgres (la aplicación)
+## 4. Qué mostrar en la base de la aplicación
 
-Conexión `sisg` → *Schemas* → `public` → *Tables*. Hay 9 tablas.
+Conexión `sisg` → base `sisg` → *Tables*. Hay 9 tablas.
 
 1. **Diagrama ER:** clic derecho en *Tables* → *View Diagram*. Ahora tiene **15 llaves foráneas**.
 2. **Tablas:** `entidad`, `usuario`, `paciente`, `estudio`, `campana`, `atencion`, `referido`, `enlace_resultado`, `bitacora`.
@@ -101,7 +101,7 @@ Si preguntan por qué esta base no es estrella: "Es transaccional. Está normali
 | ¿Qué modelo usaron? | Estrella, en su variante de constelación: dos hechos con dimensiones conformadas. |
 | ¿Por qué no una sola estrella? | Son dos procesos con granos distintos: estudios y campañas. |
 | ¿Estrella o copo de nieve? | Estrella: las dimensiones son tablas planas, sin subdimensiones. |
-| ¿Por qué dos motores? | Postgres es la aplicación y MySQL es el almacén. El curso pide el almacén aparte y el grupo eligió MySQL. |
+| ¿Por qué dos bases? | Una es la aplicación (transaccional) y otra es el almacén. El curso pide el almacén aparte; las dos son MySQL, que el grupo eligió. |
 | ¿Cómo llegan los datos al almacén? | Con el ETL: extrae de la fuente, transforma y carga el estrella. |
 | ¿Cómo saben que cargó bien? | La reconciliación compara filas y montos entre fuente y almacén: diferencia 0. |
 | ¿Qué es una dimensión conformada? | Una dimensión compartida con la misma estructura por varios hechos (`dim_tiempo`, `dim_geografia`, `dim_entidad`). |
@@ -115,4 +115,4 @@ Si preguntan por qué esta base no es estrella: "Es transaccional. Está normali
 - [ ] Si falta el almacén: `cd dw && ./run.sh`.
 - [ ] Diagramas guardados: estrella 1, estrella 2, completo y ER de la fuente.
 - [ ] Probar una vista y `etl_log` en MySQL.
-- [ ] Probar el diagrama de Postgres.
+- [ ] Probar el diagrama de la base de la aplicación.

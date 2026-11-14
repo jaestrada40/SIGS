@@ -124,7 +124,7 @@ describe('referidos: del organismo al centro de diagnóstico', () => {
 
   it('el referido guarda la fecha del consentimiento', async () => {
     const r = await enviar();
-    const [fila] = await app.get(DataSource).query('SELECT "consentimientoEn" FROM referido WHERE id = $1', [r.id]);
+    const [fila] = await app.get(DataSource).query('SELECT consentimientoEn FROM referido WHERE id = ?', [r.id]);
     expect(new Date(fila.consentimientoEn).getTime()).toBeGreaterThan(Date.now() - 60_000);
   });
 });

@@ -114,9 +114,10 @@ export class AuthController {
     if (contarFallo(k)) await this.evento(u, 'BLOQUEO', { minutos: BLOQUEO_MS / 60_000 });
     // Incremento atómico en SQL: las peticiones en paralelo no pueden saltarse el tope.
     await this.repo.query(
-      `UPDATE usuario SET "intentosFallidos" = CASE WHEN "intentosFallidos" + 1 >= $2 THEN 0 ELSE "intentosFallidos" + 1 END,
-         "bloqueadoHasta" = CASE WHEN "intentosFallidos" + 1 >= $2 THEN now() + ($3 || ' milliseconds')::interval ELSE "bloqueadoHasta" END WHERE id = $1`,
-      [u.id, MAX_INTENTOS_CUENTA, BLOQUEO_MS]);
+      // En MySQL cada asignación ve las anteriores: bloqueadoHasta va primero para leer aún el contador sin actualizar.
+      `UPDATE usuario SET bloqueadoHasta = CASE WHEN intentosFallidos + 1 >= ? THEN DATE_ADD(NOW(6), INTERVAL ? MICROSECOND) ELSE bloqueadoHasta END,
+         intentosFallidos = CASE WHEN intentosFallidos + 1 >= ? THEN 0 ELSE intentosFallidos + 1 END WHERE id = ?`,
+      [MAX_INTENTOS_CUENTA, BLOQUEO_MS * 1000, MAX_INTENTOS_CUENTA, u.id]);
     throw new UnauthorizedException();
   }
   private async limpiar(u: Usuario, k: string) { fallos.delete(k); await this.repo.update(u.id, { intentosFallidos: 0, bloqueadoHasta: null }); }
@@ -141,7 +142,7 @@ export class AuthController {
     // Condicional y atómico: dos usos simultáneos del mismo enlace no pasan los dos.
     const r = await this.repo.createQueryBuilder().update(Usuario)
       .set({ passwordHash: await bcrypt.hash(password, COSTO_BCRYPT), invitacionHash: null, invitacionVence: null, sesionesDesde: new Date(Date.now() - 1) })
-      .where('id = :id AND "invitacionHash" = :h', { id: u.id, h: sha256(token) }).execute();
+      .where('id = :id AND invitacionHash = :h', { id: u.id, h: sha256(token) }).execute();
     if (r.affected !== 1) throw new NotFoundException('La invitación no existe o venció.');
     await this.evento(u, 'INVITACION_ACEPTADA');
     return this.siguientePaso(u);
@@ -205,7 +206,7 @@ export class AuthController {
     const codigos = Array.from({ length: 8 }, codigoRecuperacion);
     const r = await this.repo.createQueryBuilder().update(Usuario)
       .set({ mfaActivo: true, mfaUltimoPaso: paso, mfaRecuperacion: codigos.map((x) => sha256(normalizarRecuperacion(x))) })
-      .where('id = :id AND "mfaActivo" = false', { id: u.id }).execute();
+      .where('id = :id AND mfaActivo = false', { id: u.id }).execute();
     if (r.affected !== 1) throw new ConflictException('La verificación en dos pasos ya está activa.');
     await this.limpiar(u, k);
     await this.evento(u, 'MFA_ACTIVADO');
@@ -245,12 +246,12 @@ export class AuthController {
     const paso = pasoValido(descifrar(u.mfaSecreto), codigo);
     if (paso === null) return false;
     const r = await this.repo.createQueryBuilder().update(Usuario).set({ mfaUltimoPaso: paso })
-      .where('id = :id AND ("mfaUltimoPaso" IS NULL OR "mfaUltimoPaso" < :p)', { id: u.id, p: paso }).execute();
+      .where('id = :id AND (mfaUltimoPaso IS NULL OR mfaUltimoPaso < :p)', { id: u.id, p: paso }).execute();
     return r.affected === 1;
   }
   private async consumirRecuperacion(u: Usuario, hash: string) {
     if (!u.mfaRecuperacion?.includes(hash)) return false;
-    const [, filas] = await this.repo.query(`UPDATE usuario SET "mfaRecuperacion" = "mfaRecuperacion" - $1 WHERE id = $2 AND "mfaRecuperacion" @> $3::jsonb`, [hash, u.id, JSON.stringify([hash])]);
-    return filas === 1;
+    const r = await this.repo.query(`UPDATE usuario SET mfaRecuperacion = JSON_REMOVE(mfaRecuperacion, JSON_UNQUOTE(JSON_SEARCH(mfaRecuperacion, 'one', ?))) WHERE id = ? AND JSON_CONTAINS(mfaRecuperacion, JSON_QUOTE(?))`, [hash, u.id, hash]);
+    return r.affectedRows === 1;
   }
 }

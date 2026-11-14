@@ -48,7 +48,7 @@ describe('auth + MFA', () => {
 
   it('el secreto de MFA se guarda cifrado y los códigos de recuperación como hash', async () => {
     const { correo, secreto, recuperacion } = await registrar(app, 'ORG_NO_LUCRATIVA');
-    const [fila] = await app.get(DataSource).query('SELECT "mfaSecreto", "mfaRecuperacion" FROM usuario WHERE correo = $1', [correo]);
+    const [fila] = await app.get(DataSource).query('SELECT mfaSecreto, mfaRecuperacion FROM usuario WHERE correo = ?', [correo]);
     expect(fila.mfaSecreto).not.toContain(secreto);
     expect(JSON.stringify(fila.mfaRecuperacion)).not.toContain(recuperacion[0].replace('-', ''));
   });

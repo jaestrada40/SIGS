@@ -35,7 +35,7 @@ describe('plataforma: alta de entidades por invitación', () => {
     const c = await nueva(sa, 'vence@test.com');
     await http().get('/auth/invitacion/inventado').expect(404);
     await http().post(`/auth/invitacion/${c.body.invitacion}`).send({ password: 'corta' }).expect(400);
-    await app.get(DataSource).query(`UPDATE usuario SET "invitacionVence" = now() - interval '1 hour' WHERE correo = 'vence@test.com'`);
+    await app.get(DataSource).query(`UPDATE usuario SET invitacionVence = NOW(6) - INTERVAL 1 HOUR WHERE correo = 'vence@test.com'`);
     await http().get(`/auth/invitacion/${c.body.invitacion}`).expect(404);
     const l = await http().get('/plataforma/entidades').set(sa.auth);
     expect(l.body.find((e) => e.correo === 'vence@test.com').estado).toBe('invitacion_vencida');
@@ -73,13 +73,13 @@ describe('plataforma: alta de entidades por invitación', () => {
 
   it('un SUPERADMIN fuera de la entidad de plataforma no puede actuar', async () => {
     const sa = await superadmin(app);
-    await app.get(DataSource).query(`UPDATE entidad SET tipo = 'CENTRO_DIAGNOSTICO' WHERE correo = $1`, [sa.correo]);
+    await app.get(DataSource).query(`UPDATE entidad SET tipo = 'CENTRO_DIAGNOSTICO' WHERE correo = ?`, [sa.correo]);
     await http().get('/plataforma/entidades').set(sa.auth).expect(403);
     await nueva(sa, 'fuera@test.com').expect(403);
   });
 
   describe('consola del superadmin', () => {
-    const idDe = async (correo: string) => (await app.get(DataSource).query('SELECT id FROM usuario WHERE correo = $1', [correo]))[0].id as number;
+    const idDe = async (correo: string) => (await app.get(DataSource).query('SELECT id FROM usuario WHERE correo = ?', [correo]))[0].id as number;
 
     it('suspender corta el acceso al instante y reactivar lo devuelve', async () => {
       const sa = await superadmin(app);
@@ -161,7 +161,7 @@ describe('plataforma: alta de entidades por invitación', () => {
       expect(desact[0].usuario.rol).toBe('SUPERADMIN');
       expect(desact[0].objetivo).toContain(e.correo);
       // la copia que ve la entidad en su propia auditoría: sin nombre de persona, marcada como hecha por la plataforma
-      const filas = await app.get(DataSource).query(`SELECT * FROM bitacora WHERE "entidadId" = $1`, [e.entidadId]);
+      const filas = await app.get(DataSource).query(`SELECT * FROM bitacora WHERE entidadId = ?`, [e.entidadId]);
       expect(filas.some((m) => m.accion === 'DESACTIVAR' && m.detalle?.plataforma === true && m.usuarioId == null)).toBe(true);
     });
   });

@@ -56,7 +56,7 @@ describe('enlace seguro de resultado y alertas', () => {
 
   it('en la base solo existe el hash del token', async () => {
     const { token } = await nuevoEnlace();
-    const filas = await app.get(DataSource).query('SELECT "tokenHash" FROM enlace_resultado');
+    const filas = await app.get(DataSource).query('SELECT tokenHash FROM enlace_resultado');
     expect(JSON.stringify(filas)).not.toContain(token);
     expect(filas.every((f) => /^[0-9a-f]{64}$/.test(f.tokenHash))).toBe(true);
   });
@@ -71,7 +71,7 @@ describe('enlace seguro de resultado y alertas', () => {
   it('token inventado, vencido o revocado dan el mismo error genérico', async () => {
     const inventado = await ver('x'.repeat(32), '1985-03-12').expect(404);
     const l = await nuevoEnlace();
-    await app.get(DataSource).query(`UPDATE enlace_resultado SET "expiraEn" = now() - interval '1 minute' WHERE id = $1`, [l.id]);
+    await app.get(DataSource).query(`UPDATE enlace_resultado SET expiraEn = NOW(6) - INTERVAL 1 MINUTE WHERE id = ?`, [l.id]);
     const vencido = await ver(l.token, '1985-03-12').expect(404);
     const r = await nuevoEnlace();
     await http().post(`/enlaces/${r.id}/revocar`).set(centro.auth).expect(201);
@@ -117,7 +117,7 @@ describe('enlace seguro de resultado y alertas', () => {
     await http().post('/campanas').set(o.auth).send({ nombre: 'Vieja', area: 'CARDIOVASCULAR', fechaInicio: '2020-01-01', fechaFin: '2020-02-01', estado: 'EN_CURSO' }).expect(201);
     const p = (await http().post('/pacientes').set(o.auth).send({ nombreCompleto: 'Cami', sexo: 'F' }).expect(201)).body;
     const r = (await http().post('/referidos').set(o.auth).send({ pacienteId: p.id, centroId: centro.entidadId, tipoEstudio: 'Z', consentimiento: true }).expect(201)).body;
-    await app.get(DataSource).query(`UPDATE referido SET "creadoEn" = now() - interval '20 days' WHERE id = $1`, [r.id]);
+    await app.get(DataSource).query(`UPDATE referido SET creadoEn = NOW(6) - INTERVAL 20 DAY WHERE id = ?`, [r.id]);
     const claves = (await http().get('/alertas').set(o.auth).expect(200)).body.map((x) => x.clave);
     expect(claves).toEqual(expect.arrayContaining(['referidos_sin_atender', 'campanas_vencidas', 'campanas_sin_costo']));
     await http().get('/alertas').expect(401);

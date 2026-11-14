@@ -210,7 +210,7 @@ export class PlataformaController {
   // Solo eventos de cuentas y de seguridad de todas las entidades. Las acciones que la plataforma hizo sobre una entidad ajena se muestran una vez (la copia que ve la entidad se omite).
   @Get('auditoria') async auditoria() {
     const filas = await this.bit.createQueryBuilder('b')
-      .where(`(b.tabla IN (:...tablas) OR b.accion IN (:...acciones)) AND (b.detalle->>'plataforma') IS DISTINCT FROM 'true'`, { tablas: ['sesion', 'usuario', 'entidad'], acciones: ['EXPORTAR', 'BLOQUEO', 'ACCESO_FALLIDO'] })
+      .where(`(b.tabla IN (:...tablas) OR b.accion IN (:...acciones)) AND COALESCE(JSON_UNQUOTE(JSON_EXTRACT(b.detalle, '$.plataforma')), '') <> 'true'`, { tablas: ['sesion', 'usuario', 'entidad'], acciones: ['EXPORTAR', 'BLOQUEO', 'ACCESO_FALLIDO'] })
       .orderBy('b.id', 'DESC').take(300).getMany();
     const [us, ents] = await Promise.all([
       this.usuarios.find({ select: { id: true, nombre: true, correo: true, rol: true } }),

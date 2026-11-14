@@ -16,7 +16,7 @@ export class Bitacora {
   @Column({ type: 'int', nullable: true }) usuarioId: number | null;   // quién lo hizo
   @Column({ type: 'int', nullable: true }) registroId: number | null;
   @Column() accion: string;
-  @Column({ type: 'jsonb', nullable: true }) detalle: Record<string, unknown> | null;
+  @Column({ type: 'json', nullable: true }) detalle: Record<string, unknown> | null;
   @CreateDateColumn() creadoEn: Date;
 }
 

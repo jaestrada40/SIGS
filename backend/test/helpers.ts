@@ -12,11 +12,15 @@ import { Usuario } from '../src/usuarios/usuario.entity';
 export async function crearApp() {
   process.env.DB_NAME = 'sisg_test';
   // NestFactory (not Test module): serve-static needs the http adapter present when the module is built
-  const app: INestApplication = await NestFactory.create(AppModule, { logger: false });
+  const app: INestApplication = await NestFactory.create(AppModule, { logger: process.env.TEST_LOG ? ['error'] : false });
   configureApp(app);
   await app.init();
   // clean slate per spec file
-  await app.get(DataSource).query('TRUNCATE entidad, usuario, paciente, estudio, campana, bitacora, referido, enlace_resultado, atencion RESTART IDENTITY');
+  const db = app.get(DataSource);
+  // MySQL no trunca tablas con llaves foráneas: se desactivan un instante.
+  await db.query('SET FOREIGN_KEY_CHECKS = 0');
+  for (const t of ['entidad', 'usuario', 'paciente', 'estudio', 'campana', 'bitacora', 'referido', 'enlace_resultado', 'atencion']) await db.query(`TRUNCATE TABLE ${t}`);
+  await db.query('SET FOREIGN_KEY_CHECKS = 1');
   return app;
 }
 

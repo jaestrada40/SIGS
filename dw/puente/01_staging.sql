@@ -1,4 +1,4 @@
--- Puente app -> fuente, paso 1: staging. Refleja tal cual lo que exporta la app (Postgres), sin validar nada.
+-- Puente app -> fuente, paso 1: staging. Refleja tal cual lo que exporta la app (MySQL), sin validar nada.
 DROP DATABASE IF EXISTS sisg_stg;
 CREATE DATABASE sisg_stg CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci;
 USE sisg_stg;
@@ -11,7 +11,7 @@ CREATE TABLE stg_estudio  (id INT, entidad_id INT, paciente_id INT, tipo_estudio
 CREATE TABLE stg_campana  (id INT, entidad_id INT, nombre VARCHAR(200), area VARCHAR(40), departamento VARCHAR(80), ubicacion VARCHAR(200),
                            fecha_inicio DATE, fecha_fin DATE NULL, personas_atendidas INT NULL, estado VARCHAR(20));
 
--- Postgres exporta NULL como campo vacío; aquí vacío = NULL.
+-- run_app.sh exporta NULL como campo vacío; aquí vacío = NULL.
 LOAD DATA INFILE '/var/lib/mysql-files/entidad.csv' INTO TABLE stg_entidad CHARACTER SET utf8mb4
   FIELDS TERMINATED BY ',' OPTIONALLY ENCLOSED BY '"' ESCAPED BY '"' LINES TERMINATED BY '\n'
   (id, nombre, tipo, @dep, @tel, correo) SET departamento = NULLIF(@dep, ''), telefono = NULLIF(@tel, '');

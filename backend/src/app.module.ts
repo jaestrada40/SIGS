@@ -40,7 +40,9 @@ export const configureApp = (app: INestApplication) => app.useGlobalPipes(new Va
     TypeOrmModule.forRootAsync({
       inject: [ConfigService],
       useFactory: (c: ConfigService) => ({
-        type: 'postgres',
+        type: 'mysql', timezone: 'Z', charset: 'utf8mb4',
+        // COUNT() y similares vuelven como número (TypeORM los pide como texto por defecto).
+        extra: { supportBigNumbers: false, bigNumberStrings: false, dateStrings: ['DATE'] },   // DATE queda como 'AAAA-MM-DD', sin corrimiento por zona horaria
         host: c.get('DB_HOST'), port: Number(c.get('DB_PORT')), username: c.get('DB_USER'), password: c.get('DB_PASS'), database: c.get('DB_NAME'),
         entities: [Entidad, Usuario, Paciente, Estudio, Campana, Bitacora, Referido, EnlaceResultado, Atencion],
         // shortcut: sin migraciones el esquema se crea con synchronize. En producción solo si DB_SYNC=true (primer arranque o tras un cambio de esquema; ver DESPLIEGUE.md).

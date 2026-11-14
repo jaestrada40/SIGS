@@ -47,9 +47,9 @@ Cada aplicación tiene su `Dockerfile` (`backend/Dockerfile` y `nuevo-diseño/Do
 - **`API_URL` se incorpora al compilar la interfaz.** Si cambia el dominio de la API, cambie la variable y **vuelva a desplegar con reconstrucción** (no basta con reiniciar).
 - **`FRONTEND_URL` debe ser exactamente el dominio de la interfaz** (con `https://`): es el único origen que la API acepta por CORS.
 - **Esquema de la base de datos (`DB_SYNC`).** El valor predeterminado de producción es `false` para evitar cambios automáticos del esquema. En una base nueva, configure temporalmente `DB_SYNC=true` para crear las tablas, haga un respaldo y vuelva a `false`; no lo active durante despliegues normales porque la sincronización automática puede borrar columnas que ya no existan en el código.
-- **Respaldo.** La base vive en el volumen `sisg_pgdata`. Haga copias periódicas, por ejemplo con una tarea programada de Coolify:
+- **Respaldo.** La base (MySQL 8) vive en el volumen `sisg_mysqldata`. Haga copias periódicas, por ejemplo con una tarea programada de Coolify:
   ```bash
-  docker exec <contenedor-db> pg_dump -U "$DB_USER" "$DB_NAME" | gzip > sisg_$(date +%F).sql.gz
+  docker exec <contenedor-db> sh -c 'mysqldump -uroot -p"$MYSQL_ROOT_PASSWORD" --single-transaction "$MYSQL_DATABASE"' | gzip > sisg_$(date +%F).sql.gz
   ```
 - **`MFA_KEY`** cifra los secretos del MFA. Si se pierde o se cambia, nadie podrá usar su código y habrá que restablecer el MFA de todos los usuarios. Guárdela en un lugar seguro.
 - **IP real del cliente.** `TRUST_PROXY=1` hace que el bloqueo por intentos fallidos y el límite de peticiones usen la IP del cliente y no la del proxy. No lo quite detrás de Coolify.

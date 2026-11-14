@@ -99,8 +99,8 @@ describe('usuarios, roles y auditoría', () => {
     const admin = await registrar(app, 'CENTRO_DIAGNOSTICO');
     const op = await crearUsuario(app, admin, 'OPERADOR');
     await http().post(`/usuarios/${op.id}/restablecer-mfa`).set(admin.auth).expect(201);
-    const [fila] = await app.get(DataSource).query('SELECT "mfaActivo","mfaSecreto","mfaRecuperacion" FROM usuario WHERE id=$1', [op.id]);
-    expect(fila).toEqual({ mfaActivo: false, mfaSecreto: null, mfaRecuperacion: null });
+    const [fila] = await app.get(DataSource).query('SELECT mfaActivo,mfaSecreto,mfaRecuperacion FROM usuario WHERE id=?', [op.id]);
+    expect({ ...fila, mfaActivo: !!fila.mfaActivo }).toEqual({ mfaActivo: false, mfaSecreto: null, mfaRecuperacion: null });
     const l = await http().post('/auth/login').send({ correo: op.correo, password: 'ClaveInicial#2026' });
     expect(l.body.estado).toBe('mfa_configurar');
     expect((await entrar(app, op.correo, 'ClaveInicial#2026')).token).toBeDefined();

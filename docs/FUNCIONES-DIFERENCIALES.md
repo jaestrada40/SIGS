@@ -14,7 +14,7 @@ No se comparó con productos de la competencia: ninguna frase de aquí afirma qu
 - Organismo: personas atendidas, costo por persona, inversión, personas por mes/área/departamento, referidos y su tasa de llegada.
 - Usa los campos opcionales `monto` (estudio) y `costo` (campaña). Cada cifra indica con cuántos registros se calculó; el costo por persona solo usa campañas con costo y personas.
 - Solo administrador y auditor. Exporta CSV (auditado) e imprime a PDF para donantes.
-- Se calcula en vivo sobre la base de la aplicación (PostgreSQL), no sobre el almacén MySQL del curso.
+- Se calcula en vivo sobre la base de la aplicación (MySQL), no sobre el almacén MySQL del curso.
 
 ## 3. Modo sin conexión para jornadas (`/jornada`)
 - Registra personas atendidas sin internet. Cada registro se cifra (AES-GCM, clave derivada con PBKDF2 de una contraseña de jornada) antes de guardarse en el dispositivo y se envía solo al volver la señal.

@@ -85,7 +85,7 @@ describe('jornada: sincronización de registros hechos sin conexión', () => {
     const log = (await http().get('/bitacora').set(org.auth)).body;
     expect(log.filter((m) => m.tabla === 'atencion').length).toBeGreaterThan(0);
     expect(JSON.stringify(log)).not.toMatch(/Persona Auditada|1111111111111/);
-    const [{ n }] = await app.get(DataSource).query('SELECT COUNT(*)::int n FROM atencion WHERE "entidadId" = $1', [org.entidadId]);
+    const [{ n }] = await app.get(DataSource).query('SELECT COUNT(*) n FROM atencion WHERE entidadId = ?', [org.entidadId]);
     expect(n).toBeGreaterThan(5);
   });
 });

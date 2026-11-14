@@ -24,8 +24,8 @@ export class Atencion {
   @ForeignKey('Campana') @Column() campanaId: number;
   @ForeignKey('Paciente') @Column() pacienteId: number;
   @Column() claveCliente: string;
-  @Column({ type: 'timestamptz' }) atendidoEn: Date;
-  @CreateDateColumn({ type: 'timestamptz' }) creadoEn: Date;
+  @Column({ type: 'datetime', precision: 6 }) atendidoEn: Date;
+  @CreateDateColumn({ type: 'datetime', precision: 6 }) creadoEn: Date;
 }
 
 class SincronizarDto {
@@ -73,7 +73,7 @@ export class JornadaController {
         return { claveCliente: clave, estado: 'ok' as const };
       });
     } catch (e: any) {
-      if (e?.code === '23505') return { claveCliente: clave, estado: 'duplicado' };   // otra petición con la misma clave ganó la carrera
+      if (e?.code === 'ER_DUP_ENTRY') return { claveCliente: clave, estado: 'duplicado' };   // otra petición con la misma clave ganó la carrera
       throw new BadRequestException('No se pudo procesar el registro.');
     }
   }

@@ -27,9 +27,9 @@ export class Referido {
   @Column({ type: 'text', nullable: true }) motivo: string | null;
   @Column({ type: 'varchar', default: 'PENDIENTE' }) estado: EstadoReferido;
   @Column({ unique: true }) codigo: string;                       // para que la persona lo muestre en el centro
-  @Column({ type: 'timestamptz' }) consentimientoEn: Date;
+  @Column({ type: 'datetime', precision: 6 }) consentimientoEn: Date;
   @ForeignKey('Estudio') @Column({ type: 'int', nullable: true }) estudioId: number | null;   // estudio que creó el centro al agendar
   @Column({ type: 'date', nullable: true }) fechaCita: string | null;
   @CreateDateColumn() creadoEn: Date;
-  @Column({ type: 'timestamptz', nullable: true }) atendidoEn: Date | null;
+  @Column({ type: 'datetime', precision: 6, nullable: true }) atendidoEn: Date | null;
 }

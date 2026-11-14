@@ -22,12 +22,12 @@ export class EnlaceResultado {
   @ForeignKey('Entidad') @Column() entidadId: number;
   @ForeignKey('Estudio') @Column() estudioId: number;
   @Index({ unique: true }) @Column() tokenHash: string;
-  @Column({ type: 'timestamptz' }) expiraEn: Date;
-  @Column({ type: 'timestamptz', nullable: true }) revocadoEn: Date | null;
+  @Column({ type: 'datetime', precision: 6 }) expiraEn: Date;
+  @Column({ type: 'datetime', precision: 6, nullable: true }) revocadoEn: Date | null;
   @Column({ default: 0 }) intentosFallidos: number;
   @Column({ default: 0 }) accesos: number;
-  @Column({ type: 'timestamptz', nullable: true }) ultimoAccesoEn: Date | null;
-  @CreateDateColumn({ type: 'timestamptz' }) creadoEn: Date;
+  @Column({ type: 'datetime', precision: 6, nullable: true }) ultimoAccesoEn: Date | null;
+  @CreateDateColumn({ type: 'datetime', precision: 6 }) creadoEn: Date;
 }
 
 class CrearEnlaceDto { @IsInt() estudioId: number; @IsOptional() @IsInt() @Min(1) @Max(30) dias?: number; }
@@ -83,8 +83,8 @@ export class PublicoController {
     const l = await this.repo.findOneBy({ tokenHash: sha(dto.token) });
     if (!l || l.revocadoEn || l.expiraEn.getTime() < Date.now()) throw invalido();
     // Se reserva el intento ANTES de verificar y en una sola sentencia: peticiones paralelas no pueden adivinar más de MAX_INTENTOS veces.
-    const [reservado] = (await this.repo.query(`UPDATE enlace_resultado SET "intentosFallidos" = "intentosFallidos" + 1 WHERE id = $1 AND "intentosFallidos" < $2 AND "revocadoEn" IS NULL RETURNING "intentosFallidos"`, [l.id, MAX_INTENTOS]))[0] ?? [];
-    if (!reservado) throw invalido();
+    const r = await this.repo.query(`UPDATE enlace_resultado SET intentosFallidos = intentosFallidos + 1 WHERE id = ? AND intentosFallidos < ? AND revocadoEn IS NULL`, [l.id, MAX_INTENTOS]);
+    if (r.affectedRows !== 1) throw invalido();
     const e = await this.estudios.findOneBy({ id: l.estudioId, entidadId: l.entidadId });
     const p = e && await this.pacientes.findOneBy({ id: e.pacienteId, entidadId: l.entidadId });
     if (!e || !p || e.estado !== 'REALIZADO') throw invalido();
@@ -94,11 +94,11 @@ export class PublicoController {
     const ultimos4 = !nac && p.dpi ? soloDigitos(p.dpi).slice(-4) : null;
     const ok = (nac !== null && iguales(dato, nac)) || (ultimos4 !== null && /^\d{4}$/.test(dato) && iguales(dato, ultimos4));
     if (!ok) {
-      const n = reservado.intentosFallidos as number;
+      const n = (await this.repo.query('SELECT intentosFallidos FROM enlace_resultado WHERE id = ?', [l.id]))[0].intentosFallidos as number;
       await registrar(this.bit, { entidadId: l.entidadId }, 'enlace', l.id, 'ACCESO_FALLIDO', { intento: n });
       throw new UnauthorizedException(n >= MAX_INTENTOS ? 'Demasiados intentos. Pida un enlace nuevo al centro.' : 'Los datos no coinciden.');
     }
-    await this.repo.query(`UPDATE enlace_resultado SET accesos = accesos + 1, "ultimoAccesoEn" = now(), "intentosFallidos" = 0 WHERE id = $1`, [l.id]);
+    await this.repo.query(`UPDATE enlace_resultado SET accesos = accesos + 1, ultimoAccesoEn = NOW(6), intentosFallidos = 0 WHERE id = ?`, [l.id]);
     await registrar(this.bit, { entidadId: l.entidadId }, 'enlace', l.id, 'ACCESO');
     const centro = await this.entidades.findOneBy({ id: l.entidadId });
     return { centro: centro?.nombre ?? '', paciente: p.nombreCompleto, tipoEstudio: e.tipoEstudio, fecha: e.fecha, resultado: e.resultado, expiraEn: l.expiraEn };

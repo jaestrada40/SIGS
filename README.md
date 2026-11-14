@@ -5,7 +5,7 @@ Proyecto de Universidad San Pablo de Guatemala (Bases de Datos II y Administraci
 
 | Carpeta | Contenido |
 |---|---|
-| `backend/` | API (NestJS + PostgreSQL): autenticación con MFA, roles, usuarios, pacientes, estudios, campañas, auditoría y carga masiva por CSV. Pruebas: `npm run test:e2e`. |
+| `backend/` | API (NestJS + MySQL): autenticación con MFA, roles, usuarios, pacientes, estudios, campañas, auditoría y carga masiva por CSV. Pruebas: `npm run test:e2e`. |
 | `nuevo-diseño/` | Interfaz (TanStack Start + React + Tailwind). |
 | `dw/` | Almacén de datos en MySQL: esquema fuente, modelo estrella, ETL, reconciliación y consultas (`README.md` y `DISENO_ESTRELLA.md`). |
 | `docs/gestion/` | Documentos de gestión del proyecto (acta, EDT, riesgos, calidad…) y el Word en formato IEEE. |
