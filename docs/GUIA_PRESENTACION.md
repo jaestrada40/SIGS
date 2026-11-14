@@ -84,13 +84,13 @@ Conexión `sisg` → base `sisg` → *Tables*. Hay 9 tablas.
 1. **Diagrama ER:** clic derecho en *Tables* → *View Diagram*. Ahora tiene **15 llaves foráneas**.
 2. **Tablas:** `entidad`, `usuario`, `paciente`, `estudio`, `campana`, `atencion`, `referido`, `enlace_resultado`, `bitacora`.
 3. **Relaciones principales:**
-   - `entidad` es la raíz: casi todas las tablas llevan `entidad_id` (cada centro u organismo ve solo lo suyo).
+   - `entidad` es la raíz: casi todas las tablas llevan `entidadId` (cada centro u organismo ve solo lo suyo).
    - `estudio` → `paciente`
    - `atencion` → `campana` y `paciente`
    - `referido` → `entidad` (origen y destino), `campana` y `estudio`
    - `enlace_resultado` → `estudio`
 4. **Seguridad en la app:** `usuario` guarda solo hashes de contraseña y el secreto MFA cifrado. `bitacora` es la auditoría.
-5. **Datos:** haz `SELECT * FROM entidad;` para mostrar que hay datos reales.
+5. **Datos:** la base arranca vacía (solo la entidad del superadmin). Antes de presentar, registra unos pacientes, estudios y campañas desde la interfaz y luego haz `SELECT * FROM entidad;` o `SELECT * FROM paciente;` para mostrarlos.
 
 Si preguntan por qué esta base no es estrella: "Es transaccional. Está normalizada para escribir sin duplicar datos. La estrella está en el almacén."
 
