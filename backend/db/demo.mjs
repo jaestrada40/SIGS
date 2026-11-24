@@ -1,13 +1,14 @@
 // Datos de ejemplo para presentar la app: un centro de diagnóstico y una organización, con usuarios, pacientes,
 // estudios, campañas y referidos. Uso (desde backend/, con la API ya arrancada una vez para que exista el esquema):
 //   node db/demo.mjs
+// En un contenedor sin .env (Coolify) toma DB_HOST, DB_PORT, DB_USER, DB_PASS y DB_NAME del entorno.
 // No hace nada si los datos ya existen. Todos los usuarios usan la contraseña PASSWORD; el MFA se configura en el primer ingreso.
 import fs from 'node:fs';
 import bcrypt from 'bcrypt';
 import mysql from 'mysql2/promise';
 
 const PASSWORD = 'Demo#2026sisg';
-const env = Object.fromEntries(fs.readFileSync(new URL('../.env', import.meta.url), 'utf8').split('\n').filter((l) => l.includes('=') && !l.startsWith('#')).map((l) => [l.slice(0, l.indexOf('=')), l.slice(l.indexOf('=') + 1)]));
+const env = !fs.existsSync(new URL('../.env', import.meta.url)) ? process.env : Object.fromEntries(fs.readFileSync(new URL('../.env', import.meta.url), 'utf8').split('\n').filter((l) => l.includes('=') && !l.startsWith('#')).map((l) => [l.slice(0, l.indexOf('=')), l.slice(l.indexOf('=') + 1)]));
 const db = await mysql.createConnection({ host: env.DB_HOST, port: Number(env.DB_PORT), user: env.DB_USER, password: env.DB_PASS, database: env.DB_NAME, timezone: 'Z' });
 
 if ((await db.query("SELECT 1 FROM entidad WHERE correo = 'centro@demo.sisg'"))[0].length) { console.log('Los datos de ejemplo ya existen.'); process.exit(0); }
