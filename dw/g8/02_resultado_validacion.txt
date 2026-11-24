@@ -1,0 +1,9 @@
+filas del dry-run: 1908
+sk_tiempo inválidos: []
+sk_establecimiento inválidos: []
+sk_geografia inválidos: []
+sk_servicio inválidos: []
+filas en vw_g4_fact_servicio: 1918
+claves del dry-run ya cargadas: 1908
+con valores distintos: 0
+filas cargadas que no son del dry-run: [(20240101, 8, 108, 7), (20240201, 8, 108, 8), (20240301, 8, 108, 9), (20240401, 9, 115, 1), (20240501, 9, 115, 9), (20240601, 9, 115, 7), (20240701, 10, 1601, 1), (20240801, 10, 1601, 7), (20240901, 8, 108, 7), (20241001, 10, 1601, 8)]
