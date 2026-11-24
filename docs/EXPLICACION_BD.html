@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SISG · Cómo viajan los datos (explicación de la base de datos)</title>
+<style>
+:root{--g:#0f766e;--b:#2563eb;--o:#d97706;--p:#7c3aed;--r:#dc2626}
+*{box-sizing:border-box}body{font-family:system-ui,sans-serif;margin:0;background:#f4f7f6;color:#1d2b2a;line-height:1.5}
+header{background:var(--g);color:#fff;padding:22px 28px}header h1{margin:0;font-size:24px}header p{margin:6px 0 0;opacity:.92}
+main{max-width:1050px;margin:0 auto;padding:20px}
+h2{margin:36px 0 8px;font-size:21px}
+.card{background:#fff;border-radius:14px;box-shadow:0 2px 8px #0002;padding:18px;margin:12px 0}
+.kid{background:#fff8e1;border-left:4px solid #f5b700;padding:10px 12px;border-radius:6px;margin:10px 0}
+.kid b,.tec b{display:block;font-size:11px;text-transform:uppercase;opacity:.7}
+.tec{background:#e8f5f3;border-left:4px solid var(--g);padding:10px 12px;border-radius:6px;margin:10px 0}
+/* tubería */
+#pipe{display:flex;flex-wrap:wrap;gap:6px;align-items:stretch}
+.st{flex:1;min-width:140px;border:2px solid #ccd;border-radius:12px;padding:10px;background:#fff;cursor:pointer;text-align:center;font-size:14px}
+.st small{display:block;opacity:.7;font-size:12px}
+.st.on{border-color:var(--c);background:var(--c);color:#fff}
+.arrow{align-self:center;font-size:20px;color:#889}
+pre{background:#10201e;color:#d7f5ef;padding:12px;border-radius:10px;overflow:auto;font-size:13px;margin:8px 0}
+.cols{display:grid;grid-template-columns:1fr 1fr;gap:14px}@media(max-width:760px){.cols{grid-template-columns:1fr}}
+.bad{border-top:5px solid var(--r)}.good{border-top:5px solid var(--g)}
+table{border-collapse:collapse;width:100%;font-size:14px}td,th{border:1px solid #d5dedc;padding:6px 8px;text-align:left}th{background:#e8f5f3}
+.pill{display:inline-block;background:#eef;border-radius:20px;padding:2px 10px;font-size:12px;margin:2px}
+details{background:#fff;border-radius:10px;margin:8px 0;padding:10px 14px;box-shadow:0 1px 4px #0002}
+summary{cursor:pointer;font-weight:600}
+code{background:#eef3f2;padding:1px 5px;border-radius:4px}
+</style></head><body>
+<header><h1>Cómo viajan los datos en SISG</h1>
+<p>De la app (normalizada) → bodega temporal → fuente limpia → ETL → estrella (desnormalizada). Haz clic en cada etapa y mira cómo cambia UN mismo estudio.</p></header>
+<main>
+
+<h2>1. El viaje completo</h2>
+<div class="card">
+ <div id="pipe"></div>
+ <div id="detail"></div>
+</div>
+
+<h2>2. Normalizar vs. desnormalizar (con una analogía)</h2>
+<div class="cols">
+ <div class="card bad"><h3>Normalizada (app y <code>sisg_fuente</code>)</h3>
+  <div class="kid"><b>Como niño</b>Una libreta de direcciones: la dirección de cada amigo está escrita UNA sola vez, y las cartas solo dicen «para el amigo #7». Si se muda, corriges un solo lugar. Pero para saber a dónde va una carta tienes que buscar en varias libretas.</div>
+  <p>Cada dato vive en un solo lugar → <b>no se repite, no se contradice</b>. Ideal para <b>registrar</b> rápido y sin errores. Pero para analizar hay que unir muchas tablas.</p></div>
+ <div class="card good"><h3>Desnormalizada (estrella <code>sisg_dw</code>)</h3>
+  <div class="kid"><b>Como niño</b>Una hoja de respuestas: en cada fila ya viene escrito «Antigua, Sacatepéquez», sin tener que ir a buscar. Repites cosas, pero leer es súper rápido.</div>
+  <p>Departamento y municipio están en la <b>misma tabla</b> (<code>dim_geografia</code>). Se repite texto a propósito, a cambio de <b>menos uniones</b> y consultas más rápidas. Nadie escribe aquí a mano: solo el ETL, así que la repetición no se desordena.</p></div>
+</div>
+
+<div class="card"><h3>La misma pregunta: «¿cuántos estudios por departamento y categoría?»</h3>
+<div class="cols">
+<div><b>En la fuente (normalizada): 4 uniones</b>
+<pre>FROM estudio e
+JOIN paciente p      ON p.id = e.paciente_id
+JOIN municipio m     ON m.id = p.municipio_id
+JOIN departamento d  ON d.id = m.departamento_id
+JOIN tipo_estudio t  ON t.id = e.tipo_estudio_id</pre></div>
+<div><b>En el DW (estrella): 2 uniones</b>
+<pre>FROM fact_estudio f
+JOIN dim_geografia g    ON g.geo_key = f.geo_key
+JOIN dim_tipo_estudio t ON t.tipo_estudio_key = f.tipo_estudio_key</pre></div></div>
+<p>Y la geografía ya trae <code>departamento</code> y <code>municipio</code> como columnas. Eso es lo que significa «desnormalizar».</p></div>
+
+<h2>3. El ETL, paso a paso</h2>
+<div class="card">
+<div class="kid"><b>Como niño</b>Es una mudanza: <b>E</b>xtraes (sacas las cajas de la casa vieja), <b>T</b>ransformas (limpias, etiquetas y reordenas), <b>L</b>oad/cargas (acomodas en la casa nueva). Al final cuentas las cajas para ver que no se perdió nada.</div>
+<table>
+<tr><th>Paso</th><th>Procedimiento</th><th>Qué hace</th></tr>
+<tr><td>0</td><td><code>sp_etl_completo</code></td><td>El director: llama a los demás en orden y escribe en <code>etl_log</code> (inicio, fin, filas, estado).</td></tr>
+<tr><td>1</td><td><code>sp_cargar_dim_tiempo('2024-01-01','2027-12-31')</code></td><td>Genera el calendario (año, trimestre, mes, día de semana, fin de semana). <code>tiempo_key</code> = yyyymmdd.</td></tr>
+<tr><td>2</td><td><code>sp_etl_dimensiones</code></td><td>Vacía el DW y llena las dimensiones: geografía (con fila -1 «Desconocido», una fila por municipio y otra por departamento), entidad, paciente (solo sexo), tipo de estudio, área.</td></tr>
+<tr><td>3</td><td><code>sp_etl_facts</code></td><td>Convierte cada estudio y campaña en una fila de hechos: fecha → <code>tiempo_key</code>, ids → claves sustitutas, edad al día del estudio → grupo etario; lo que no se encuentra va a <code>-1</code>.</td></tr>
+<tr><td>4</td><td><code>sp_etl_resumen</code></td><td>Llena <code>fact_estudio_mensual</code> (mes × centro × tipo): la tabla resumen.</td></tr>
+</table>
+<p><b>Es recarga completa</b> (TRUNCATE + carga): simple y correcto con este volumen. Incremental = siguiente paso, con marca de agua en <code>etl_log</code>.</p>
+<p><b>Verificación:</b> <code>07_reconciliacion.sql</code> compara filas y montos fuente vs DW → diferencia 0.</p>
+</div>
+
+<h2>4. ¿Por qué hay una etapa «intermedia» (staging)?</h2>
+<div class="card">
+<div class="kid"><b>Como niño</b>Cuando llegan las compras del súper, no las metes directo al refri: primero las pones en la mesa, revisas qué está dañado y qué no cabe, y luego las acomodas.</div>
+<div class="tec"><b>Técnico</b><code>sisg_stg</code> recibe los CSV exportados por la app (sin contraseñas) tal cual, <b>sin validar</b>. Luego <code>puente/02_mapeo.sql</code> limpia contra los catálogos (sin importar mayúsculas ni tildes), traduce estados libres a enumerados, descarta campañas con fin antes del inicio, y agrega tipos de estudio nuevos como «Sin clasificar». Así la fuente <code>sisg_fuente</code> queda limpia y el DW nunca ve basura.</div>
+<p>Dato importante: la app <b>no registra costo ni duración</b> del estudio, así que se usa el precio y duración <b>de lista</b> del catálogo. Y el presupuesto de campaña queda vacío. Dilo tú antes de que te lo pregunten.</p>
+</div>
+
+<h2>5. Preguntas trampa (abre para ver la respuesta)</h2>
+<details><summary>¿Por qué no consultar directo la base de la app?</summary>Porque está normalizada (muchas uniones, más lenta para análisis) y porque el análisis pesado competiría con quien registra pacientes. Además el curso pide origen y destino para el ETL.</details>
+<details><summary>Si desnormalizas, ¿no se repiten datos y se desordena?</summary>Se repite a propósito. No se desordena porque nadie escribe en el DW a mano: solo el ETL, que recarga todo desde la fuente que sí está normalizada y con llaves foráneas. La integridad se garantiza en la fuente.</details>
+<details><summary>¿Por qué estrella y no copo de nieve?</summary>Jerarquías de solo 2 niveles, dimensiones pequeñas (<code>dim_geografia</code> ≈55 filas, <code>dim_tipo_estudio</code> ≈10), así que normalizarlas no ahorra espacio, y sí añade uniones. Los usuarios de negocio entienden mejor tablas planas. Candidata a copo si creciera: <code>dim_geografia</code>.</details>
+<details><summary>¿Cuál es el grano?</summary><code>fact_estudio</code>: un estudio. <code>fact_campana</code>: una campaña.</details>
+<details><summary>¿Qué pasa si un paciente no tiene municipio o fecha de nacimiento?</summary>No se pierde el hecho: va a la fila <code>-1</code> «Desconocido» (<code>geo_key</code> o <code>grupo_etario_key</code>). Primero intenta el municipio, luego el departamento, y solo si no hay nada, -1.</details>
+<details><summary>¿Y si cambia el nombre de un departamento?</summary>SCD tipo 1: se sobrescribe, porque el ETL recarga todo y no guarda historia. Para guardar historia habría que usar tipo 2 (fila nueva con fechas de vigencia).</details>
+<details><summary>¿Cómo demuestran que el ETL es correcto?</summary>Reconciliación: filas y montos fuente vs DW, diferencia 0. Y <code>etl_log</code> deja registro de cada corrida.</details>
+<details><summary>¿Para qué sirve la tabla de resumen?</summary><code>fact_estudio_mensual</code> (≈1,758 filas vs 12,507): la consulta 8 ≈ 1.6 ms contra ≈ 11 ms de la consulta 1: ~7× más rápida (promedio de 50 ejecuciones × 3). Se pierde la geografía a propósito porque con ella casi no se reducía.</details>
+<details><summary>¿Qué datos personales hay en el DW?</summary>Ninguno identificable: solo sexo y grupo de edad. Sin nombre, DPI, teléfono ni contacto. Rol <code>analista</code> de solo lectura.</details>
+<details><summary>¿Los resultados son reales?</summary>No: datos sintéticos aleatorios. Lo que se evalúa es el diseño, el ETL y las consultas, no las cifras.</details>
+<details><summary>¿Carga incremental?</summary>No: recarga completa. Con más volumen se haría incremental con marca de agua (última fecha cargada) en <code>etl_log</code>.</details>
+<details><summary>¿Por qué MySQL y no SQL Server?</summary>Decisión del grupo el 24 de octubre. <code>dw/README.md</code> trae las equivalencias (IDENTITY, CHECK, THROW, DATEADD, CHOOSE…).</details>
+
+</main>
+<script>
+const S=[
+{n:"1. App",s:"sisg · normalizada",c:"#2563eb",kid:"Aquí la gente escribe a mano, y cada quien escribe como quiere.",tec:"Base transaccional MySQL de la app (NestJS). Normalizada, pensada para registrar rápido. El tipo de estudio y el estado se pueden escribir libremente.",
+ code:`paciente: { id: 17, departamento: "sacatepequez", municipio: "antigua guatemala", fecha_nacimiento: "1990-05-02" }
+estudio:  { id: 301, paciente_id: 17, tipo_estudio: "rayos x", estado: "Realizado ", fecha: "2026-03-14" }`},
+{n:"2. Staging",s:"sisg_stg · bodega",c:"#d97706",kid:"La mesa donde pones las compras antes de guardarlas: llegan tal cual, aún no se revisan.",tec:"CSV exportados por la app (sin contraseñas) cargados sin validar en sisg_stg. Es el área intermedia: aquí se puede ver exactamente qué entró sucio.",
+ code:`stg_paciente: { id: 17, departamento: "sacatepequez", municipio: "antigua guatemala", ... }
+stg_estudio:  { id: 301, tipo_estudio: "rayos x", estado: "Realizado ", ... }   -- sigue sucio`},
+{n:"3. Fuente",s:"sisg_fuente · limpia",c:"#0f766e",kid:"Ya está ordenado: cada cosa tiene su número y su lugar en la libreta, y los guardias (triggers) revisan las reglas.",tec:"puente/02_mapeo.sql limpia contra catálogos (sin mayúsculas ni tildes), estado → enumerado, costo y duración = valores de lista del catálogo. Normalizada, con 13 llaves foráneas, catálogos, triggers y bitácora.",
+ code:`departamento: { id: 3, nombre: "Sacatepéquez" }
+municipio:    { id: 41, nombre: "Antigua Guatemala", departamento_id: 3 }
+paciente:     { id: 17, municipio_id: 41, departamento_id: 3, fecha_nacimiento: "1990-05-02" }
+estudio:      { id: 301, paciente_id: 17, tipo_estudio_id: 5, estado: "REALIZADO", costo_q: <precio de lista> }`},
+{n:"4. ETL",s:"sp_etl_completo",c:"#7c3aed",kid:"La mudanza: sacar, reordenar y acomodar, y contar las cajas.",tec:"sp_cargar_dim_tiempo → sp_etl_dimensiones → sp_etl_facts → sp_etl_resumen. Calcula la edad al día del estudio (35 años → grupo 30-44), convierte la fecha a 20260314, resuelve geo_key (municipio → departamento → -1) y registra todo en etl_log.",
+ code:`fecha 2026-03-14            →  tiempo_key = 20260314
+municipio 41                →  geo_key (Antigua Guatemala, Sacatepéquez)
+edad a la fecha = 35        →  grupo_etario_key = "30-44"
+tipo_estudio_id 5           →  tipo_estudio_key
+si falta municipio/fecha_nac →  -1 (Desconocido)`},
+{n:"5. Estrella",s:"sisg_dw · desnormalizada",c:"#db2777",kid:"La hoja de respuestas: cada línea ya trae todo escrito para leer rápido.",tec:"fact_estudio (grano: un estudio) con llaves sustitutas a dim_tiempo, dim_entidad, dim_geografia, dim_paciente, dim_tipo_estudio y dim_grupo_etario. dim_geografia trae departamento y municipio juntos. Sin nombre ni DPI.",
+ code:`fact_estudio:  { estudio_id: 301, tiempo_key: 20260314, geo_key: ·, tipo_estudio_key: ·, grupo_etario_key: "30-44",
+                 estado: "REALIZADO", cantidad: 1, costo_q: ·, duracion_min: · }
+dim_geografia: { departamento: "Sacatepéquez", municipio: "Antigua Guatemala" }   ← todo en una fila
+dim_paciente:  { sexo }                                                          ← sin nombre ni DPI`},
+{n:"6. Consultas",s:"8 consultas + vistas",c:"#059669",kid:"Ahora sí puedes preguntar: ¿cuántos? ¿dónde? ¿a quién? Y la respuesta sale rápido.",tec:"06_consultas.sql: agrupaciones, RANK, SUM OVER, LAG, cruce de ambos hechos por dim_geografia. Vistas v_* y tabla resumen para la consulta 8.",
+ code:`SELECT t.anio, t.mes, te.categoria, COUNT(*) AS estudios, SUM(f.costo_q) AS ingresos_q
+FROM fact_estudio f
+JOIN dim_tiempo t ON t.tiempo_key = f.tiempo_key
+JOIN dim_tipo_estudio te ON te.tipo_estudio_key = f.tipo_estudio_key
+WHERE f.estado = 'REALIZADO' GROUP BY t.anio, t.mes, te.categoria;`}
+];
+const pipe=document.getElementById("pipe"),det=document.getElementById("detail");
+function show(i){
+ pipe.innerHTML="";
+ S.forEach((x,k)=>{
+  const d=document.createElement("div");d.className="st"+(k==i?" on":"");d.style.setProperty("--c",x.c);
+  d.innerHTML=`<b>${x.n}</b><small>${x.s}</small>`;d.onclick=()=>show(k);pipe.appendChild(d);
+  if(k<S.length-1){const a=document.createElement("div");a.className="arrow";a.textContent="→";pipe.appendChild(a)}
+ });
+ const x=S[i];
+ det.innerHTML=`<div class="kid"><b>Como niño</b>${x.kid}</div><div class="tec"><b>Técnico</b>${x.tec}</div><p><span class="pill">Ejemplo ilustrativo: el mismo estudio en esta etapa</span></p><pre></pre>`;
+ det.querySelector("pre").textContent=x.code;
+}
+show(0);
+</script></body></html>

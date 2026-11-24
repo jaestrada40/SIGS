@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SISG · Flashcards para estudiar</title>
+<style>
+body{font-family:system-ui,sans-serif;background:#f4f7f6;margin:0;color:#1d2b2a}
+header{background:#0f766e;color:#fff;padding:18px 24px}
+header h1{margin:0;font-size:22px}header p{margin:4px 0 0;opacity:.9;font-size:14px}
+.bar{display:flex;flex-wrap:wrap;gap:8px;padding:14px 24px;align-items:center}
+.bar button,.bar input{font:inherit;padding:6px 12px;border-radius:20px;border:1px solid #0f766e;background:#fff;color:#0f766e;cursor:pointer}
+.bar button.on{background:#0f766e;color:#fff}.bar input{cursor:text;color:#222;min-width:200px}
+#grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:16px;padding:0 24px 40px}
+.card{background:#fff;border-radius:14px;box-shadow:0 2px 8px #0002;padding:18px;cursor:pointer;min-height:90px;border-top:6px solid var(--c)}
+.card .tag{font-size:11px;font-weight:700;text-transform:uppercase;color:var(--c)}
+.card .q{font-size:17px;font-weight:600;margin:6px 0}
+.card .a{display:none;margin-top:12px;font-size:15px;line-height:1.45}
+.card.open .a{display:block}.card.open .hint{display:none}
+.hint{font-size:12px;color:#889}
+.kid{background:#fff8e1;border-left:4px solid #f5b700;padding:8px 10px;border-radius:6px;margin-bottom:8px}
+.tec{background:#e8f5f3;border-left:4px solid #0f766e;padding:8px 10px;border-radius:6px}
+b.l{display:block;font-size:11px;text-transform:uppercase;opacity:.7;margin-bottom:2px}
+.done{opacity:.45}
+</style></head><body>
+<header><h1>SISG · Flashcards para la sustentación</h1>
+<p>Toca una tarjeta para ver la respuesta: primero «como si tuvieras 8 años», luego la versión técnica. Doble clic = marcar como ya sabida.</p></header>
+<div class="bar" id="bar"></div><div id="grid"></div>
+<script>
+const COL={Proyecto:"#0f766e","Base de datos":"#2563eb",Estrella:"#d97706",ETL:"#7c3aed",Consultas:"#db2777","App y seguridad":"#059669","Gestión":"#475569"};
+// [categoría, pregunta, explicación para niño, respuesta técnica]
+const C=[
+["Proyecto","¿Qué es SISG?","Es como un cuaderno mágico donde las clínicas y las fundaciones anotan a sus pacientes, sus estudios y sus campañas, y después una lupa gigante les dice qué pasó.","Sistema de Información de Salud de Guatemala (Grupo 4). Una aplicación para centros de diagnóstico y organismos no lucrativos (pacientes, estudios, campañas) más un almacén de datos para analizarlos. Entrega: 28 nov 2026."],
+["Proyecto","¿Qué problema resuelve?","Cada clínica anotaba en su propio cuaderno y nadie podía sumar todo. Ahora todos anotan en el mismo lugar.","Centros y ONG registran datos por separado y no pueden medir ingresos, personas alcanzadas ni referidos que terminan en estudio. SISG los integra."],
+["Proyecto","¿Por qué hay DOS bases de datos?","Una es la cocina (donde se cocina rápido, plato por plato). La otra es el comedor con el menú ya ordenado para que mires y decidas. No se cocina en el comedor.","La app usa una base transaccional (`sisg`, normalizada, para registrar rápido). El almacén (`sisg_fuente` + `sisg_dw`) está pensado para consultar. El análisis pesado no debe competir con quien registra, el ETL necesita origen y destino, y normalizado y estrella no conviven en un esquema."],
+["Proyecto","¿Qué tecnologías usan?","Un cerebro (API), una cara bonita (la web) y un baúl (la base de datos).","Backend NestJS + MySQL 8, interfaz TanStack Start + React + Tailwind, almacén en MySQL 8 en Docker. Todo MySQL."],
+["Proyecto","¿Por qué MySQL si el curso usa SQL Server?","Elegimos el idioma que mejor hablamos. Y tenemos un diccionario para traducir.","Decisión del grupo el 24 de octubre; el riesgo quedó registrado y cerrado. `dw/README.md` trae la tabla de equivalencias a T-SQL (IDENTITY, CHECK, THROW, DATEADD, CHOOSE…)."],
+["Proyecto","¿Los datos son reales?","No, son de mentira, como dinero de Monopoly. Sirven para practicar.","Almacén: datos sintéticos aleatorios (≈6,000 pacientes, ≈12,000 estudios, 150 campañas); los resultados no significan nada real. App: datos de ejemplo. Costo/duración vienen de precios de lista, no de cobros reales."],
+
+["Base de datos","¿Qué es el ER (entidad-relación)?","Es el mapa de quién es amigo de quién: un paciente se hace estudios, un estudio es de un tipo, un centro hace estudios.","Modelo de las fuentes en `sisg_fuente`: 10 tablas, 13 llaves foráneas. Catálogos (departamento, municipio, tipo de entidad, tipo de estudio, área de campaña) en lugar de texto libre; paciente, estudio, campaña, entidad y bitácora."],
+["Base de datos","¿Qué es una llave primaria?","Es el número de la camiseta: no hay dos jugadores con el mismo.","Columna que identifica de forma única cada fila de una tabla."],
+["Base de datos","¿Qué es una llave foránea?","Es decir «este estudio es de ESTE paciente» y la base no te deja inventar un paciente que no existe.","Columna que apunta a la llave primaria de otra tabla; garantiza integridad referencial (no hay estudios sin paciente)."],
+["Base de datos","¿Por qué catálogos y no texto libre?","Si cada quien escribe «Sacatepéquez» como quiere, tienes 5 formas de escribir lo mismo. Con una lista, solo eliges.","Evidencia real: llegaba `sacatepequez` y `Sacatepéquez`. Catálogos + FK evitan duplicados y se limpian en `puente/02_mapeo.sql` sin distinguir mayúsculas ni tildes."],
+["Base de datos","¿Qué son los triggers?","Un guardia en la puerta: si algo no cumple las reglas, no lo deja pasar.","Reglas de negocio en `03_fuente_triggers.sql`: validan estudios y campañas antes de guardar y alimentan la bitácora de auditoría (usan SIGNAL SQLSTATE '45000' para rechazar)."],
+["Base de datos","¿Qué es la bitácora?","El diario donde queda escrito quién hizo qué y cuándo.","Tabla de auditoría: registra cambios. En la app, todo queda auditado."],
+["Base de datos","¿Qué es normalizar?","Guardar cada cosa una sola vez, como tener UNA libreta de direcciones y no copiarla en cada carta.","Organizar tablas para eliminar redundancia. Bueno para registrar (OLTP); malo para analizar porque requiere muchas uniones."],
+
+["Estrella","¿Qué es un almacén de datos (data warehouse)?","Una biblioteca donde los libros ya están ordenados por tema para encontrar respuestas rápido, sin molestar a quien escribe libros nuevos.","Base separada, desnormalizada, pensada para análisis (OLAP) con datos históricos integrados."],
+["Estrella","¿Qué es el modelo estrella?","Dibuja una estrella: en el centro un montón de números (los hechos) y en las puntas las etiquetas para filtrarlos (quién, cuándo, dónde, qué).","Una tabla de hechos al centro rodeada de dimensiones planas, unidas por llaves. Consultas con 2–3 uniones."],
+["Estrella","¿Qué es una tabla de hechos?","El cuaderno de cosas que pasaron y se pueden contar o sumar: cada estudio es una línea.","Tabla con medidas numéricas y llaves a las dimensiones. Aquí: `fact_estudio` y `fact_campana`."],
+["Estrella","¿Qué es una dimensión?","Las preguntas con las que cortas los números: ¿cuándo? ¿dónde? ¿a quién? ¿de qué tipo?","Tabla descriptiva (tiempo, geografía, entidad, paciente, tipo de estudio, grupo etario, área de campaña) con atributos para filtrar y agrupar."],
+["Estrella","¿Qué es el grano?","Qué significa UNA fila: ¿una torta entera o una rebanada? Hay que decidirlo antes.","`fact_estudio`: un estudio diagnóstico. `fact_campana`: una campaña de salud. Se define primero para no mezclar niveles."],
+["Estrella","¿Qué medidas tienen los hechos?","Los números que puedes sumar o promediar: cuánto cuesta, cuánto dura, a cuántos atendiste.","Estudio: `cantidad`, `costo_q`, `duracion_min` (se analiza como promedio). Campaña: `personas_atendidas`, `presupuesto_q`, `duracion_dias` (promedio; sumarla no tiene sentido)."],
+["Estrella","¿Qué es una medida aditiva?","Se puede sumar sin hacer trampa: 3 manzanas + 2 manzanas = 5. Pero la temperatura de ayer + la de hoy no tiene sentido.","Puede sumarse por cualquier dimensión. `costo_q`, `cantidad`, `personas_atendidas` lo son; las duraciones se promedian."],
+["Estrella","¿Por qué DOS tablas de hechos?","Contar estudios y contar campañas son juegos distintos; no puedes meter ambos en el mismo tablero.","Procesos con granos distintos; mezclarlos en una tabla sería incorrecto. Forman una constelación de hechos."],
+["Estrella","¿Qué son las dimensiones conformadas?","Un mismo diccionario que usan los dos juegos, así se pueden comparar.","`dim_tiempo`, `dim_geografia` y `dim_entidad` tienen misma estructura y claves en ambos hechos; permiten cruzar estudios y campañas por departamento (consulta 6)."],
+["Estrella","¿Estrella o copo de nieve? ¿Por qué estrella?","Copo de nieve = tarjetas dentro de tarjetas, más difícil de leer. Estrella = todo en una tarjeta plana. Como son pocas filas, no vale la pena complicarse.","Más rápido (2–3 uniones vs 4–5), más simple para usuarios de negocio, jerarquías de solo 2 niveles, `dim_geografia` ≈55 filas y `dim_tipo_estudio` ≈10 (no hay ahorro), integridad ya resuelta en la fuente. Regla de la clase 12: empieza en estrella. Candidato a copo: `dim_geografia`."],
+["Estrella","¿Qué es una llave sustituta (surrogate key)?","Un número de lista nuestro, inventado, para no depender de los nombres de otros sistemas.","Clave artificial (`*_key`) propia del DW; `tiempo_key` es yyyymmdd. Aísla el DW de cambios en las claves de origen."],
+["Estrella","¿Por qué la fila -1 «desconocido»?","Si no sabemos dónde vive alguien, lo ponemos en el cajón «no sé» en vez de tirarlo a la basura.","`geo_key = -1` y `grupo_etario_key = -1`: evitan perder hechos sin municipio o sin fecha de nacimiento."],
+["Estrella","¿Qué es el rol de dimensión de tiempo (role-playing)?","Una misma agenda del calendario usada dos veces: para «cuándo empezó» y «cuándo terminó».","`dim_tiempo` se usa como inicio y fin en `fact_campana`, sin duplicar la tabla."],
+["Estrella","¿Qué es un atributo degenerado?","Un dato que viaja en la fila sin tener su propia tarjeta, como el número de ticket.","`estudio_id`, `campana_id` y `estado` en los hechos: identificadores sin dimensión propia."],
+["Estrella","¿Qué es SCD (cambios lentos de dimensión)?","¿Qué haces si alguien cambia de nombre? Tipo 1: borras el viejo y escribes el nuevo. Tipo 2: guardas los dos con fechas.","Usamos tipo 1 (sobrescribir); el ETL recarga todo y no guarda historia. Para historia: tipo 2 (fila nueva con vigencia)."],
+["Estrella","¿Qué es la tabla de sumarización?","Un resumen ya hecho, como las notas de un libro: no releer las 12,000 páginas.","`fact_estudio_mensual`: estudios realizados, ingresos y duración promedio por mes, centro y tipo (≈1,758 filas vs 12,507). Se quitó geografía a propósito porque casi no reducía (10,106 vs 12,219)."],
+["Estrella","¿Por qué el DW no tiene nombre ni DPI?","Los datos de salud son secretos; guardamos «mujer, 30–44 años», no «María Pérez».","Privacidad: solo sexo y grupo de edad (0-14, 15-29, 30-44, 45-59, 60+) calculado al día del estudio. Sin nombre, DPI, teléfono ni contacto."],
+
+["ETL","¿Qué es el ETL?","Es mudarse de casa: sacas las cosas (E), las limpias y reordenas (T) y las acomodas en la casa nueva (L).","Extract–Transform–Load. Extrae de `sisg_fuente`, transforma (limpia, calcula edad y grupo etario, asigna claves sustitutas) y carga la estrella."],
+["ETL","¿Cómo está hecho el ETL?","Con recetas guardadas en la base que se ejecutan con un solo botón.","Procedimientos almacenados en `05_dw_etl.sql`; el principal es `sp_etl_completo`. Cada corrida queda en `etl_log` (inicio, fin, filas, estado)."],
+["ETL","¿Cómo saben que el ETL cargó bien?","Cuentan las canicas antes y después de la mudanza; si coinciden, todo llegó.","Reconciliación: compara filas y montos entre fuente y almacén; diferencia 0. Última carga: 12,507 estudios, 150 campañas, 1,758 filas de resumen."],
+["ETL","¿Es carga incremental?","No: cada vez vaciamos la caja y la rellenamos completa. Con pocos datos alcanza.","Recarga completa (borra y recarga). Para producción: incremental con marca de agua en `etl_log`."],
+["ETL","¿Cómo llegan los datos de la app al almacén?","Un camión (el «puente») recoge los datos, los revisa en una bodega temporal y luego los acomoda.","`run_app.sh`: la app exporta CSV sin contraseñas → `sisg_stg` (staging, sin validar) → mapeo a catálogos (`02_mapeo.sql`) → triggers → DW → ETL → reconciliación."],
+["ETL","¿Qué hacen con datos sucios?","Si el dato no entra en ningún cajón, lo ponemos en «sin clasificar» o lo dejamos vacío y lo contamos.","Departamento/municipio sin match: vacío y contado. Tipo de estudio nuevo: «Sin clasificar». Estado `realiz…`→REALIZADO, `cancel…`→CANCELADO, otro→PROGRAMADO. Campaña con fin antes del inicio: se descarta. Solo fechas 2024–2027."],
+["ETL","¿Qué limitación tienen los datos de la app?","La app todavía no anota cuánto costó de verdad un estudio, así que usamos el precio de lista.","Costo y duración usan el valor de lista del catálogo; presupuesto de campaña queda vacío. No son montos reales cobrados."],
+
+["Consultas","¿Cuántas consultas hay y qué responden?","Ocho preguntas que le hacemos a la lupa, cada una con su atajo (vista).","8 consultas en `06_consultas.sql`, cada una con vista `v_*` (p. ej. `v_estudios_mes_categoria`): estudios por mes/tipo/centro/lugar, perfil por sexo y edad, personas y costo por área, cruce estudios–campañas por departamento (consulta 6)."],
+["Consultas","¿Qué es una vista?","Una ventana guardada: miras siempre lo mismo sin repetir la receta.","Consulta guardada con nombre; `SELECT * FROM v_estudios_mes_categoria;`."],
+["Consultas","¿Qué mejora de desempeño lograron?","Preguntar al resumen es como mirar la nota del libro en vez de leerlo entero: 7 veces más rápido.","Consulta 1 (fact_estudio, 12,507 filas) ≈ 11 ms; consulta 8 (fact_estudio_mensual, 1,758 filas) ≈ 1.6 ms: ~7× más rápida. Promedio de 50 ejecuciones × 3, MySQL 8, datos sintéticos; se compara con `EXPLAIN`."],
+["Consultas","¿Qué es el rol `analista`?","Una llave que solo deja mirar, nunca romper.","Rol de solo lectura en el almacén (`CREATE ROLE` + `GRANT`)."],
+
+["App y seguridad","¿Qué roles tiene la app?","Tres sombreros: jefe, quien registra y quien solo revisa.","Administrador, operador y auditor; cada entidad ve solo lo suyo."],
+["App y seguridad","¿Qué es el MFA?","Además de la contraseña, un código secreto del celular: como llave y huella.","Autenticación en dos pasos, obligatoria. La clave se cifra con `MFA_KEY`. Contraseñas con JWT (`JWT_SECRET` ≥32 caracteres); sin esas variables la API no arranca."],
+["App y seguridad","¿Cómo se crean los usuarios?","No hay inscripción abierta: el dueño da una invitación de un solo uso.","Sin registro público. El superadmin crea cada entidad y entrega un enlace de invitación de un solo uso (72 h) con el que se crea la contraseña."],
+["App y seguridad","¿Qué son los referidos?","Una clínica dice: «mejor ve a ese centro a hacerte el estudio» y se puede seguir si fue.","Referidos entre organismo y centro, con estados y agenda; el panel de impacto mide cuántos terminan en estudio."],
+["App y seguridad","¿Qué es FHIR?","Un idioma universal para que los sistemas de salud se entiendan.","Estándar de interoperabilidad en salud; la app exporta en formato FHIR."],
+["App y seguridad","¿Qué pruebas tiene?","Robots que usan la app y revisan que todo funcione.","103 pruebas automáticas de extremo a extremo (`npm run test:e2e`). Lección: corrían contra la base de desarrollo y la vaciaban; se fijó una base de pruebas."],
+["App y seguridad","¿Qué lección aprendieron de la base de datos?","Elegir el motor al principio: mudarse a mitad del camino cuesta.","La app nació en PostgreSQL; migrar a MySQL obligó a reescribir SQL escrito a mano."],
+
+["Gestión","¿Metodología?","Planificamos como arquitectos y construimos como en equipo de juegos: poco a poco.","Híbrida: predictiva para acordar plan (alcance, hitos, dependencias) y ágil para construir en iteraciones cortas. Equipo de 3."],
+["Gestión","¿Qué documentos de gestión hay?","Los papeles del proyecto: qué, cuándo, quién, qué puede salir mal.","Acta y alcance, EDT (regla del 100%), cronograma con ruta crítica, PERT y Gantt, interesados (poder-interés), comunicaciones, reporte de estado con CPI/SPI, riesgos, calidad."],
+["Gestión","¿Cómo valoran los riesgos?","Qué tan probable y qué tan grave, en una tabla de 3×3, y explicamos por qué.","Matriz 3×3 probabilidad×impacto con justificación. Respuestas: evitar, transferir, mitigar, aceptar, escalar. Severidad de vulnerabilidad ≠ nivel de riesgo."],
+["Gestión","¿Qué calidad miden?","Ponemos metas con números, como «¿llegué a la meta?».","ISO/IEC 25010: corrección (reconciliación = 0 diferencias), eficiencia (consulta 8 ≈7× más rápida), seguridad (MFA y acceso por rol)."],
+["Gestión","¿Qué es CPI y SPI?","CPI: ¿gasté lo planeado? SPI: ¿voy al ritmo planeado? Mayor a 1 es bien.","CPI = EV/AC (costo); SPI = EV/PV (cronograma). Valores finales y EAC dependen de las horas reales que el grupo está completando."],
+["Gestión","¿Declaración de IA?","Decimos con honestidad dónde ayudó la IA.","IA usada en código, documentos y presentación; detalle (herramienta, propósito, nivel de modificación) en `docs/gestion/05_apendice_declaracion_ia.md`."]
+];
+const bar=document.getElementById("bar"),grid=document.getElementById("grid");
+let cat="Todas",q="";const done=new Set(JSON.parse(localStorage.getItem("sisgDone")||"[]"));
+const esc=s=>s.replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c])).replace(/`([^`]+)`/g,"<code>$1</code>");
+function render(){
+ bar.innerHTML="";
+ ["Todas",...Object.keys(COL)].forEach(c=>{const b=document.createElement("button");b.textContent=c;b.className=c==cat?"on":"";b.onclick=()=>{cat=c;render()};bar.appendChild(b)});
+ const i=document.createElement("input");i.placeholder="Buscar…";i.value=q;i.oninput=e=>{q=e.target.value.toLowerCase();draw()};bar.appendChild(i);
+ const s=document.createElement("button");s.textContent="Mezclar";s.onclick=()=>{C.sort(()=>Math.random()-.5);draw()};bar.appendChild(s);
+ draw();i.focus&&q&&i.focus();
+}
+function draw(){
+ grid.innerHTML="";
+ C.forEach(([k,p,n,t],idx)=>{
+  if(cat!="Todas"&&k!=cat)return;
+  if(q&&!(p+n+t).toLowerCase().includes(q))return;
+  const d=document.createElement("div");d.className="card"+(done.has(p)?" done":"");d.style.setProperty("--c",COL[k]);
+  d.innerHTML=`<div class="tag">${k}</div><div class="q">${esc(p)}</div><div class="hint">toca para ver la respuesta</div><div class="a"><div class="kid"><b class="l">Como niño de 8 años</b>${esc(n)}</div><div class="tec"><b class="l">Respuesta técnica</b>${esc(t)}</div></div>`;
+  d.onclick=()=>d.classList.toggle("open");
+  d.ondblclick=()=>{done.has(p)?done.delete(p):done.add(p);localStorage.setItem("sisgDone",JSON.stringify([...done]));d.classList.toggle("done")};
+  grid.appendChild(d);
+ });
+}
+render();
+</script></body></html>
