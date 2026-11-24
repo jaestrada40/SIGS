@@ -1,8 +1,8 @@
-# SISG · Guion para exponer (12 diapositivas)
+# SISG · Guion para exponer (13 diapositivas)
 
-Tiempo sugerido: 12 a 15 minutos. Es el mismo texto de las notas del orador de la presentación en Canva. Las cifras salen de lo medido en el proyecto; si algo cambia, corrígelo aquí y en la diapositiva.
+Tiempo sugerido: 13 a 16 minutos. Es el mismo texto de las notas del orador de la presentación en Canva. Las cifras salen de lo medido en el proyecto; si algo cambia, corrígelo aquí y en la diapositiva.
 
-**Reparto sugerido (3 integrantes):** diapositivas 1 a 3 (presentación y arquitectura), 4 a 8 (datos y aplicación, Bases de Datos II), 9 a 12 (gestión y cierre, Administración de Proyectos). Ajústenlo al grupo.
+**Reparto sugerido (3 integrantes):** diapositivas 1 a 3 (presentación y arquitectura), 4 a 9 (datos, aplicación e integración con el Grupo 8, Bases de Datos II), 10 a 13 (gestión y cierre, Administración de Proyectos). Ajústenlo al grupo.
 
 ---
 
@@ -32,16 +32,21 @@ Esta es la aplicación que alimenta los datos, con información de ejemplo. Cada
 
 *Demo en vivo (opcional):* entrar con un administrador (ver `docs/GUIA_PRESENTACION.md`, sección 2b), mostrar Impacto y Referidos. Tengan el MFA ya configurado antes de exponer.
 
-## 9. Gestión: alcance y cronograma · ~1.5 min
+## 9. Integración con la plataforma del Grupo 8 · ~1.5 min
+Hasta aquí todo es nuestro: la aplicación genera los datos y nuestro almacén los modela. Ahora cerramos el ciclo con el resto del sistema de salud. El Grupo 8 es el gestor de la plataforma: tiene un almacén central, `sisg_analitica`, en MySQL, donde convergen los siete grupos de datos. Nosotros, como Grupo 4 (centros de diagnóstico y organismos no lucrativos), le aportamos un resumen, no la base completa. De nuestro almacén calculamos un agregado mensual: servicios y monto cobrado por mes, establecimiento, ubicación y tipo de servicio. Ese resumen, 1,908 filas de 14 establecimientos, se inserta en nuestra tabla buzón `ingesta_g4_servicio`; un disparador en el servidor lo valida contra sus catálogos y lo copia a `fact_servicio`, que consumen otros grupos, como las aseguradoras. No viajan pacientes ni datos personales: solo cifras agregadas. Antes de enviar validamos, solo con lectura, que todas nuestras llaves existieran en sus catálogos: cero inválidas. Y el portal del Grupo 8 ya muestra nuestros datos en el tablero del Grupo 4.
+
+*Demo (opcional, solo si hay Internet):* abrir el portal del Grupo 8, entrar con el usuario del Grupo 4 y mostrar el tablero. Tengan lista una captura por si la red falla. Las primeras filas de la tabla son 10 datos de prueba del Grupo 8, no nuestros: desplácense hasta nuestros establecimientos.
+
+## 10. Gestión: alcance y cronograma · ~1.5 min
 Pasamos a la gestión del proyecto. Usamos un enfoque híbrido: predictivo para acordar el plan, con alcance, hitos y dependencias; y ágil para construir, en iteraciones cortas con revisión y ajuste. El plazo es fijo, el 28 de noviembre, y el equipo es de tres personas. La documentación incluye el acta de constitución y alcance, la EDT con la regla del 100 por ciento, el cronograma con ruta crítica, PERT y Gantt, el registro de interesados con la matriz poder-interés, el plan de comunicaciones y el reporte de estado con CPI y SPI. Los valores finales de CPI y EAC dependen de las horas reales trabajadas, que el grupo está completando.
 
-## 10. Riesgos y calidad · ~1.5 min
+## 11. Riesgos y calidad · ~1.5 min
 Los riesgos los valoramos con una matriz de 3 por 3, probabilidad contra impacto, y escribimos el porqué de cada valor para que otra persona llegue a la misma conclusión. Las respuestas a amenazas son evitar, transferir, mitigar, aceptar o escalar. Un ejemplo: existía el riesgo de que la docente exigiera SQL Server; el grupo decidió el 24 de octubre que MySQL es definitivo y el riesgo se cerró. También separamos severidad de riesgo: una vulnerabilidad con puntaje alto puede dejar un riesgo bajo. Para calidad usamos ISO/IEC 25010 con metas medibles: corrección, con la reconciliación en diferencia cero; eficiencia, con la consulta 8 unas 7 veces más rápida; y seguridad, con MFA obligatorio y acceso por rol.
 
-## 11. Lecciones aprendidas · ~1 min
+## 12. Lecciones aprendidas · ~1 min
 Lo que funcionó: separar la operación de la analítica, reconciliar la fuente contra el almacén para confiar en el ETL, y tener 103 pruebas automáticas de extremo a extremo. Lo que haríamos distinto: decidir el motor de base de datos al inicio; la aplicación nació en PostgreSQL y migrarla a MySQL obligó a reescribir el SQL escrito a mano. Y las pruebas deben correr sobre una base propia: descubrimos tarde que apuntaban a la base de desarrollo y la vaciaban en cada corrida. Lo corregimos fijando la base de pruebas.
 
-## 12. Cierre y declaración de IA · ~1 min
+## 13. Cierre y declaración de IA · ~1 min
 Resumo. Para Bases de Datos II entregamos el ER de las fuentes, el modelo estrella, el ETL y las consultas con sus vistas, más una aplicación que genera los datos. Para Administración de Proyectos entregamos el plan: acta, EDT, cronograma, interesados, comunicaciones, riesgos y calidad. Declaramos el uso de inteligencia artificial: se usó para código, documentos y esta presentación, y el detalle, con la herramienta, el propósito y el nivel de modificación, está en el apéndice. Gracias; quedamos atentos a sus preguntas.
 
 ---
@@ -57,4 +62,7 @@ Resumo. Para Bases de Datos II entregamos el ER de las fuentes, el modelo estrel
 | ¿Cómo saben que el ETL cargó bien? | La reconciliación compara filas y montos entre fuente y almacén: diferencia 0. |
 | ¿Es una carga incremental? | No: es recarga completa. La incremental, con marca de agua en `etl_log`, es el siguiente paso. |
 | ¿Los datos son reales? | No: el almacén usa datos sintéticos y la aplicación, datos de ejemplo. Los costos y duraciones del almacén vienen de precios de lista, no de cobros reales. |
+| ¿Qué le mandan al Grupo 8? | Solo un agregado mensual (servicios y monto por mes, establecimiento, ubicación y servicio) en `ingesta_g4_servicio`. Sin pacientes ni datos personales. |
+| ¿Cómo saben que llegó bien? | Validamos con solo lectura contra sus catálogos: 0 llaves inválidas, 1,908 de 1,908 filas ya en su `fact_servicio` y sin diferencias de valores (`dw/g8/02_resultado_validacion.txt`). |
+| ¿Por qué hay más filas de las suyas en su tablero? | Hay 10 filas de prueba del Grupo 8 (establecimientos 8 a 10, año 2024). Los totales propios son 1,908 filas y 52,004 servicios. |
 | ¿Y la seguridad? | Rol `analista` de solo lectura en el almacén, MFA obligatorio, roles por entidad, bitácora de auditoría y llaves foráneas. |
