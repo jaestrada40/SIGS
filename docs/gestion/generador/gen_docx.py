@@ -291,7 +291,7 @@ para(f"Las respuestas a las amenazas suman {RES} h, por lo que la reserva de con
 # =============================== VII. CALIDAD ===============================
 H1('Plan de gestión de la calidad')
 H2('Especificaciones medibles')
-para("La calidad se define contra requisitos documentados y se trata como principio de PMBOK 8 [2] en los siete dominios, con las prácticas de planificar, asegurar y controlar la calidad de ISO 21502 [3]. El producto se evalúa con cuatro características de ISO/IEC 25010 [4]: adecuación funcional, fiabilidad, seguridad y usabilidad. Los mínimos y metas de usabilidad y desempeño son propuestas del grupo y deben validarse antes de usarse como criterio de aceptación.")
+para("La calidad se define contra requisitos documentados y se trata como principio de PMBOK 8 [2] en los siete dominios, con las prácticas de planificar, asegurar y controlar la calidad de ISO 21502 [3]. El producto se evalúa con cinco características de ISO/IEC 25010 [4]: adecuación funcional, fiabilidad, seguridad, usabilidad y eficiencia de desempeño. Los mínimos y metas de usabilidad y desempeño son propuestas del grupo y deben validarse antes de usarse como criterio de aceptación.")
 table('Especificación de calidad', t04[7], widths=[14, 12, 16, 6, 6, 14])
 H2('Calidad en los siete dominios')
 table('Integración de la calidad en los dominios de PMBOK 8', t04[8], widths=[7, 18, 30])

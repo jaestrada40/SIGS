@@ -105,8 +105,8 @@ Seguimiento: revisar la matriz cada semana; un riesgo de nivel alto o crítico s
 
 ## 2. Plan de gestión de la calidad integrado (método de la sesión 11)
 La calidad se define **contra requisitos documentados** (no contra opinión) y se trata como **principio** de PMBOK 8 en los siete dominios,
-con las prácticas de planificar (ISO 21502 7.11.2), asegurar (7.11.3) y controlar (7.11.4) la calidad [3]. El producto se evalúa con cuatro
-características de ISO/IEC 25010:2023 [4]: adecuación funcional, fiabilidad, seguridad y usabilidad.
+con las prácticas de planificar (ISO 21502 7.11.2), asegurar (7.11.3) y controlar (7.11.4) la calidad [3]. El producto se evalúa con cinco
+características de ISO/IEC 25010:2023 [4]: adecuación funcional, fiabilidad, seguridad, usabilidad y eficiencia de desempeño.
 
 ### 2.1 Especificaciones de calidad medibles (qué, unidad, cómo, mínimo, meta)
 **TABLA VII: ESPECIFICACIÓN DE CALIDAD**
