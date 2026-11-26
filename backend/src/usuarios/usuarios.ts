@@ -5,7 +5,7 @@ import { Repository } from 'typeorm';
 import { Entidad as Quien, Roles } from '../common/auth';
 import { Bitacora, registrar } from '../common/bitacora';
 import { Rol } from '../common/enums';
-import { ActualizarUsuarioDto, CrearUsuarioDto, NuevaPasswordDto } from '../auth/auth.dto';
+import { ActualizarUsuarioDto, CrearUsuarioDto, MfaExentoDto, NuevaPasswordDto } from '../auth/auth.dto';
 import { Usuario } from './usuario.entity';
 
 type Sesion = { entidadId: number; usuarioId: number };
@@ -54,6 +54,14 @@ export class UsuariosController {
     await this.propio(s, id); this.ajeno(s, id);
     await this.repo.update(id, { mfaActivo: false, mfaSecreto: null, mfaUltimoPaso: null, mfaRecuperacion: null, sesionesDesde: new Date() });
     await registrar(this.bit, s, 'usuario', id, 'RESTABLECER_MFA');
+    return { ok: true };
+  }
+
+  // Exento = el login solo pide la contraseña, sin MFA. Reversible y queda en la bitácora.
+  @Patch(':id/mfa-exento') async mfaExento(@Quien() s: Sesion, @Param('id', ParseIntPipe) id: number, @Body() { exento }: MfaExentoDto) {
+    await this.propio(s, id); this.ajeno(s, id);
+    await this.repo.update(id, { mfaExento: exento });
+    await registrar(this.bit, s, 'usuario', id, exento ? 'MFA_EXENTO' : 'MFA_REQUERIDO');
     return { ok: true };
   }
 

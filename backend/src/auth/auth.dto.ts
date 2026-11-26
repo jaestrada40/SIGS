@@ -53,6 +53,12 @@ export class EstadoEntidadDto {
 export class ActivoDto {
   @IsBoolean() activo: boolean;
 }
+export class MfaExentoDto {
+  @IsBoolean() exento: boolean;
+}
+export class MfaObligatorioDto {
+  @IsBoolean() obligatorio: boolean;
+}
 export class CrearSuperadminDto {
   @IsString() @IsNotEmpty() @MaxLength(120) nombre: string;
   @IsEmail() @MaxLength(120) correo: string;

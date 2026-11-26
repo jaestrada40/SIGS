@@ -1,10 +1,11 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 import { Ban, Building2, CheckCircle2, Download, Hourglass, ShieldAlert, ShieldOff, Users, type LucideIcon } from "lucide-react";
 import { AppShell } from "@/components/sisg/AppShell";
 import { Card, EmptyState, IconChip, PageHeader, Skeleton, useCountUp, type Tono } from "@/components/sisg/ui";
 import { Button } from "@/components/ui/button";
-import { api, esSuperadmin, fmtNum, useSession } from "@/lib/api";
+import { api, ApiError, esSuperadmin, fmtNum, useSession } from "@/lib/api";
 
 export const Route = createFileRoute("/plataforma")({
   head: () => ({
@@ -75,8 +76,38 @@ function Resumen() {
                 ))}
               </ul>}
           </Card>
+          <AjusteMfa />
         </>
       )}
     </>
+  );
+}
+
+// Interruptor de toda la plataforma. Los usuarios exentos se gestionan aparte, por usuario.
+function AjusteMfa() {
+  const qc = useQueryClient();
+  const q = useQuery({ queryKey: ["ajustes-plataforma"], queryFn: api.ajustesPlataforma });
+  const m = useMutation({
+    mutationFn: api.mfaGlobal,
+    onSuccess: (r) => { toast.success(r.mfaObligatorio ? "El MFA vuelve a ser obligatorio" : "MFA desactivado para toda la plataforma"); void qc.invalidateQueries({ queryKey: ["ajustes-plataforma"] }); },
+    onError: (e) => toast.error(e instanceof ApiError ? e.message : "Ocurrió un error inesperado."),
+  });
+  const activo = q.data?.mfaObligatorio ?? true;
+  return (
+    <Card className="mt-6">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="min-w-0 flex-1">
+          <h2 className="text-lg font-bold">Verificación en dos pasos</h2>
+          <p className="text-sm text-muted-foreground">
+            {activo ? "Obligatoria: todos entran con contraseña y código, salvo los usuarios marcados como exentos."
+              : "Desactivada para todos: la contraseña basta para entrar. Los datos de salud quedan protegidos solo por la contraseña."}
+          </p>
+        </div>
+        <Button variant={activo ? "outline" : "default"} disabled={q.isLoading || m.isPending}
+          onClick={() => { if (!activo || window.confirm("¿Desactivar la verificación en dos pasos para TODA la plataforma? Quedará registrado en la auditoría.")) m.mutate(!activo); }}>
+          {activo ? "Desactivar para todos" : "Volver a exigirla"}
+        </Button>
+      </div>
+    </Card>
   );
 }

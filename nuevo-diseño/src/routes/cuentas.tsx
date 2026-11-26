@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { AlertCircle, KeyRound, Loader2, MoreHorizontal, Search, UserCheck, UserPlus, UserX } from "lucide-react";
+import { AlertCircle, KeyRound, Loader2, MoreHorizontal, Search, ShieldCheck, ShieldOff, UserCheck, UserPlus, UserX } from "lucide-react";
 import { toast } from "sonner";
 import { AppShell } from "@/components/sisg/AppShell";
 import { EnlaceInvitacion, type Entregado } from "@/components/sisg/EnlaceInvitacion";
@@ -51,6 +51,12 @@ function Cuentas() {
     onError: (e) => { toast.error(msg(e)); setAccion(null); },
   });
 
+  const exento = useMutation({
+    mutationFn: (u: UsuarioPlataforma) => api.mfaExentoPlataforma(u.id, !u.mfaExento),
+    onSuccess: (_, u) => { toast.success(u.mfaExento ? "Volverá a necesitar MFA al entrar" : "Ya no se le pedirá MFA"); refrescar(); },
+    onError: (e) => toast.error(msg(e)),
+  });
+
   if (!esSuperadmin(session)) return <Card><EmptyState title="No tiene acceso a esta sección" text="Solo el superadministrador ve las cuentas de la plataforma." /></Card>;
 
   const todos = q.data ?? [];
@@ -94,7 +100,7 @@ function Cuentas() {
                     <Tag tone={u.activo ? "teal" : "coral"}>{u.activo ? "Activo" : "Desactivado"}</Tag>
                     {u.invitacion
                       ? <Tag tone="amber">{u.invitacion === "vencida" ? "Invitación vencida" : "Invitación pendiente"}</Tag>
-                      : <Tag tone={u.mfaActivo ? "teal" : "amber"}>{u.mfaActivo ? "MFA activo" : "MFA pendiente"}</Tag>}
+                      : u.mfaExento ? <Tag tone="blue">Sin MFA (exento)</Tag> : <Tag tone={u.mfaActivo ? "teal" : "amber"}>{u.mfaActivo ? "MFA activo" : "MFA pendiente"}</Tag>}
                     {!u.entidadActiva && <Tag tone="coral">Entidad suspendida</Tag>}
                   </div>
                   <p className="order-4 w-full text-xs text-muted-foreground sm:order-none sm:w-32" title={u.ultimoAcceso ? fmtFecha(u.ultimoAcceso) : undefined}>{u.ultimoAcceso ? `Entró ${tiempoRelativo(u.ultimoAcceso)}` : "Nunca ha entrado"}</p>
@@ -103,6 +109,7 @@ function Cuentas() {
                       <DropdownMenuTrigger asChild><Button variant="ghost" size="icon" aria-label={`Acciones para ${u.nombre}`}><MoreHorizontal /></Button></DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
                         {u.activo && <DropdownMenuItem onSelect={() => setAccion({ tipo: "acceso", u })}><KeyRound /> Restablecer acceso</DropdownMenuItem>}
+                        <DropdownMenuItem onSelect={() => exento.mutate(u)}>{u.mfaExento ? <><ShieldCheck /> Volver a exigir MFA</> : <><ShieldOff /> No pedir MFA</>}</DropdownMenuItem>
                         {u.activo && <DropdownMenuSeparator />}
                         <DropdownMenuItem onSelect={() => setAccion({ tipo: "activo", u })}>{u.activo ? <><UserX /> Desactivar</> : <><UserCheck /> Activar</>}</DropdownMenuItem>
                       </DropdownMenuContent>

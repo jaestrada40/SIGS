@@ -9,5 +9,6 @@ export class Entidad {
   @Column({ nullable: true }) departamento: string;
   @Column({ nullable: true }) telefono: string;
   @Column({ default: true }) activa: boolean;   // false = suspendida por la plataforma: nadie de la entidad puede entrar
+  @Column({ default: true }) mfaObligatorio: boolean;   // solo se lee en la entidad de plataforma: false = a nadie se le pide MFA
   @Column({ unique: true }) correo: string;   // contacto de la entidad (el del primer administrador)
 }

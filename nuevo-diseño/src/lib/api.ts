@@ -13,14 +13,14 @@ export const ROLES: Record<Rol, { label: string; desc: string }> = {
 };
 export interface UsuarioSesion { id: number; nombre: string; correo: string; rol: Rol }
 export interface AuthResponse { entidad: Entidad; usuario: UsuarioSesion }
-export interface UsuarioGestion { id: number; nombre: string; correo: string; rol: Rol; activo: boolean; mfaActivo: boolean; creadoEn: string; ultimoAcceso: string | null }
+export interface UsuarioGestion { id: number; nombre: string; correo: string; rol: Rol; activo: boolean; mfaActivo: boolean; mfaExento: boolean; creadoEn: string; ultimoAcceso: string | null }
 export interface EntidadAlta {
   id: number; nombre: string; tipo: TipoEntidad; correo: string; departamento: string | null; telefono: string | null;
   estado: "activa" | "invitada" | "invitacion_vencida" | "sin_administrador" | "suspendida"; activa: boolean;
   usuarios: number; usuariosActivos: number; ultimoAcceso: string | null;
 }
 export interface UsuarioPlataforma {
-  id: number; entidadId: number; nombre: string; correo: string; rol: Rol; activo: boolean; mfaActivo: boolean; creadoEn: string; ultimoAcceso: string | null;
+  id: number; entidadId: number; nombre: string; correo: string; rol: Rol; activo: boolean; mfaActivo: boolean; mfaExento: boolean; creadoEn: string; ultimoAcceso: string | null;
   invitacion: "pendiente" | "vencida" | null; entidad: string | null; entidadTipo: TipoEntidad | null; entidadActiva: boolean;
 }
 export interface ResumenPlataforma {
@@ -31,7 +31,7 @@ export interface ResumenPlataforma {
 export type MovimientoPlataforma = Movimiento & { entidad: string | null; objetivo: string | null };
 export interface EnlaceEntregado { invitacion: string; vence: string }
 export type Geografia = Record<string, string[]>;
-// Tras la contraseña el servidor nunca da sesión: pide el código MFA o exige configurarlo.
+// Tras la contraseña el servidor pide el código MFA o exige configurarlo; solo da la sesión directa si el usuario está exento o la plataforma desactivó el MFA.
 export type PasoAcceso =
   | { estado: "mfa_requerido"; mfa_token: string }
   | { estado: "mfa_configurar"; setup_token: string };
@@ -157,7 +157,7 @@ const post = <T,>(p: string, b: unknown) => request<T>(p, { method: "POST", body
 const patch = <T,>(p: string, b: unknown) => request<T>(p, { method: "PATCH", body: JSON.stringify(b) });
 
 export const api = {
-  login: (b: { correo: string; password: string }) => post<PasoAcceso>("/auth/login", b),
+  login: (b: { correo: string; password: string }) => post<PasoAcceso | AuthResponse>("/auth/login", b),
   // Revoca en el servidor todos los tokens de esta entidad; si falla, igual se cierra la sesión local.
   logout: () => request<{ ok: boolean }>("/auth/logout", { method: "POST" }).catch(() => null),
   mfaVerificar: (b: { mfa_token: string; codigo: string }) => post<AuthResponse>("/auth/mfa/verificar", b),
@@ -165,7 +165,7 @@ export const api = {
   mfaActivar: (setupToken: string, codigo: string) =>
     request<AuthResponse & { recuperacion: string[] }>("/auth/mfa/activar", { method: "POST", body: JSON.stringify({ codigo }), headers: { Authorization: `Bearer ${setupToken}` } }),
   invitacion: (token: string) => request<{ entidad: string; correo: string }>(`/auth/invitacion/${encodeURIComponent(token)}`),
-  aceptarInvitacion: (token: string, password: string) => post<PasoAcceso>(`/auth/invitacion/${encodeURIComponent(token)}`, { password }),
+  aceptarInvitacion: (token: string, password: string) => post<PasoAcceso | AuthResponse>(`/auth/invitacion/${encodeURIComponent(token)}`, { password }),
   entidades: () => request<EntidadAlta[]>("/plataforma/entidades"),
   crearEntidad: (b: { nombre: string; tipo: Exclude<TipoEntidad, "PLATAFORMA">; correo: string; departamento?: string | undefined; telefono?: string | undefined }) =>
     post<EnlaceEntregado & { entidad: EntidadAlta }>("/plataforma/entidades", b),
@@ -212,6 +212,10 @@ export const api = {
   usuarios: () => request<UsuarioGestion[]>("/usuarios"),
   crearUsuario: (b: { nombre: string; correo: string; rol: Rol; password: string }) => post<UsuarioGestion>("/usuarios", b),
   editarUsuario: (id: number, b: { nombre?: string; rol?: Rol; activo?: boolean }) => patch<UsuarioGestion>(`/usuarios/${id}`, b),
+  mfaExento: (id: number, exento: boolean) => patch<{ ok: boolean }>(`/usuarios/${id}/mfa-exento`, { exento }),
+  mfaExentoPlataforma: (id: number, exento: boolean) => patch<{ ok: boolean }>(`/plataforma/usuarios/${id}/mfa-exento`, { exento }),
+  ajustesPlataforma: () => request<{ mfaObligatorio: boolean }>("/plataforma/ajustes"),
+  mfaGlobal: (obligatorio: boolean) => patch<{ mfaObligatorio: boolean }>("/plataforma/ajustes/mfa", { obligatorio }),
   restablecerMfa: (id: number) => post<{ ok: boolean }>(`/usuarios/${id}/restablecer-mfa`, {}),
   restablecerPassword: (id: number, password: string) => post<{ ok: boolean }>(`/usuarios/${id}/restablecer-password`, { password }),
 };

@@ -13,6 +13,7 @@ export class Usuario {
   @CreateDateColumn() creadoEn: Date;
   @Column({ type: 'datetime', precision: 6, nullable: true }) ultimoAcceso: Date | null;
   @Column({ default: false }) mfaActivo: boolean;
+  @Column({ default: false }) mfaExento: boolean;   // true = no se le pide MFA (lo decide su administrador o la plataforma)
 
   // --- Seguridad (select:false: nunca salen en consultas normales ni en respuestas) ---
   @Column({ select: false }) passwordHash: string;

@@ -13,7 +13,7 @@ import { Repository } from 'typeorm';
 import { Public, Roles } from '../common/auth';
 import { Bitacora, registrar } from '../common/bitacora';
 import { cifrar, codigoRecuperacion, descifrar, normalizarRecuperacion, sha256 } from '../common/cripto';
-import { Rol } from '../common/enums';
+import { Rol, TipoEntidad } from '../common/enums';
 import { Entidad } from '../entidades/entidad.entity';
 import { Usuario } from '../usuarios/usuario.entity';
 import { CambiarPasswordDto, CodigoDto, InvitacionDto, LoginDto, MfaVerificarDto } from './auth.dto';
@@ -44,7 +44,7 @@ function contarFallo(k: string): boolean {
   fallos.set(k, r);
   return bloquea;
 }
-const SEG = { id: true, entidadId: true, nombre: true, correo: true, rol: true, activo: true, passwordHash: true, mfaActivo: true, mfaSecreto: true, mfaUltimoPaso: true, mfaRecuperacion: true, intentosFallidos: true, bloqueadoHasta: true, sesionesDesde: true } as const;
+const SEG = { id: true, entidadId: true, nombre: true, correo: true, rol: true, activo: true, passwordHash: true, mfaActivo: true, mfaExento: true, mfaSecreto: true, mfaUltimoPaso: true, mfaRecuperacion: true, intentosFallidos: true, bloqueadoHasta: true, sesionesDesde: true } as const;
 
 // Solo los tokens con scope "full" abren la API; los de "mfa" y "mfa-setup" son parciales y solo sirven en /auth/mfa/*.
 // El rol se lee de la base en cada petición: un cambio de rol o una desactivación surten efecto de inmediato.
@@ -91,7 +91,9 @@ export class AuthController {
     return this.jwt.signAsync({ sub: u.id, scope, ms: Date.now() }, { expiresIn: scope === 'mfa' ? '5m' : '15m' });
   }
   // Tras la contraseña nadie recibe sesión completa: o ya tiene MFA (pide el código) o debe configurarlo.
-  private async siguientePaso(u: Usuario) {
+  // Excepción: si la plataforma desactivó el MFA, o el usuario está exento, la contraseña basta y se abre la sesión.
+  private async siguientePaso(u: Usuario, res: Response) {
+    if (u.mfaExento || await this.entidades.existsBy({ tipo: TipoEntidad.PLATAFORMA, mfaObligatorio: false })) return this.iniciar(u, res);
     return u.mfaActivo ? { estado: 'mfa_requerido', mfa_token: await this.temporal(u, 'mfa') } : { estado: 'mfa_configurar', setup_token: await this.temporal(u, 'mfa-setup') };
   }
   private async deToken(token: string | undefined, scope: string): Promise<Usuario> {
@@ -137,7 +139,7 @@ export class AuthController {
 
   @Throttle({ default: { limit: 5, ttl: 60_000 } })
   @Post('invitacion/:token')
-  async aceptarInvitacion(@Param('token') token: string, @Body() { password }: InvitacionDto) {
+  async aceptarInvitacion(@Param('token') token: string, @Body() { password }: InvitacionDto, @Res({ passthrough: true }) res: Response) {
     const u = await this.porInvitacion(token);
     // Condicional y atómico: dos usos simultáneos del mismo enlace no pasan los dos.
     const r = await this.repo.createQueryBuilder().update(Usuario)
@@ -145,12 +147,12 @@ export class AuthController {
       .where('id = :id AND invitacionHash = :h', { id: u.id, h: sha256(token) }).execute();
     if (r.affected !== 1) throw new NotFoundException('La invitación no existe o venció.');
     await this.evento(u, 'INVITACION_ACEPTADA');
-    return this.siguientePaso(u);
+    return this.siguientePaso(u, res);
   }
 
   @Throttle({ default: { limit: 10, ttl: 60_000 } })
   @Post('login')
-  async login(@Body() { correo, password }: LoginDto, @Ip() ip: string) {
+  async login(@Body() { correo, password }: LoginDto, @Ip() ip: string, @Res({ passthrough: true }) res: Response) {
     const k = `login|${ip}|${correo.toLowerCase()}`;
     bloqueado(k);   // antes de buscar la cuenta: el 429 es igual exista o no el correo
     const u = await this.repo.findOne({ where: { correo }, select: SEG });
@@ -160,7 +162,7 @@ export class AuthController {
     if (!(await this.entidades.existsBy({ id: u.entidadId, activa: true }))) throw new ForbiddenException('Su entidad está suspendida. Contacte al administrador de la plataforma.');
     this.verBloqueo(u);
     await this.limpiar(u, k);
-    return this.siguientePaso(u);
+    return this.siguientePaso(u, res);
   }
 
   // Paso 2 del inicio de sesión: código de la app autenticadora o un código de recuperación (de un solo uso).

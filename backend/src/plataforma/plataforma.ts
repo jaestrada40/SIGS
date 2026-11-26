@@ -4,7 +4,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import * as bcrypt from 'bcrypt';
 import { randomBytes } from 'crypto';
 import { MoreThan, Not, Repository } from 'typeorm';
-import { ActivoDto, ActualizarEntidadDto, CrearEntidadDto, CrearSuperadminDto, EstadoEntidadDto } from '../auth/auth.dto';
+import { ActivoDto, ActualizarEntidadDto, CrearEntidadDto, CrearSuperadminDto, EstadoEntidadDto, MfaExentoDto, MfaObligatorioDto } from '../auth/auth.dto';
 import { Entidad as Quien, Roles } from '../common/auth';
 import { Bitacora, registrar } from '../common/bitacora';
 import { sha256 } from '../common/cripto';
@@ -96,7 +96,7 @@ export class PlataformaController {
   }
 
   @Get('resumen') async resumen() {
-    const [entidades, usuarios] = await Promise.all([this.listarEntidades(), this.usuarios.find({ select: { id: true, rol: true, activo: true, mfaActivo: true, invitacionVence: true } })]);
+    const [entidades, usuarios] = await Promise.all([this.listarEntidades(), this.usuarios.find({ select: { id: true, rol: true, activo: true, mfaActivo: true, mfaExento: true, invitacionVence: true } })]);
     const desde = new Date(Date.now() - 7 * DIA_MS);
     const finales = usuarios.filter((u) => u.rol !== Rol.SUPERADMIN);
     return {
@@ -111,7 +111,7 @@ export class PlataformaController {
       usuarios: {
         total: finales.length,
         activos: finales.filter((u) => u.activo).length,
-        sinMfa: finales.filter((u) => u.activo && !u.mfaActivo && !u.invitacionVence).length,
+        sinMfa: finales.filter((u) => u.activo && !u.mfaActivo && !u.mfaExento && !u.invitacionVence).length,
         superadmins: usuarios.filter((u) => u.rol === Rol.SUPERADMIN && u.activo).length,
       },
       seguridad: {
@@ -167,7 +167,7 @@ export class PlataformaController {
 
   @Get('usuarios') async listarUsuarios() {
     const [us, ents] = await Promise.all([
-      this.usuarios.find({ order: { id: 'ASC' }, select: { id: true, entidadId: true, nombre: true, correo: true, rol: true, activo: true, mfaActivo: true, creadoEn: true, ultimoAcceso: true, invitacionVence: true } }),
+      this.usuarios.find({ order: { id: 'ASC' }, select: { id: true, entidadId: true, nombre: true, correo: true, rol: true, activo: true, mfaActivo: true, mfaExento: true, creadoEn: true, ultimoAcceso: true, invitacionVence: true } }),
       this.entidades.find(),
     ]);
     const por = new Map(ents.map((e) => [e.id, e]));
@@ -182,6 +182,24 @@ export class PlataformaController {
       await this.auditar(s, u.entidadId, 'usuario', id, activo ? 'ACTIVAR' : 'DESACTIVAR');
     }
     return { ok: true };
+  }
+
+  @Patch('usuarios/:id/mfa-exento') async mfaExento(@Quien() s: Sesion, @Param('id', ParseIntPipe) id: number, @Body() { exento }: MfaExentoDto) {
+    this.noYo(s, id);
+    const u = await this.usuario(id);
+    await this.usuarios.update(id, { mfaExento: exento });
+    await this.auditar(s, u.entidadId, 'usuario', id, exento ? 'MFA_EXENTO' : 'MFA_REQUERIDO');
+    return { ok: true };
+  }
+
+  // Interruptor de toda la plataforma: con MFA desactivado nadie lo necesita para entrar. Se guarda en la entidad de plataforma.
+  @Get('ajustes') async ajustes(@Quien() s: Sesion) {
+    return { mfaObligatorio: (await this.entidades.findOneByOrFail({ id: s.entidadId })).mfaObligatorio };
+  }
+  @Patch('ajustes/mfa') async ajusteMfa(@Quien() s: Sesion, @Body() { obligatorio }: MfaObligatorioDto) {
+    await this.entidades.update(s.entidadId, { mfaObligatorio: obligatorio });
+    await this.auditar(s, s.entidadId, 'entidad', s.entidadId, obligatorio ? 'MFA_GLOBAL_ACTIVADO' : 'MFA_GLOBAL_DESACTIVADO');
+    return { mfaObligatorio: obligatorio };
   }
 
   // Para quien perdió contraseña y MFA (o se quedó sin otro administrador): borra ambos, cierra sus sesiones y entrega un enlace para empezar de nuevo.

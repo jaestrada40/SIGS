@@ -80,10 +80,10 @@ function Acceso() {
     if (invitacion && password.length < 10) { setError("La contraseña debe tener al menos 10 caracteres."); return; }
     setLoading(true);
     try {
-      const res: PasoAcceso = invitacion ? await api.aceptarInvitacion(invitacion, password) : await api.login({ correo, password });
+      const res = invitacion ? await api.aceptarInvitacion(invitacion, password) : await api.login({ correo, password });
       if (!invitacion) { try { recordar ? localStorage.setItem(CLAVE_CORREO, correo) : localStorage.removeItem(CLAVE_CORREO); } catch { /* sin almacenamiento: no se recuerda */ } }
       setPassword("");
-      setPaso(res);
+      if ("estado" in res) setPaso(res); else setSession({ entidad: res.entidad, usuario: res.usuario });   // sin paso MFA: exento o desactivado por la plataforma
     } catch (err) {
       setError(err instanceof ApiError ? (err.status === 401 ? "Correo o contraseña incorrectos." : err.message) : "Ocurrió un error inesperado.");
     } finally {
