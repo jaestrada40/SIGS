@@ -6,7 +6,7 @@ Todas las rutas son del repositorio `https://github.com/jaestrada40/SIGS` (desde
 
 | Curso | Entregable | Dónde está | Estado |
 |---|---|---|---|
-| **Bases de Datos II** (proyecto final, vence **28 nov. 08:00**) | 1) ER de las fuentes, 2) modelo estrella, 3) ETL, 4) consultas | Scripts: `entrega_sql/1_sisg_aplicacion.sql` y `entrega_sql/2_sisg_almacen_datos.sql` (cómo abrirlos: `entrega_sql/LEEME.md`). Detalle: `dw/sql/` (`01_`…`07_`), `dw/DISENO_ESTRELLA.md`, `dw/README.md` | Hecho. Falta confirmar con la docente en qué formato se sube |
+| **Bases de Datos II** (proyecto final, vence **28 nov. 08:00**) | 1) ER de las fuentes, 2) modelo estrella, 3) ETL, 4) consultas | Scripts: `entrega_sql/1_sisg_aplicacion.sql` y `entrega_sql/2_sisg_almacen_datos.sql` (cómo abrirlos: `entrega_sql/LEEME.md`). Detalle: `dw/sql/` (`01_`…`07_`), `dw/DISENO_ESTRELLA.md`, `dw/README.md` | Hecho. Falta confirmar con la docente en qué formato se sube (vence hoy 08:00) |
 | **Administración de Proyectos Tecnológicos** (entregable 3 y exposición final) | Plan de gestión en formato IEEE, con carátula y Apéndice A (declaración de uso de IA) | **`docs/gestion/SISG_Grupo4_Plan_de_gestion_IEEE.docx`** (fuentes: `docs/gestion/01_…` a `06_…`) | Revisar los pendientes de la sección 4. Sin la declaración de IA, la nota máxima es 60% |
 
 ## 2. Presentaciones (una por curso)
@@ -14,7 +14,7 @@ Todas las rutas son del repositorio `https://github.com/jaestrada40/SIGS` (desde
 | Curso | Presentación | Guion / apoyo |
 |---|---|---|
 | **Bases de Datos II** | `docs/PRESENTACION_SISG.html` (76 diapositivas; diapositivas 1 a 54 son datos, aplicación e integración con el Grupo 8) | `docs/GUION_PRESENTACION.md` (13 secciones, 13 a 16 min) y `docs/GUIA_PRESENTACION.md` (cómo mostrar las bases en DBeaver y levantar todo) |
-| **Administración de Proyectos** | `docs/PRESENTACION_APT.html` (44 diapositivas: alcance, EDT, cronograma, riesgos, calidad, normas, lecciones, IA) | Las notas del orador de cada diapositiva (tecla `N`) |
+| **Administración de Proyectos** | `SISG-APT` (repositorio `jaestrada40/SISG-AP`, 41 diapositivas: alcance, EDT, cronograma, riesgos, calidad, normas, Grupo 8, lecciones, IA). Respaldo anterior: `docs/PRESENTACION_APT.html` (44 diapositivas) | `GUION.html` del repositorio `SISG-AP` (el texto de cada diapositiva) |
 
 Las dos tienen buscador, la tabla de **normas y estándares → dónde se aplica en SISG** y diapositivas de **preguntas probables**.
 
@@ -31,7 +31,7 @@ Las dos tienen buscador, la tabla de **normas y estándares → dónde se aplica
 
 ## 4. Pendiente antes del sábado (resumen; el detalle está en los dos PENDIENTES)
 
-- **Administración de Proyectos:** carnés en la carátula; horas reales (AC) para CPI y EAC; laboratorio A1-b de cada integrante (inventario de su equipo y un CVE vigente); abrir el Word en Microsoft Word y revisar el formato; medir usabilidad (prueba con 3 a 5 personas) o decir que está planificada.
+- **Administración de Proyectos:** carnés en la carátula; horas reales (AC): hoy CPI y EAC son un supuesto (AC = EV); laboratorio A1-b de los integrantes 2 y 3 (inventario de su equipo y un CVE vigente); anotar el resultado de la prueba de usabilidad; abrir el Word en Microsoft Word y revisar el formato.
 - **Bases de Datos II / Grupo 8:** confirmar con Sharon que las 1,908 filas están bien y de quién son las 10 filas de prueba; tener una captura del tablero del Grupo 4 por si falla la red.
 - **Demostración:** la app está en `https://sisg.kynova.tech` (API `https://api-sisg.kynova.tech/salud`). Usuarios de demostración en `docs/GUIA_PRESENTACION.md`, sección 2b. Configurar el MFA antes de exponer.
 - **Canva:** si presentan desde Canva y no desde el HTML, agregar a mano la diapositiva del Grupo 8.

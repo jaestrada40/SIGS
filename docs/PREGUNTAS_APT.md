@@ -5,8 +5,8 @@ Fuente: `Proyecto final grupo 4.pdf` (datos al 24 de octubre de 2026, secciones 
 ## 1. Alcance y acta
 - **¿Propósito?** Registrar pacientes, estudios y campañas de centros de diagnóstico y organismos no lucrativos, y dejar los datos listos para analizar en un almacén con modelo estrella.
 - **¿Objetivos SMART?** Específicos, medibles y con fecha. Ej. (O3): ETL con reconciliación fuente–DW con diferencia 0 antes del 5 de noviembre.
-- **¿Criterios de éxito?** Reconciliación con diferencia 0, 49 de 49 pruebas e2e, 0 columnas con datos personales, declaración de IA en todo, 2 días de holgura, usabilidad de al menos 80%.
-- **¿Fuera del alcance?** Integración real con otros grupos, producción con HTTPS, recuperación de contraseña, carga incremental, BI externo, apps móviles.
+- **¿Criterios de éxito?** Reconciliación con diferencia 0, 103 de 103 pruebas e2e (eran 49 al 24 de octubre), 0 columnas con datos personales, declaración de IA en todo, 2 días de holgura, usabilidad de al menos 80%.
+- **¿Fuera del alcance?** Integración directa con los demás grupos (el único vínculo es el Grupo 8, la plataforma central), producción con HTTPS, recuperación de contraseña, carga incremental, BI externo, apps móviles.
 - **¿Hubo control de cambios?** Sí. El 24 de octubre se agregaron MFA, roles y auditoría; lo aprobó el líder y se registró como cambio de alcance (paquete 3.4, riesgo R6).
 - **¿Por qué híbrido?** Los entregables de BD II (ER, estrella, ETL, consultas) son predictivos: contenido y fecha fijos. La aplicación es ágil: backlog y sprints.
 - **¿Trazabilidad?** Cada entregable se rastrea a un objetivo: ER→O1, estrella→O2, ETL→O3, consultas→O4, documentos→O5, exposición→O6.
@@ -57,8 +57,8 @@ Fuente: `Proyecto final grupo 4.pdf` (datos al 24 de octubre de 2026, secciones 
 - **Definición:** contra requisitos documentados, no contra opinión.
 - **ISO/IEC 25010 (5 características):** adecuación funcional, fiabilidad, seguridad, usabilidad, eficiencia de desempeño.
 - **PMBOK:** planificar (7.11.2), asegurar (7.11.3: revisión por pares y ejecución desde cero), controlar (7.11.4: e2e, reconciliación, registro de defectos).
-- **Cumplido:** ETL diferencia 0, 49/49 pruebas, 0 columnas con datos personales, MFA 100%, aislamiento entre entidades.
-- **Usabilidad:** planificada, no ejecutada (3 a 5 personas, SUS). Mínimo aceptable 80%; meta 95%.
+- **Cumplido:** ETL diferencia 0, 103/103 pruebas, 0 columnas con datos personales, MFA 100%, aislamiento entre entidades.
+- **Usabilidad:** ejecutada con 3 a 5 personas, tareas con datos ficticios y cuestionario SUS. Mínimo aceptable 80%; meta 95%. **Anotar aquí el resultado (personas y %): ________**
 - **Eficiencia:** consulta 1 ≈ 11.1 ms, consulta 8 (sumarización) ≈ 1.6 ms, unas 7 veces más rápida.
 - **Defectos corregidos:** consultas corrían antes del ETL · sumarización casi tan grande como el hecho · pacientes sin municipio perdían el departamento · `docker-compose.yml` quedó vacío tras una edición.
 
@@ -68,21 +68,27 @@ Fuente: `Proyecto final grupo 4.pdf` (datos al 24 de octubre de 2026, secciones 
 - **Sprints sin solape:** primero se verifica el modelo, luego se construyen las consultas; si uno se atrasa, se mueve el siguiente.
 - **Declaración de IA:** sin ella la nota máxima es 60% (R8). Indica qué documentos usaron IA y qué datos estimó la IA y deben validarse.
 
+## 8. Integración con el Grupo 8
+- **¿Qué consumen de ellos?** Cuatro vistas de catálogos conformados, en solo lectura: `vw_cat_tiempo`, `vw_cat_geografia` (códigos INE), `vw_cat_establecimiento` y `vw_cat_servicio`. Sirven para cruzar nuestras llaves `sk_*` con su almacén. No usamos `vw_cat_actor` (habilitada para el Grupo 4) ni las de diagnóstico, demografía y evento.
+- **¿Qué les envían?** Un agregado mensual por tiempo, establecimiento, geografía y servicio, con servicios y monto cobrado, a su tabla `ingesta_g4_servicio`. Sin pacientes ni datos personales.
+- **¿Cómo saben que llegó bien?** 0 llaves inválidas, 1,908 de 1,908 filas ya en su tabla de hechos y sin diferencias (`dw/g8/02_resultado_validacion.txt`).
+- **¿Y lo que no tiene código en su catálogo?** Va con el ID -1 («No especificado»), válido como llave foránea. Nuestra geografía llega a departamento.
+
 ---
 
 ## Debilidades que pueden señalar (respuestas listas)
 
 **1. CPI y EAC son supuestos**
-> "No llevamos registro de horas reales (AC), así que en la presentación CPI y EAC figuran como pendientes. Si asumimos AC = EV, el CPI sería 1.00 y el EAC igual al BAC de 168 h, pero es un supuesto, no una medición. La lección es que el valor ganado exige registrar horas desde el día uno. Para el cierre, cada integrante reporta sus horas reales y recalculamos CPI y EAC."
+> "No llevamos registro de horas reales (AC), así que en la presentación CPI y EAC figuran como supuesto: asumimos AC = EV, y el CPI es 1.00 y el EAC igual al BAC de 168 h. Es un supuesto, no una medición. La lección es que el valor ganado exige registrar horas desde el día uno. Para el cierre, cada integrante reporta sus horas reales y recalculamos CPI y EAC."
 
 **2. SPI de 1.27 depende de porcentajes estimados**
-> "Calculamos EV con el porcentaje de avance que el grupo estimó por paquete, y PV con la fracción del plazo transcurrido. Por eso el SPI de 1.27 indica que vamos adelantados, no es un dato exacto. Lo respalda que los entregables verificables sí están hechos: ER entregado, 49 de 49 pruebas en verde y reconciliación en 0."
+> "Calculamos EV con el porcentaje de avance que el grupo estimó por paquete, y PV con la fracción del plazo transcurrido. Por eso el SPI de 1.27 indica que vamos adelantados, no es un dato exacto. Lo respalda que los entregables verificables sí están hechos: ER entregado, 103 de 103 pruebas en verde y reconciliación en 0."
 
 **3. Las estimaciones PERT las propuso el borrador**
 > "Los valores optimista, probable y pesimista son estimaciones iniciales hechas con el borrador, y las declaramos así en el documento. La fórmula y el procedimiento están bien: esperado 31.8 días, σ de 1.91 y z de 0.63, que da ≈74%. Si los valores cambian, el resultado cambia. Lo que no cambia es la conclusión: la holgura es corta y por eso adelantamos el ETL."
 
-**4. La usabilidad no se ha medido**
-> "Está planificada, no ejecutada. Tenemos el protocolo: 3 a 5 personas, tareas con datos ficticios y cuestionario SUS. El mínimo es que 80% registre un paciente sin ayuda; la meta es 95%. La marcamos como planificada y no como cumplida, para no reportar un resultado que no tenemos."
+**4. ¿Cuál fue el resultado de la usabilidad?**
+> "Ya la ejecutamos con 3 a 5 personas, tareas con datos ficticios y el cuestionario SUS. El mínimo es que 80% registre un paciente sin ayuda; la meta es 95%. El resultado fue: ________."
 
 **5. Faltan las filas del laboratorio A1-b de los integrantes 2 y 3**
 > "El inventario del integrante 1 está completo: macOS 27.0.1, fuera del rango de CVE-2025-43300 y con la corrección de CVE-2026-65395. Los otros dos integrantes tienen que completar su fila con su equipo y un CVE vigente. El riesgo R14 sigue en nivel bajo mientras tanto."
@@ -96,6 +102,8 @@ Fuente: `Proyecto final grupo 4.pdf` (datos al 24 de octubre de 2026, secciones 
 ---
 ## Notas de coherencia (revisar antes de exponer)
 - **Roles y CPI/EAC ya están unificados** en el acta, los documentos de gestión, `PRESENTACION_APT.html` y la presentación `SISG-AP`: líder Soberanis, datos Jolón, aplicación y calidad Estrada; CPI 1.00 y EAC 168 h como **supuesto** (AC = EV, sin horas reales).
-- **Pruebas:** 49 de 49 es al 24 de oct.; hoy son 103. Decir la fecha.
+- **Pruebas:** hoy son 103 de 103 (eran 49 al 24 de oct.); ya figuran así en la presentación.
+- **Usabilidad:** ya se ejecutó; falta anotar el resultado en la sección 6 y en la debilidad 4.
+- **Integración con el Grupo 8:** hecha (ver sección 8); ya no es una exclusión.
 - **Declaración de IA:** el "Nivel de modificación" quedó declarado el 27 de nov.: ≈70% del contenido generado con IA fue revisado a mano. Tener claro qué se revisó, porque pueden preguntarlo.
 - **No afirmar** que hay cifrado como mitigación, ni que la Definition of Done exige rastrear código de IA: no están en los documentos.

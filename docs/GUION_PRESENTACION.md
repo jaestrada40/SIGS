@@ -1,13 +1,13 @@
 # SISG · Guion para exponer (13 diapositivas)
 
-Tiempo sugerido: 13 a 16 minutos. Es el mismo texto de las notas del orador de la presentación en Canva. Las cifras salen de lo medido en el proyecto; si algo cambia, corrígelo aquí y en la diapositiva.
+Tiempo sugerido: 13 a 16 minutos. Es el resumen en 13 bloques del hilo de `docs/PRESENTACION_SISG.html` (las notas por diapositiva están con la tecla `N`). Las cifras salen de lo medido en el proyecto; si algo cambia, corrígelo aquí y en la diapositiva.
 
 **Reparto sugerido (3 integrantes):** diapositivas 1 a 3 (presentación y arquitectura), 4 a 9 (datos, aplicación e integración con el Grupo 8, Bases de Datos II), 10 a 13 (gestión y cierre, Administración de Proyectos). Ajústenlo al grupo.
 
 ---
 
 ## 1. Portada · ~30 s
-Buenos días. Somos el Grupo 4 y presentamos SISG, el Sistema de Información de Salud de Guatemala. Es un solo proyecto que entregamos en dos cursos: en Bases de Datos II mostramos el diseño y el análisis de los datos, y en Administración de Proyectos Tecnológicos mostramos cómo lo planificamos y gestionamos. Primero veremos el producto y los datos, y al final la gestión.
+Buenos días. Somos el Grupo 4 y presentamos SISG, el Sistema Integral de Salud de Guatemala. Es un solo proyecto que entregamos en dos cursos: en Bases de Datos II mostramos el diseño y el análisis de los datos, y en Administración de Proyectos Tecnológicos mostramos cómo lo planificamos y gestionamos. Primero veremos el producto y los datos, y al final la gestión.
 
 ## 2. El problema y el alcance · ~1 min
 Los centros de diagnóstico y las organizaciones no lucrativas ya registran pacientes, estudios y campañas, pero cada uno por su lado. Sin integrar esos datos no pueden medir cuánto ingresan, a cuántas personas llegan ni cuántos referidos terminan en un estudio. SISG integra esos tres datos (pacientes, estudios, campañas) en una aplicación y en un almacén de datos para analizarlos. El plazo es fijo: entrega el 28 de noviembre de 2026.
@@ -38,7 +38,7 @@ Hasta aquí todo es nuestro: la aplicación genera los datos y nuestro almacén 
 *Demo (opcional, solo si hay Internet):* abrir el portal del Grupo 8, entrar con el usuario del Grupo 4 y mostrar el tablero. Tengan lista una captura por si la red falla. Las primeras filas de la tabla son 10 datos de prueba del Grupo 8, no nuestros: desplácense hasta nuestros establecimientos.
 
 ## 10. Gestión: alcance y cronograma · ~1.5 min
-Pasamos a la gestión del proyecto. Usamos un enfoque híbrido: predictivo para acordar el plan, con alcance, hitos y dependencias; y ágil para construir, en iteraciones cortas con revisión y ajuste. El plazo es fijo, el 28 de noviembre, y el equipo es de tres personas. La documentación incluye el acta de constitución y alcance, la EDT con la regla del 100 por ciento, el cronograma con ruta crítica, PERT y Gantt, el registro de interesados con la matriz poder-interés, el plan de comunicaciones y el reporte de estado con CPI y SPI. Los valores finales de CPI y EAC dependen de las horas reales trabajadas, que el grupo está completando.
+Pasamos a la gestión del proyecto. Usamos un enfoque híbrido: predictivo para acordar el plan, con alcance, hitos y dependencias; y ágil para construir, en iteraciones cortas con revisión y ajuste. El plazo es fijo, el 28 de noviembre, y el equipo es de tres personas. La documentación incluye el acta de constitución y alcance, la EDT con la regla del 100 por ciento, el cronograma con ruta crítica, PERT y Gantt, el registro de interesados con la matriz poder-interés, el plan de comunicaciones y el reporte de estado con CPI y SPI. No registramos las horas reales, así que el CPI de 1.00 y el EAC de 168 horas son un supuesto, con el costo real igual al valor ganado, y no una medición.
 
 ## 11. Riesgos y calidad · ~1.5 min
 Los riesgos los valoramos con una matriz de 3 por 3, probabilidad contra impacto, y escribimos el porqué de cada valor para que otra persona llegue a la misma conclusión. Las respuestas a amenazas son evitar, transferir, mitigar, aceptar o escalar. Un ejemplo: existía el riesgo de que la docente exigiera SQL Server; el grupo decidió el 24 de octubre que MySQL es definitivo y el riesgo se cerró. También separamos severidad de riesgo: una vulnerabilidad con puntaje alto puede dejar un riesgo bajo. Para calidad usamos ISO/IEC 25010 con metas medibles para cinco características; entre ellas: fiabilidad, con la reconciliación en diferencia cero; eficiencia de desempeño, con la consulta 8 unas 7 veces más rápida; y seguridad, con MFA obligatorio y acceso por rol.
@@ -47,7 +47,7 @@ Los riesgos los valoramos con una matriz de 3 por 3, probabilidad contra impacto
 Lo que funcionó: separar la operación de la analítica, reconciliar la fuente contra el almacén para confiar en el ETL, y tener 103 pruebas automáticas de extremo a extremo. Lo que haríamos distinto: decidir el motor de base de datos al inicio; la aplicación nació en PostgreSQL y migrarla a MySQL obligó a reescribir el SQL escrito a mano. Y las pruebas deben correr sobre una base propia: descubrimos tarde que apuntaban a la base de desarrollo y la vaciaban en cada corrida. Lo corregimos fijando la base de pruebas.
 
 ## 13. Cierre y declaración de IA · ~1 min
-Resumo. Para Bases de Datos II entregamos el ER de las fuentes, el modelo estrella, el ETL y las consultas con sus vistas, más una aplicación que genera los datos. Para Administración de Proyectos entregamos el plan: acta, EDT, cronograma, interesados, comunicaciones, riesgos y calidad. Declaramos el uso de inteligencia artificial: se usó para código, documentos y esta presentación, y el detalle, con la herramienta, el propósito y el nivel de modificación, está en el apéndice. Gracias; quedamos atentos a sus preguntas.
+Resumo. Para Bases de Datos II entregamos el ER de las fuentes, el modelo estrella, el ETL y las consultas con sus vistas, más una aplicación que genera los datos. Para Administración de Proyectos entregamos el plan: acta, EDT, cronograma, interesados, comunicaciones, riesgos y calidad. Declaramos el uso de inteligencia artificial: se usó para código, documentos y esta presentación, y el detalle, con la herramienta, el propósito y el nivel de modificación, está en el apéndice: revisamos a mano aproximadamente el 70 % del contenido generado. Gracias; quedamos atentos a sus preguntas.
 
 ---
 

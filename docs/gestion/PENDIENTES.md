@@ -5,18 +5,18 @@ Corte: 24 de octubre de 2026. Marca cada casilla cuando esté hecho.
 ## 1. Decisiones que bloquean
 - [x] **MySQL es definitivo** (decisión del grupo, 24 oct.). Ya no se pregunta a la Inga. Alegre; el riesgo R1 pasa a cerrado y la tabla de equivalencias de `dw/README.md` queda solo como referencia.
 - [x] **Asignar roles** (líder, responsable de datos, responsable de aplicación y calidad) en el acta, sección 9, y en el Word.
-- [ ] **Confirmar con el grupo** las horas por paquete, los % de avance, los valores PERT y las valoraciones de riesgo e interesados. Son estimaciones iniciales.
+- [x] **Confirmar con el grupo** las horas por paquete, los % de avance, los valores PERT y las valoraciones de riesgo e interesados. Son estimaciones iniciales.
 
 ## 2. Datos que faltan
 - [ ] **Horas reales trabajadas (AC)** por paquete, para calcular CPI y EAC. Sin esto el reporte de estado queda incompleto.
 - [ ] **Carnés** de los tres integrantes en la carátula.
 - [x] **Apéndice A (declaración de IA):** *nivel de modificación* declarado: ≈70% revisado a mano (27 nov.). **Sin la declaración la nota máxima es 60%.** Preguntar si Bases de Datos II exige la misma declaración.
 - [x] **Desempeño medido (13 nov. 2026):** consulta 1 (sobre `fact_estudio`, 12,507 estudios) ≈ 11.1 ms; consulta 8 (sobre `fact_estudio_mensual`, 1,758 filas) ≈ 1.6 ms, unas 7 veces más rápida. Promedio de 50 ejecuciones tras 3 de calentamiento, repetido 3 veces (6.4x a 7.9x), tiempo del cliente en MySQL 8 de Docker con datos sintéticos. Medición anterior (11 nov., otro conjunto de datos sintéticos): 9.3 ms y 1.2 ms.
-- [ ] **Medir usabilidad** (tabla de especificación de calidad): una prueba con 3 a 5 personas.
+- [x] **Medir usabilidad** (tabla de especificación de calidad): prueba con 3 a 5 personas ejecutada; anotar el resultado en la tabla.
 
 ## 2b. Lo que dejó la clase del 24 de octubre (riesgos) y los cambios de ese día
 - [ ] **Laboratorio A1-b (individual):** cada integrante completa su fila de la TABLA VI de `04_riesgos_calidad.md` (sistema, compilación, estado, decisión) y la **Parte B** (una vulnerabilidad vigente de su versión exacta, consultada en el NVD, con CVE, CVSS, explotación conocida, versión corregida y aviso del fabricante). Hoy solo está la fila del integrante 1, con su Parte B (CVE-2026-65395, consultada el 24 de oct.; **confírmenla en la ficha del NVD antes de entregar**). Faltan los integrantes 2 y 3. Cada quien escribe su mensaje de 3 líneas al gerente.
-- [ ] **Validar con el grupo** las valoraciones y los «porque» de los riesgos nuevos (R12 a R14) y las 12 h del paquete 3.4 (seguridad y usuarios), que se agregaron al plan.
+- [x] **Validar con el grupo** las valoraciones y los «porque» de los riesgos nuevos (R12 a R14) y las 12 h del paquete 3.4 (seguridad y usuarios), que se agregaron al plan.
 - [ ] **Verificar el catálogo de municipios** (`backend/src/common/geografia.ts`): tiene 339 y el oficial son 340; se escribió de memoria. El almacén usa el mismo catálogo (`dw/sql/01b_catalogos.sql`).
 - [x] **Puente de la aplicación al almacén repetido el 24 de oct.** con la base de pruebas (`./run_app.sh sisg_test`): ETL OK y reconciliación con diferencia 0 en filas y montos. El script ahora escribe los CSV con Python porque la redirección del shell fallaba en `dw/data/`. Para volver a los datos sintéticos de la demostración, corre `./run.sh`.
 - [ ] **Antes de publicar la aplicación:** HTTPS, sesión en cookie `HttpOnly`, migraciones de base de datos, contraseña propia para MySQL y respaldos (riesgo R12).
@@ -34,7 +34,7 @@ Corte: 24 de octubre de 2026. Marca cada casilla cuando esté hecho.
 |---|---|
 | 30 oct. | Presentar el diseño estrella (`dw/DISENO_ESTRELLA.md`) |
 | 5 nov. | ETL con datos reales de la aplicación |
-| 20–21 nov. | Exposición final (semana 19) e informe de cierre |
+| **28 nov.** | **Exposición final de Administración de Proyectos** (la fecha original del acta era 20–21 nov.) |
 | **28 nov., 8:00** | **Entrega del proyecto final de Bases de Datos II** (la cadena tiene 2 días de holgura) |
 
 ## 5. Lista de verificación de cada entrega
