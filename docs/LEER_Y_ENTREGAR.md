@@ -31,7 +31,7 @@ Las dos tienen buscador, la tabla de **normas y estándares → dónde se aplica
 
 ## 4. Pendiente antes del sábado (resumen; el detalle está en los dos PENDIENTES)
 
-- **Administración de Proyectos:** carnés en la carátula; asignar roles (acta, sección 9); horas reales (AC) para CPI y EAC; completar el «nivel de modificación» del Apéndice A (declaración de IA); laboratorio A1-b de cada integrante (inventario de su equipo y un CVE vigente); abrir el Word en Microsoft Word y revisar el formato; medir usabilidad (prueba con 3 a 5 personas) o decir que está planificada.
+- **Administración de Proyectos:** carnés en la carátula; horas reales (AC) para CPI y EAC; laboratorio A1-b de cada integrante (inventario de su equipo y un CVE vigente); abrir el Word en Microsoft Word y revisar el formato; medir usabilidad (prueba con 3 a 5 personas) o decir que está planificada.
 - **Bases de Datos II / Grupo 8:** confirmar con Sharon que las 1,908 filas están bien y de quién son las 10 filas de prueba; tener una captura del tablero del Grupo 4 por si falla la red.
 - **Demostración:** la app está en `https://sisg.kynova.tech` (API `https://api-sisg.kynova.tech/salud`). Usuarios de demostración en `docs/GUIA_PRESENTACION.md`, sección 2b. Configurar el MFA antes de exponer.
 - **Canva:** si presentan desde Canva y no desde el HTML, agregar a mano la diapositiva del Grupo 8.

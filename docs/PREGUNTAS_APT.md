@@ -97,5 +97,5 @@ Fuente: `Proyecto final grupo 4.pdf` (datos al 24 de octubre de 2026, secciones 
 ## Notas de coherencia (revisar antes de exponer)
 - **Roles y CPI/EAC ya están unificados** en el acta, los documentos de gestión, `PRESENTACION_APT.html` y la presentación `SISG-AP`: líder Soberanis, datos Jolón, aplicación y calidad Estrada; CPI 1.00 y EAC 168 h como **supuesto** (AC = EV, sin horas reales).
 - **Pruebas:** 49 de 49 es al 24 de oct.; hoy son 103. Decir la fecha.
-- **Declaración de IA:** el campo "Nivel de modificación" sigue por completar; sin él, la nota máxima es 60%. Es el pendiente más importante.
+- **Declaración de IA:** el "Nivel de modificación" quedó declarado el 27 de nov.: ≈70% del contenido generado con IA fue revisado a mano. Tener claro qué se revisó, porque pueden preguntarlo.
 - **No afirmar** que hay cifrado como mitigación, ni que la Definition of Done exige rastrear código de IA: no están en los documentos.
