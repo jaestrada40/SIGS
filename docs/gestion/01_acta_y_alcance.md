@@ -91,15 +91,15 @@ presupuesto con reservas = **198.2 h**. Las horas son estimaciones iniciales que
 **Restricciones:** plazo fijo del 28 de noviembre; equipo de 3 personas; el curso de Bases de Datos II enseña SQL Server; el grupo decidió que el almacén se implementa en MySQL (decisión definitiva del 24 de octubre).
 
 ### 9. Director de proyecto y su autoridad
-**Director de proyecto (líder):** *por asignar por el grupo*.
+**Director de proyecto (líder):** Jonathan Javier Soberanis Castillo.
 **Autoridad:** aprobar cambios de alcance dentro del equipo y registrarlos; reasignar paquetes de trabajo; usar las reservas de contingencia y de gestión;
 convocar la reunión semanal; escalar a los docentes lo que excede la autoridad del equipo (por ejemplo, el motor de base de datos o el alcance de una entrega).
 
 | Rol | Responsabilidad | Persona |
 |---|---|---|
-| Líder de proyecto | Planificación, seguimiento y comunicación con docentes | *por asignar* |
-| Responsable de datos | ER, modelo estrella, ETL, consultas | *por asignar* |
-| Responsable de aplicación y calidad | Aplicación web, pruebas, documentación | *por asignar* |
+| Líder de proyecto | Planificación, seguimiento y comunicación con docentes | Jonathan Javier Soberanis Castillo |
+| Responsable de datos | ER, modelo estrella, ETL, consultas | Jonathan Eduardo Jolón García |
+| Responsable de aplicación y calidad | Aplicación web, pruebas, documentación | Javier Augusto Estrada Gordillo |
 
 ### 10. Firma del patrocinador
 Patrocinadores académicos: Ing. Rafael G. Barrios Parra (Administración de Proyectos Tecnológicos) e Inga. Claudia Alegre (Bases de Datos II).

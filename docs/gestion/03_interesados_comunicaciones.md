@@ -94,9 +94,9 @@ quadrantChart
 | Período | Hasta el 24 de octubre de 2026 |
 | Para | Docentes de Administración de Proyectos y Bases de Datos II |
 | Elabora | Equipo del Grupo 4 |
-| CPI | *Pendiente: falta registrar el costo real (AC) en horas* |
+| CPI | **1.00** *(supuesto)*: sin registro de horas reales se asume AC = EV (110.1 h) |
 | SPI | **1.27** (EV 110.1 h / PV 86.6 h) – valor sujeto a validar los % de avance |
-| EAC | *Pendiente: requiere CPI* (BAC = 168 h) |
+| EAC | **168 h** *(supuesto)*, igual al BAC por CPI = 1.00 |
 | Avance | **66%** (EV/BAC) |
 
 **Desempeño.** Hecho: ER de las fuentes (entregado), modelo estrella y ETL, aplicación con carga masiva, MFA, roles y auditoría, 49 pruebas e2e en verde,

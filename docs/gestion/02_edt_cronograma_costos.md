@@ -159,9 +159,9 @@ SISG no tiene presupuesto monetario. Se usa **horas-persona** como unidad de cos
 | EV (valor ganado) | 110.1 h | Horas de cada paquete × % de avance |
 | SPI = EV/PV | **1.27** | Mayor que 1: adelantados respecto del plan |
 | Avance = EV/BAC | **66%** | |
-| AC (costo real) | *pendiente* | **El grupo debe registrar las horas realmente trabajadas** |
-| CPI = EV/AC | *pendiente* | Requiere AC |
-| EAC = BAC/CPI | *pendiente* | Requiere CPI |
+| AC (costo real) | 110.1 h *(supuesto)* | El grupo no registró sus horas; se asume AC = EV hasta tener el registro real |
+| CPI = EV/AC | 1.00 *(supuesto)* | Resultado del supuesto, no una medición |
+| EAC = BAC/CPI | 168 h *(supuesto)* | Con CPI = 1.00 el proyecto termina en el presupuesto |
 
 > El SPI > 1 depende de los % de avance y de las horas, que son estimaciones del borrador. No debe reportarse como resultado hasta validar ambos con el grupo.
 

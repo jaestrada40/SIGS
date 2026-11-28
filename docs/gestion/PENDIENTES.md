@@ -4,7 +4,7 @@ Corte: 24 de octubre de 2026. Marca cada casilla cuando esté hecho.
 
 ## 1. Decisiones que bloquean
 - [x] **MySQL es definitivo** (decisión del grupo, 24 oct.). Ya no se pregunta a la Inga. Alegre; el riesgo R1 pasa a cerrado y la tabla de equivalencias de `dw/README.md` queda solo como referencia.
-- [ ] **Asignar roles** (líder, responsable de datos, responsable de aplicación y calidad) en el acta, sección 9, y en el Word.
+- [x] **Asignar roles** (líder, responsable de datos, responsable de aplicación y calidad) en el acta, sección 9, y en el Word.
 - [ ] **Confirmar con el grupo** las horas por paquete, los % de avance, los valores PERT y las valoraciones de riesgo e interesados. Son estimaciones iniciales.
 
 ## 2. Datos que faltan
