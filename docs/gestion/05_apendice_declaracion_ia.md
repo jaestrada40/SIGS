@@ -3,8 +3,8 @@
 Formato exigido por el *Estándar de Declaración de uso de IA para Estudiantes* del curso de Administración de Proyectos Tecnológicos:
 sin esta declaración, el uso de IA hace que la entrega obtenga como máximo el **60%** de la puntuación.
 
-> **Borrador para que el grupo lo revise y complete.** Las partes marcadas con ⚠ solo las puede responder el grupo con honestidad;
-> no las rellené porque no sé cuánto de este material revisaron y modificaron.
+> **Declaración del grupo.** El nivel de modificación lo declaró el grupo el 27 de noviembre de 2026. Las estimaciones listadas
+> en «Datos que la IA estimó y el grupo debe validar» siguen siendo estimaciones iniciales, no mediciones.
 
 ## Declaración (aplica a los documentos de `docs/gestion/` y a `dw/`)
 

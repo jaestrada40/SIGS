@@ -119,7 +119,7 @@ características de ISO/IEC 25010:2023 [4]: adecuación funcional, fiabilidad, s
 | Seguridad: autenticación | % de cuentas que necesitan un segundo factor (MFA) para obtener sesión | Pruebas e2e de MFA (token parcial sin acceso, código de un solo uso, bloqueo) | 100% | 100% | **Cumple (24 oct.)** |
 | Seguridad: trazabilidad | % de cambios, inicios de sesión y exportaciones desde la interfaz que quedan en la auditoría, con su autor | Pruebas e2e de bitácora y exportación | 100% | 100% | **Cumple (24 oct.)**; límite: la exportación se registra desde el cliente |
 | Seguridad: aislamiento entre entidades | Intentos de acceso cruzado que se rechazan | Pruebas e2e de aislamiento (404/403) | 100% | 100% | **Cumple** |
-| Usabilidad (calidad percibida) | % de personas que registran un paciente sin ayuda | Sesión con 3 a 5 personas y casos de práctica | 80% | 95% | *Pendiente de medir* |
+| Usabilidad (calidad percibida) | % de personas que registran un paciente sin ayuda | Sesión con 3 a 5 personas y casos de práctica | 80% | 95% | *Planificada*: protocolo listo (3 a 5 personas, tareas con datos ficticios y cuestionario SUS); falta ejecutarla |
 | Eficiencia de desempeño | Segundos de una consulta analítica con ≈ 12,000 estudios | Tiempo de ejecución y `EXPLAIN` (consultas 1 y 8) | menos de 2 s | menos de 0.5 s | **Cumple (13 nov.)**: consulta 1 ≈ 11.1 ms y consulta 8 ≈ 1.6 ms, unas 7 veces más rápida (promedio de 50 ejecuciones, datos sintéticos) |
 
 Los mínimos y metas de usabilidad y desempeño son propuestas del grupo (ilustrativas); deben validarse antes de usarse como criterio de aceptación.
