@@ -18,9 +18,12 @@ mio = {tuple(int(r[k]) for k in K): (int(r["servicios"]), Decimal(r["monto_cobra
 cur.execute("SELECT sk_tiempo,sk_establecimiento,sk_geografia,sk_servicio FROM vw_g4_fact_servicio")
 ya = set(cur.fetchall())
 faltan = {k: v for k, v in mio.items() if k not in ya}
+cur.execute("SELECT COUNT(*) FROM (SELECT 1 FROM vw_g4_fact_servicio GROUP BY sk_tiempo,sk_establecimiento,sk_geografia,sk_servicio HAVING COUNT(*)>1) t")
+dup = cur.fetchone()[0]
+if dup: print(f"ALERTA: {dup} llaves repetidas en su fact_servicio (duplicados). Avisar al Grupo 8; no se envía nada.")
 print(f"CSV: {len(mio)} · ya en el Grupo 8: {len(mio) - len(faltan)} · faltan: {len(faltan)}")
 
-if "--enviar" in sys.argv and faltan:
+if "--enviar" in sys.argv and faltan and not dup:
     if input(f"¿Insertar {len(faltan)} filas en ingesta_g4_servicio? (si/no) ") != "si": sys.exit("cancelado")
     cur.executemany("INSERT INTO ingesta_g4_servicio (sk_tiempo,sk_establecimiento,sk_geografia,sk_servicio,servicios,monto_cobrado) VALUES (%s,%s,%s,%s,%s,%s)",
                     [(*k, *v) for k, v in faltan.items()])
